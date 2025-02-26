@@ -1,0 +1,10 @@
+bin
+obj
+.vs
+.idea
+packages
+wwwroot
+node_modules
+*.log
+*sln.DotSettings.user
+*csproj.user
