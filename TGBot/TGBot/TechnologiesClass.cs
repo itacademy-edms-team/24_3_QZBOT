@@ -2,6 +2,11 @@
 {
     public class TechnologiesClass
     {
-        public List<string> Technologies { get; set; }
+        public string Name { get; set; }
+        //public List<Question> Questions { get; set; }
+        public TechnologiesClass(string name)
+        {
+            Name = name;
+        }
     }
 }
