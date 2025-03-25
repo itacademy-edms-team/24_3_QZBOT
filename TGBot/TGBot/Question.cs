@@ -2,7 +2,8 @@
 {
     public class Question
     {
-        public string question { get; set; }
-        public List<string> answers { get; set; }
+        public string Text { get; set; }
+        public List<string> Answers { get; set; }
+        public string CorrectAnswer { get; set; }
     }
 }
