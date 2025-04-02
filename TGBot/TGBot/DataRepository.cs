@@ -29,6 +29,33 @@
                                 Answers = new List<string> { "function", "def", "lambda" },
                                 CorrectAnswer = "def"
                             }
+                        },
+                        {
+                            "list",
+                            new Question()
+                            {
+                                Text = "Как создать пустой список в Python?",
+                                Answers = new List<string> { "[]", "{}", "()" },
+                                CorrectAnswer = "[]"
+                            }
+                        },
+                        {
+                            "anonfunc",
+                            new Question()
+                            {
+                                Text = "Как объявить анонимную функцию в Python?",
+                                Answers = new List<string> { "lambda", "def", "anon" },
+                                CorrectAnswer = "lambda"
+                            }
+                        },
+                        {
+                            "intorcomp",
+                            new Question()
+                            {
+                                Text = "Python - интерпретируемый или компилируемый язык? (int/comp)",
+                                Answers = new List<string> { "int", "comp" },
+                                CorrectAnswer = "int"
+                            }
                         }
                     }
                 },
@@ -53,7 +80,34 @@
                                 Answers = new List<string> { "int x = 10;", "var x = 10;", "let x = 10;" },
                                 CorrectAnswer = "int x = 10;"
                             }
-                        }
+                        },
+                        {
+                            "startprogram",
+                            new Question()
+                            {
+                                Text = "Как называется функция, с которой начинается запуск программы?",
+                                Answers = new List<string> { "const", "main", "nachat" },
+                                CorrectAnswer = "main"
+                            }
+                        },
+                        {
+                            "arrays",
+                            new Question()
+                            {
+                                Text = "Как объявить массив целых чисел в Java?",
+                                Answers = new List<string> { "array<int>", "int[]", "List<Integer>" },
+                                CorrectAnswer = "int[]"
+                            }
+                        },
+                        {
+                            "objectclass",
+                            new Question()
+                            {
+                                Text = "Как создать объект класса в Java?",
+                                Answers = new List<string> { "new", "create", "instance" },
+                                CorrectAnswer = "new"
+                            }
+                        },
                     }
                 }
             };
