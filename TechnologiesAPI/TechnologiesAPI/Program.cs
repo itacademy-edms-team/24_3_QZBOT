@@ -1,4 +1,4 @@
-using TGBot;
+using TechnologiesAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -1,4 +1,4 @@
-﻿namespace TGBot
+﻿namespace TechnologiesAPI
 {
     public class TechnologiesClass
     {

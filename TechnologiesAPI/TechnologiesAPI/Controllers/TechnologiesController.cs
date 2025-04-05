@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace TGBot.Controllers
+namespace TechnologiesAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

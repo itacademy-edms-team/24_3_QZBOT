@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 
-namespace TGBot
+namespace TechnologiesAPI
 {
     public class TechnologyService
     {
