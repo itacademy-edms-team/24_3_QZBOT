@@ -1,4 +1,6 @@
-﻿namespace TechnologiesAPI
+﻿using Models;
+
+namespace TechnologiesAPI
 {
     public class DataRepository
     {
