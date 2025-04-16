@@ -8,4 +8,4 @@ node_modules
 *.log
 *sln.DotSettings.user
 *csproj.user
-BotTG/BotTG/.env
+TechnologiesAPI/BotTG/.env

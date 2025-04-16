@@ -13,6 +13,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Models\Models.csproj" />
+    <ProjectReference Include="..\BotTG\BotTG.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\BotTG\.env">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>BotTG\.env</Link>
+    </Content>
   </ItemGroup>
 
 </Project>

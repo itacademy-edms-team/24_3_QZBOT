@@ -1,4 +1,5 @@
 using TechnologiesAPI;
+using BotTG;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddSingleton<DataRepository>();
 builder.Services.AddScoped<TechnologyService>();
+builder.Services.AddHostedService<TelegramBotService>();
 
 var app = builder.Build();
 

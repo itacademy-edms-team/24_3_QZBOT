@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TechnologiesAPI", "Technolo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Models", "Models\Models.csproj", "{8D73D04E-13D1-4FC6-AE77-5DFFCE53766F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BotTG", "BotTG\BotTG.csproj", "{DD360D68-C429-41DE-93DA-756F4DEC945F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{8D73D04E-13D1-4FC6-AE77-5DFFCE53766F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8D73D04E-13D1-4FC6-AE77-5DFFCE53766F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8D73D04E-13D1-4FC6-AE77-5DFFCE53766F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DD360D68-C429-41DE-93DA-756F4DEC945F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DD360D68-C429-41DE-93DA-756F4DEC945F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DD360D68-C429-41DE-93DA-756F4DEC945F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DD360D68-C429-41DE-93DA-756F4DEC945F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
