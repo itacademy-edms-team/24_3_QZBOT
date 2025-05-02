@@ -1,5 +1,6 @@
 using TechnologiesAPI;
 using BotTG;
+using Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
