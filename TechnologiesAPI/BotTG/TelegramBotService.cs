@@ -81,31 +81,39 @@ namespace BotTG
                     string callbackData = callbackQuery.Data;
 
 
-                    var questions = new List<string> { };
+                    //var questions = new List<string> { };
 
-                    foreach (var qstn in repo.GetQuestions(callbackData).Keys)
-                    {
-                        questions.Add(qstn);
-                    }
+                    //foreach (var qstn in repo.GetQuestions(callbackData).Keys)
+                    //{
+                    //    questions.Add(qstn);
+                    //}
 
                     
 
                     // выбор технологии
-                    if (callbackData == "python" || callbackData == "java")
+                    if (ListOfTechnologies.Contains(callbackData))
                     {
                         var sentMsg = await botClient.SendMessage(
                             chatId: chatId,
 
-                            text: $"Хорошо, вы выбрали {callbackData}, выберите область вопроса",
+                            text: $"Хорошо, вы выбрали {callbackData}, начинаем тестирование.",
+
+                            cancellationToken: cancellationToken
+                        );
+
+                        var qstn1 = repo.GetQuestions(callbackData).Values.First();
+
+                        var sentMsg2 = await botClient.SendMessage(
+                            chatId: chatId,
+
+                            text: $"Вопрос 1. {qstn1.Text}",
 
                             cancellationToken: cancellationToken,
                             replyMarkup: new InlineKeyboardButton[][]
                             {
-                                [($"{questions[0]}", $"{questions[0]}"),
-                                ($"{questions[1]}", $"{questions[1]}"),
-                                ($"{questions[2]}", $"{questions[2]}"),
-                                ($"{questions[3]}", $"{questions[3]}"),
-                                ($"{questions[4]}", $"{questions[4]}")],
+                                [($"{qstn1.Answers[0]}", $"{qstn1.Answers[0] == qstn1.CorrectAnswer}"),
+                                ($"{qstn1.Answers[1]}", $"{qstn1.Answers[1] == qstn1.CorrectAnswer}"), 
+                                ($"{qstn1.Answers[2]}", $"{qstn1.Answers[2] == qstn1.CorrectAnswer}")],
                             }
                         );
 
@@ -120,23 +128,59 @@ namespace BotTG
                         );
                     }
 
-                    else if (callbackData == questions[0] || callbackData == questions[1] || callbackData == questions[2])
+                    else if (callbackData == "True")
                     {
                         await botClient.SendMessage(
                         chatId: chatId,
 
-                        text: $"Хорошо, вы выбрали {callbackData}, выберите область вопроса",
+                        text: $"Молодец! Ты выбрал правильный ответ",
 
-                        cancellationToken: cancellationToken,
-                        replyMarkup: new InlineKeyboardButton[][]
-                        {
-                                [($"{questions[0]}", $"{questions[0]}"),
-                                ($"{questions[1]}", $"{questions[1]}"),
-                                ($"{questions[2]}", $"{questions[2]}")],
-                        }
-                    );
+                        cancellationToken: cancellationToken
+                        );
 
+                        Console.WriteLine($"Пользователь {callbackQuery.From.Username} выбрал правильный ответ");
+
+                        await botClient.AnswerCallbackQuery(
+                            callbackQueryId: callbackQuery.Id,
+                            cancellationToken: cancellationToken
+                        );
                     }
+
+                    else if (callbackData == "False")
+                    {
+                        await botClient.SendMessage(
+                        chatId: chatId,
+
+                        text: $"Подумай еще",
+
+                        cancellationToken: cancellationToken
+                        );
+
+                        Console.WriteLine($"Пользователь {callbackQuery.From.Username} выбрал правильный ответ");
+
+                        await botClient.AnswerCallbackQuery(
+                            callbackQueryId: callbackQuery.Id,
+                            cancellationToken: cancellationToken
+                        );  
+                    }
+
+                    //else if (callbackData == questions[0] || callbackData == questions[1] || callbackData == questions[2])
+                    //{
+                    //    await botClient.SendMessage(
+                    //    chatId: chatId,
+
+                    //    text: $"Хорошо, вы выбрали {callbackData}, выберите область вопроса",
+
+                    //    cancellationToken: cancellationToken,
+                    //    replyMarkup: new InlineKeyboardButton[][]
+                    //    {
+                    //            [($"{questions[0]}", $"{questions[0]}"),
+                    //            ($"{questions[1]}", $"{questions[1]}"),
+                    //            ($"{questions[2]}", $"{questions[2]}")],
+                    //    }
+                    //);
+
+                    //}
                 }
 
 

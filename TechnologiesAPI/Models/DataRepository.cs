@@ -19,7 +19,7 @@ namespace Models
                     new Dictionary<string, Question>(StringComparer.OrdinalIgnoreCase)
                     {
                         {
-                            "variables",
+                            "variablesPython",
                             new Question()
                             {
                                 Text = "Как объявить переменную в Python?",
@@ -28,7 +28,7 @@ namespace Models
                             }
                         },
                         {
-                            "functions",
+                            "functionsPython",
                             new Question()
                             {
                                 Text = "Как объявить функцию в Python?",
@@ -37,7 +37,7 @@ namespace Models
                             }
                         },
                         {
-                            "list",
+                            "listPython",
                             new Question()
                             {
                                 Text = "Как создать пустой список в Python?",
@@ -46,7 +46,7 @@ namespace Models
                             }
                         },
                         {
-                            "anonfunc",
+                            "anonfuncPython",
                             new Question()
                             {
                                 Text = "Как объявить анонимную функцию в Python?",
@@ -55,7 +55,7 @@ namespace Models
                             }
                         },
                         {
-                            "intorcomp",
+                            "intorcompPython",
                             new Question()
                             {
                                 Text = "Python - интерпретируемый или компилируемый язык? (int/comp)",
@@ -70,7 +70,7 @@ namespace Models
                     new Dictionary<string, Question>(StringComparer.OrdinalIgnoreCase)
                     {
                         {
-                            "inheritance",
+                            "inheritanceJava",
                             new Question()
                             {
                                 Text = "Какой оператор используется для наследования?",
@@ -79,7 +79,7 @@ namespace Models
                             }
                         },
                         {
-                            "variables",
+                            "variablesJava",
                             new Question()
                             {
                                 Text = "Как объявить переменную в Java?",
@@ -88,7 +88,7 @@ namespace Models
                             }
                         },
                         {
-                            "startprogram",
+                            "startprogramJava",
                             new Question()
                             {
                                 Text = "Как называется функция, с которой начинается запуск программы?",
@@ -97,7 +97,7 @@ namespace Models
                             }
                         },
                         {
-                            "arrays",
+                            "arraysJava",
                             new Question()
                             {
                                 Text = "Как объявить массив целых чисел в Java?",
@@ -106,7 +106,7 @@ namespace Models
                             }
                         },
                         {
-                            "objectclass",
+                            "objectclassJava",
                             new Question()
                             {
                                 Text = "Как создать объект класса в Java?",
