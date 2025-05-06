@@ -11,12 +11,20 @@ using Models;
 
 namespace BotTG
 {
+    public class UserState
+    {
+        public string Technology { get; set; }
+        public int CurrentQuestionIndex { get; set; } = 0;
+    }
+
     public class TelegramBotService : BackgroundService
     {
         private readonly ILogger<TelegramBotService> _logger;
         private readonly TelegramBotClient _bot;
         private readonly CancellationTokenSource _cts;
-        //private static Dictionary<long, string> userStates = new Dictionary<long, string>();
+
+        private static readonly Dictionary<long, UserState> _userStates = new();
+        private static readonly object _lock = new();
 
         public TelegramBotService(ILogger<TelegramBotService> logger)
         {
@@ -76,8 +84,6 @@ namespace BotTG
 
                     if (callbackQuery == null) return;
 
-                    long chatId = callbackQuery.Message.Chat.Id;
-
                     string callbackData = callbackQuery.Data;
 
 
@@ -88,57 +94,41 @@ namespace BotTG
                     //    questions.Add(qstn);
                     //}
 
-                    
+
 
                     // выбор технологии
                     if (ListOfTechnologies.Contains(callbackData))
                     {
-                        var sentMsg = await botClient.SendMessage(
-                            chatId: chatId,
+                        // Сохраняем состояние пользователя
+                        var chatId = callbackQuery.Message.Chat.Id;
 
-                            text: $"Хорошо, вы выбрали {callbackData}, начинаем тестирование.",
-
-                            cancellationToken: cancellationToken
-                        );
-
-                        var qstn1 = repo.GetQuestions(callbackData).Values.First();
-
-                        var sentMsg2 = await botClient.SendMessage(
-                            chatId: chatId,
-
-                            text: $"Вопрос 1. {qstn1.Text}",
-
-                            cancellationToken: cancellationToken,
-                            replyMarkup: new InlineKeyboardButton[][]
+                        lock (_lock)
+                        {
+                            if (!_userStates.ContainsKey(chatId))
                             {
-                                [($"{qstn1.Answers[0]}", $"{qstn1.Answers[0] == qstn1.CorrectAnswer}"),
-                                ($"{qstn1.Answers[1]}", $"{qstn1.Answers[1] == qstn1.CorrectAnswer}"), 
-                                ($"{qstn1.Answers[2]}", $"{qstn1.Answers[2] == qstn1.CorrectAnswer}")],
+                                _userStates[chatId] = new UserState { Technology = callbackData, CurrentQuestionIndex = 0 };
                             }
-                        );
+                            else
+                            {
+                                _userStates[chatId].Technology = callbackData;
+                                _userStates[chatId].CurrentQuestionIndex = 0;
+                            }
+                        }
 
-                        var msgId = sentMsg.MessageId;
-
-                        Console.WriteLine($"Пользователь {callbackQuery.From.Username} нажал кнопку с данными: {callbackData}");
-
-                        await botClient.AnswerCallbackQuery(
-                            callbackQueryId: callbackQuery.Id,
-                            text: $"Выбор: {callbackData}!",
+                        await botClient.SendMessage(
+                            chatId: chatId,
+                            text: $"Хорошо, вы выбрали {callbackData}, начинаем тестирование.",
                             cancellationToken: cancellationToken
                         );
-                    }
 
-                    else if (callbackData == "True")
-                    {
+                        var question = repo.GetQuestions(callbackData).Values.First();
+
                         await botClient.SendMessage(
-                        chatId: chatId,
-
-                        text: $"Молодец! Ты выбрал правильный ответ",
-
-                        cancellationToken: cancellationToken
+                            chatId: chatId,
+                            text: $"Вопрос 1. {question.Text}",
+                            replyMarkup: GetAnswerButtons(question),
+                            cancellationToken: cancellationToken
                         );
-
-                        Console.WriteLine($"Пользователь {callbackQuery.From.Username} выбрал правильный ответ");
 
                         await botClient.AnswerCallbackQuery(
                             callbackQueryId: callbackQuery.Id,
@@ -146,22 +136,52 @@ namespace BotTG
                         );
                     }
 
-                    else if (callbackData == "False")
+                    else if (callbackData == "True" || callbackData == "False")
                     {
-                        await botClient.SendMessage(
-                        chatId: chatId,
+                        var chatId = callbackQuery.Message.Chat.Id;
 
-                        text: $"Подумай еще",
+                        if (!_userStates.TryGetValue(chatId, out var userState))
+                        {
+                            await botClient.SendMessage(chatId, "Начните квиз заново с /start", cancellationToken: cancellationToken);
+                            return;
+                        }
 
-                        cancellationToken: cancellationToken
-                        );
+                        if (callbackData == "True")
+                        {
+                            await botClient.SendMessage(chatId, "Правильно!", cancellationToken: cancellationToken);
 
-                        Console.WriteLine($"Пользователь {callbackQuery.From.Username} выбрал правильный ответ");
+                            userState.CurrentQuestionIndex++;
 
-                        await botClient.AnswerCallbackQuery(
-                            callbackQueryId: callbackQuery.Id,
-                            cancellationToken: cancellationToken
-                        );  
+                            var questions = repo.GetQuestions(userState.Technology).Values.ToList();
+
+                            if (userState.CurrentQuestionIndex < questions.Count)
+                            {
+                                var nextQuestion = questions[userState.CurrentQuestionIndex];
+
+                                await botClient.SendMessage(
+                                    chatId: chatId,
+                                    text: $"Вопрос {userState.CurrentQuestionIndex + 1}. {nextQuestion.Text}",
+                                    replyMarkup: GetAnswerButtons(nextQuestion),
+                                    cancellationToken: cancellationToken
+                                );
+                            }
+                            else
+                            {
+                                await botClient.SendMessage(chatId, "Поздравляем! Вы завершили квиз.", cancellationToken: cancellationToken);
+
+                                // Очистка состояния (по желанию)
+                                lock (_lock)
+                                {
+                                    _userStates.Remove(chatId);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            await botClient.SendMessage(chatId, "Неправильно. Попробуйте ещё раз.", cancellationToken: cancellationToken);
+                        }
+
+                        await botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
                     }
 
                     //else if (callbackData == questions[0] || callbackData == questions[1] || callbackData == questions[2])
@@ -223,6 +243,25 @@ namespace BotTG
 
             Console.WriteLine(errorMessage);
             return Task.CompletedTask;
+        }
+
+        private static InlineKeyboardMarkup GetAnswerButtons(Question question)
+        {
+            return new InlineKeyboardMarkup(new[]
+            {
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData(question.Answers[0], (question.Answers[0] == question.CorrectAnswer).ToString()),
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData(question.Answers[1], (question.Answers[1] == question.CorrectAnswer).ToString()),
+                },
+                new[]
+                {
+                    InlineKeyboardButton.WithCallbackData(question.Answers[2], (question.Answers[2] == question.CorrectAnswer).ToString()),
+                }
+            });
         }
 
         //private async Task OnMessage(Message msg, UpdateType type)
