@@ -15,6 +15,8 @@ namespace BotTG
     {
         public string Technology { get; set; }
         public int CurrentQuestionIndex { get; set; } = 0;
+        public int LastQuestionMessageId { get; set; } = -1;
+        public int CurrentScore { get; set; } = 0;
     }
 
     public class TelegramBotService : BackgroundService
@@ -87,15 +89,6 @@ namespace BotTG
                     string callbackData = callbackQuery.Data;
 
 
-                    //var questions = new List<string> { };
-
-                    //foreach (var qstn in repo.GetQuestions(callbackData).Keys)
-                    //{
-                    //    questions.Add(qstn);
-                    //}
-
-
-
                     // выбор технологии
                     if (ListOfTechnologies.Contains(callbackData))
                     {
@@ -138,6 +131,11 @@ namespace BotTG
 
                     else if (callbackData == "True" || callbackData == "False")
                     {
+                        await botClient.AnswerCallbackQuery(
+                            callbackQueryId: callbackQuery.Id,
+                            cancellationToken: cancellationToken
+                        );
+
                         var chatId = callbackQuery.Message.Chat.Id;
 
                         if (!_userStates.TryGetValue(chatId, out var userState))
@@ -148,59 +146,35 @@ namespace BotTG
 
                         if (callbackData == "True")
                         {
-                            await botClient.SendMessage(chatId, "Правильно!", cancellationToken: cancellationToken);
+                            userState.CurrentScore += 1;
+                        }
 
-                            userState.CurrentQuestionIndex++;
+                        userState.CurrentQuestionIndex++;
 
-                            var questions = repo.GetQuestions(userState.Technology).Values.ToList();
+                        var questions = repo.GetQuestions(userState.Technology).Values.ToList();
 
-                            if (userState.CurrentQuestionIndex < questions.Count)
-                            {
-                                var nextQuestion = questions[userState.CurrentQuestionIndex];
+                        if (userState.CurrentQuestionIndex < questions.Count)
+                        {
+                            var nextQuestion = questions[userState.CurrentQuestionIndex];
 
-                                await botClient.SendMessage(
-                                    chatId: chatId,
-                                    text: $"Вопрос {userState.CurrentQuestionIndex + 1}. {nextQuestion.Text}",
-                                    replyMarkup: GetAnswerButtons(nextQuestion),
-                                    cancellationToken: cancellationToken
-                                );
-                            }
-                            else
-                            {
-                                await botClient.SendMessage(chatId, "Поздравляем! Вы завершили квиз.", cancellationToken: cancellationToken);
-
-                                // Очистка состояния (по желанию)
-                                lock (_lock)
-                                {
-                                    _userStates.Remove(chatId);
-                                }
-                            }
+                            await botClient.SendMessage(
+                                chatId: chatId,
+                                text: $"Вопрос {userState.CurrentQuestionIndex + 1}. {nextQuestion.Text}",
+                                replyMarkup: GetAnswerButtons(nextQuestion),
+                                cancellationToken: cancellationToken
+                            );
                         }
                         else
                         {
-                            await botClient.SendMessage(chatId, "Неправильно. Попробуйте ещё раз.", cancellationToken: cancellationToken);
+                            await botClient.SendMessage(chatId, $"Поздравляем! Вы завершили квиз. Ваш результат: {userState.CurrentScore} / {questions.Count}", cancellationToken: cancellationToken);
+
+                            // Очистка состояния (по желанию)
+                            lock (_lock)
+                            {
+                                _userStates.Remove(chatId);
+                            }
                         }
-
-                        await botClient.AnswerCallbackQuery(callbackQuery.Id, cancellationToken: cancellationToken);
                     }
-
-                    //else if (callbackData == questions[0] || callbackData == questions[1] || callbackData == questions[2])
-                    //{
-                    //    await botClient.SendMessage(
-                    //    chatId: chatId,
-
-                    //    text: $"Хорошо, вы выбрали {callbackData}, выберите область вопроса",
-
-                    //    cancellationToken: cancellationToken,
-                    //    replyMarkup: new InlineKeyboardButton[][]
-                    //    {
-                    //            [($"{questions[0]}", $"{questions[0]}"),
-                    //            ($"{questions[1]}", $"{questions[1]}"),
-                    //            ($"{questions[2]}", $"{questions[2]}")],
-                    //    }
-                    //);
-
-                    //}
                 }
 
 
@@ -222,7 +196,8 @@ namespace BotTG
                         }
                         else
                         {
-                            await botClient.SendMessage(msg.Chat, msg.Text);
+                            //await botClient.SendMessage(msg.Chat, msg.Text);
+                            await botClient.DeleteMessage(msg.Chat, update.Message.Id);
                         }
                     }
                 }
@@ -247,41 +222,18 @@ namespace BotTG
 
         private static InlineKeyboardMarkup GetAnswerButtons(Question question)
         {
-            return new InlineKeyboardMarkup(new[]
+            var buttonRows = new List<InlineKeyboardButton[]>();
+
+            foreach (var answer in question.Answers)
             {
-                new[]
+                var isCorrect = answer == question.CorrectAnswer;
+                buttonRows.Add(new[]
                 {
-                    InlineKeyboardButton.WithCallbackData(question.Answers[0], (question.Answers[0] == question.CorrectAnswer).ToString()),
-                },
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData(question.Answers[1], (question.Answers[1] == question.CorrectAnswer).ToString()),
-                },
-                new[]
-                {
-                    InlineKeyboardButton.WithCallbackData(question.Answers[2], (question.Answers[2] == question.CorrectAnswer).ToString()),
-                }
-            });
+                    InlineKeyboardButton.WithCallbackData(answer, isCorrect.ToString())
+                });
+            }
+
+            return new InlineKeyboardMarkup(buttonRows.ToArray());
         }
-
-        //private async Task OnMessage(Message msg, UpdateType type)
-        //{
-        //    if (msg.Text is null) 
-        //    {
-        //        await _bot.SendMessage(msg.Chat, "Напиши текст");
-        //    }
-
-        //    if (msg.Text == "/start")
-        //    {
-        //        var sent = await _bot.SendMessage(msg.Chat, $"Привет, {msg.Chat.FirstName}! Выбери технологию для прохождения теста",
-        //        replyMarkup: new InlineKeyboardButton[][]
-        //        {
-        //            [("Python", "python")],
-        //            [("Java", "java")]
-        //        });
-        //    }
-
-        //    _logger.LogInformation($"Received {type} '{msg.Text}' in {msg.Chat}");
-        //}
     }
 }
