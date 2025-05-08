@@ -68,73 +68,83 @@ namespace BotTG
 
             var ListOfTechnologies = new List<string> { "python", "java" };
 
-
             try
             {
-                // работа с кнопками
                 if (update.Type == UpdateType.CallbackQuery)
                 {
                     var callbackQuery = update.CallbackQuery;
 
                     if (callbackQuery == null) return;
 
-                    string callbackData = callbackQuery.Data;
+                    var chatId = callbackQuery.Message.Chat.Id;
+                    var messageId = callbackQuery.Message.MessageId;
+                    var callbackData = callbackQuery.Data;
 
-
-                    // выбор технологии
+                    // --- Выбор технологии ---
                     if (ListOfTechnologies.Contains(callbackData))
                     {
-                        // Сохраняем состояние пользователя
-                        var chatId = callbackQuery.Message.Chat.Id;
+                        // Создаём состояние пользователя
+                        var newUserState = new UserState
+                        {
+                            Technology = callbackData,
+                            CurrentQuestionIndex = 0,
+                            CurrentScore = 0,
+                            LastQuestionMessageId = -1
+                        };
 
                         lock (_lock)
                         {
-                            if (!_userStates.ContainsKey(chatId))
-                            {
-                                _userStates[chatId] = new UserState { Technology = callbackData, CurrentQuestionIndex = 0 };
-                            }
-                            else
-                            {
-                                _userStates[chatId].Technology = callbackData;
-                                _userStates[chatId].CurrentQuestionIndex = 0;
-                            }
+                            _userStates[chatId] = newUserState;
                         }
 
                         await botClient.SendMessage(
                             chatId: chatId,
                             text: $"Хорошо, вы выбрали {callbackData}, начинаем тестирование.",
-                            cancellationToken: cancellationToken
-                        );
+                            cancellationToken: cancellationToken);
 
                         var question = repo.GetQuestions(callbackData).Values.First();
 
-                        await botClient.SendMessage(
+                        var sentMessage = await botClient.SendMessage(
                             chatId: chatId,
                             text: $"Вопрос 1. {question.Text}",
                             replyMarkup: GetAnswerButtons(question),
-                            cancellationToken: cancellationToken
-                        );
+                            cancellationToken: cancellationToken);
+
+                        lock (_lock)
+                        {
+                            _userStates[chatId].LastQuestionMessageId = sentMessage.MessageId;
+                        }
 
                         await botClient.AnswerCallbackQuery(
                             callbackQueryId: callbackQuery.Id,
-                            cancellationToken: cancellationToken
-                        );
+                            cancellationToken: cancellationToken);
                     }
 
+                    // --- Ответ на вопрос ---
                     else if (callbackData == "True" || callbackData == "False")
                     {
-                        await botClient.AnswerCallbackQuery(
-                            callbackQueryId: callbackQuery.Id,
-                            cancellationToken: cancellationToken
-                        );
-
-                        var chatId = callbackQuery.Message.Chat.Id;
-
+                        // Теперь получаем состояние ПОСЛЕ создания
                         if (!_userStates.TryGetValue(chatId, out var userState))
                         {
-                            await botClient.SendMessage(chatId, "Начните квиз заново с /start", cancellationToken: cancellationToken);
+                            await botClient.AnswerCallbackQuery(
+                                callbackQueryId: callbackQuery.Id,
+                                text: "Начните квиз заново",
+                                cancellationToken: cancellationToken);
                             return;
                         }
+
+                        // Проверяем, относится ли Callback к текущему вопросу
+                        var msgId = callbackQuery.Message.MessageId;
+                        if (msgId != userState.LastQuestionMessageId)
+                        {
+                            await botClient.AnswerCallbackQuery(
+                                callbackQueryId: callbackQuery.Id,
+                                text: "Это старый вопрос, нельзя отвечать повторно",
+                                showAlert: false,
+                                cancellationToken: cancellationToken);
+                            return;
+                        }
+
 
                         if (callbackData == "True")
                         {
@@ -145,22 +155,43 @@ namespace BotTG
 
                         var questions = repo.GetQuestions(userState.Technology).Values.ToList();
 
+                        // Удаляем кнопки у предыдущего сообщения
+                        if (userState.LastQuestionMessageId != -1)
+                        {
+                            try
+                            {
+                                await botClient.EditMessageReplyMarkup(
+                                    chatId: chatId,
+                                    messageId: userState.LastQuestionMessageId,
+                                    replyMarkup: null,
+                                    cancellationToken: cancellationToken);
+                            }
+                            catch { /* игнорируем ошибки, если сообщение не найдено */ }
+                        }
+
+                        // Переходим к следующему вопросу или завершаем квиз
                         if (userState.CurrentQuestionIndex < questions.Count)
                         {
                             var nextQuestion = questions[userState.CurrentQuestionIndex];
 
-                            await botClient.SendMessage(
+                            var sentMessage = await botClient.SendMessage(
                                 chatId: chatId,
                                 text: $"Вопрос {userState.CurrentQuestionIndex + 1}. {nextQuestion.Text}",
                                 replyMarkup: GetAnswerButtons(nextQuestion),
-                                cancellationToken: cancellationToken
-                            );
+                                cancellationToken: cancellationToken);
+
+                            lock (_lock)
+                            {
+                                userState.LastQuestionMessageId = sentMessage.MessageId;
+                            }
                         }
                         else
                         {
-                            await botClient.SendMessage(chatId, $"Поздравляем! Вы завершили квиз. Ваш результат: {userState.CurrentScore} / {questions.Count}", cancellationToken: cancellationToken);
+                            await botClient.SendMessage(
+                                chatId: chatId,
+                                text: $"🎉 Поздравляем! Тест завершён.\nВаш результат: {userState.CurrentScore} / {questions.Count}",
+                                cancellationToken: cancellationToken);
 
-                            // Очистка состояния (по желанию)
                             lock (_lock)
                             {
                                 _userStates.Remove(chatId);
@@ -169,8 +200,7 @@ namespace BotTG
                     }
                 }
 
-
-                // работа с сообщениями
+                // --- Работа с текстовыми сообщениями ---
                 else if (update.Type == UpdateType.Message)
                 {
                     var msg = update.Message;
@@ -179,17 +209,18 @@ namespace BotTG
                     {
                         if (msg.Text == "/start")
                         {
-                            var sent = await botClient.SendMessage(msg.Chat, $"Привет, {msg.Chat.FirstName}! Выбери технологию для прохождения теста",
-                                replyMarkup: new InlineKeyboardButton[][]
-                                    {
-                                    [("Python", "python")],
-                                    [("Java", "java")]
-                                    });
+                            await botClient.SendMessage(
+                                chatId: msg.Chat.Id,
+                                text: $"Привет, {msg.Chat.FirstName}! Выбери технологию для прохождения теста",
+                                replyMarkup: new InlineKeyboardMarkup(new[]
+                                {
+                            new[] { InlineKeyboardButton.WithCallbackData("Python", "python") },
+                            new[] { InlineKeyboardButton.WithCallbackData("Java", "java") }
+                                }));
                         }
                         else
                         {
-                            //await botClient.SendMessage(msg.Chat, msg.Text);
-                            await botClient.DeleteMessage(msg.Chat, update.Message.Id);
+                            await botClient.DeleteMessage(msg.Chat.Id, msg.MessageId, cancellationToken);
                         }
                     }
                 }
