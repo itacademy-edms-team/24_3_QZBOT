@@ -11,14 +11,6 @@ using Models;
 
 namespace BotTG
 {
-    public class UserState
-    {
-        public string Technology { get; set; }
-        public int CurrentQuestionIndex { get; set; } = 0;
-        public int LastQuestionMessageId { get; set; } = -1;
-        public int CurrentScore { get; set; } = 0;
-    }
-
     public class TelegramBotService : BackgroundService
     {
         private readonly ILogger<TelegramBotService> _logger;
