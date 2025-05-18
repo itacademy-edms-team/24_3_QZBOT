@@ -1,13 +1,15 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Data;
+using DotNetEnv;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Models;
 using Telegram.Bot;
+using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
-using DotNetEnv;
 using Telegram.Bot.Types.ReplyMarkups;
-using Telegram.Bot.Exceptions;
-using Models;
 
 namespace BotTG
 {
@@ -76,9 +78,12 @@ namespace BotTG
 
                     if (callbackQuery == null) return;
 
+
+                    var fromId = callbackQuery.Message.From.Id;
                     var chatId = callbackQuery.Message.Chat.Id;
                     var messageId = callbackQuery.Message.MessageId;
                     var callbackData = callbackQuery.Data;
+
 
                     // --- Выбор технологии ---
                     if (ListOfTechnologies.Contains(callbackData))
@@ -163,6 +168,7 @@ namespace BotTG
                                 await botClient.EditMessageReplyMarkup(
                                     chatId: chatId,
                                     messageId: userState.LastQuestionMessageId,
+                                    
                                     replyMarkup: null,
                                     cancellationToken: cancellationToken);
                             }
@@ -217,6 +223,17 @@ namespace BotTG
                             new[] { InlineKeyboardButton.WithCallbackData("Python", "python") },
                             new[] { InlineKeyboardButton.WithCallbackData("Java", "java") }
                                 }));
+
+                            var db = new AppDbContext();
+                            var user = new Models.User
+                            {
+                                ChatId = msg.Chat.Id,
+                                FullName = $"{msg.Chat.FirstName} {msg.Chat.LastName}",
+                                FirstName = msg.Chat.FirstName,
+                                LastName = msg.Chat.LastName
+                            };
+                            db.Add(user);
+                            db.SaveChanges();
                         }
                         else
                         {
