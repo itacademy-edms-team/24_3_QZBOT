@@ -11,7 +11,8 @@ namespace Data.Repository
     {
         Task<IEnumerable<Technology>> GetAllAsync();
         Task<Technology> GetByIdAsync(int id);
-        Task<IEnumerable<Technology>> GetAllQuestionsById(int id);
+        Task<IEnumerable<Question>> GetAllQuestionsByTechnologyId(int id);
+        Task<IEnumerable<Question>> GetAllQuestionsByTechnologyName(string name);
         Task AddAsync(Technology technology);
         Task UpdateAsync(Technology technology);
         Task DeleteAsync(int id);

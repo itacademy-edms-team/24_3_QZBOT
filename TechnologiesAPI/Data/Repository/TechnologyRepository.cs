@@ -1,7 +1,7 @@
-﻿using Models;
+﻿using Microsoft.EntityFrameworkCore;
+using Models;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -32,6 +32,14 @@ namespace Data.Repository
         {
             return await _context.Questions
                 .Where(x => x.TechnologyId == id)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Question>> GetAllQuestionsByTechnologyName(string name)
+        {
+            return await _context.Questions
+                .Include(q => q.Technology)
+                .Where(q => q.Technology.Title.ToLower() == name)
                 .ToListAsync();
         }
 
