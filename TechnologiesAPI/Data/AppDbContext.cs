@@ -1,12 +1,31 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Models;
 using DotNetEnv;
+using System.ComponentModel.Design;
 
 namespace Data
 {
     public class AppDbContext : DbContext
     {
         public DbSet<User> User { get; set; }
+        public DbSet<Technology> Technologies { get; set; }
+        public DbSet<Question> Questions { get; set; }
+        public DbSet<AnswerOption> AnswerOptions { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Technology>()
+                .HasMany(t => t.Questions)
+                .WithOne(q => q.Technology)
+                .HasForeignKey(q => q.TechnologyId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Question>()
+                .HasMany(t => t.AnswerOption)
+                .WithOne(a => a.Question)
+                .HasForeignKey(a => a.QuestionId)
+                .OnDelete(DeleteBehavior.Cascade);
+        }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -16,6 +35,6 @@ namespace Data
 
             optionsBuilder.UseSqlServer(connectionString);
 
-        } // "Data Source=WIN-57GSVVQFVLA;Initial Catalog=MyBotDB;Integrated Security=True;Pooling=False;Encrypt=False;Trust Server Certificate=True"
+        } 
     }
 }
