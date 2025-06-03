@@ -38,6 +38,10 @@ jobs:
     - name: Navigate to solution
       run: cd TechnologiesAPI
 
+    # Dir
+    - name: Dir
+      run: dir
+
     # Build solution
     - name: Build solution
       run: dotnet build
