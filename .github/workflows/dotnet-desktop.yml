@@ -34,14 +34,7 @@ jobs:
       with:
         dotnet-version: 9.0.x
 
-    # Navigate to solution
-    - name: Navigate to solution
-      run: cd TechnologiesAPI
-
-    # Dir
-    - name: Dir
-      run: dir
-
     # Build solution
     - name: Build solution
+      working-directory: .\TechnologiesAPI
       run: dotnet build
