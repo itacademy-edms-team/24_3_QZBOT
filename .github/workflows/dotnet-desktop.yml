@@ -1,6 +1,6 @@
 # Build solution in sprints branch.
 
-name: .NET Core Sprints
+name: .NET Core Build
 
 on:
   push:
@@ -20,7 +20,7 @@ jobs:
                              # https://help.github.com/en/actions/reference/workflow-syntax-for-github-actions#jobsjob_idruns-on
 
     env:
-      Solution_Name: DND5E-CE.sln                         # Replace with your solution name, i.e. MyWpfApp.sln.
+      Solution_Name: TechnologiesAPI.sln                    # Replace with your solution name, i.e. MyWpfApp.sln.
 
     steps:
     - name: Checkout
