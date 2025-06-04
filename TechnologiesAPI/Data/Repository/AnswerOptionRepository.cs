@@ -1,7 +1,7 @@
-﻿using Models;
+﻿using Microsoft.EntityFrameworkCore;
+using Models;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -28,6 +28,15 @@ namespace Data.Repository
                 .Where(x => x.QuestionId == id)
                 .ToListAsync();
         }
+
+        public async Task<IEnumerable<AnswerOption>> GetAllByQuestionShortName(string shortName)
+        {
+            return await _context.AnswerOptions
+                .Include(x => x.Question)
+                .Where(x => x.Question.ShortName.ToLower() == shortName.ToLower())
+                .ToListAsync();
+        }
+
 
         public async Task<AnswerOption> GetByIdAsync(int id)
         {

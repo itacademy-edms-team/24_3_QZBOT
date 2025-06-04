@@ -1,18 +1,26 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Models;
+using Data;
+using Data.Repository;
 
 namespace TechnologiesAPI
 {
     public class TechnologyService
     {
-        private readonly DataRepository _repository;
+        private readonly IQuestionRepository _questionRepo;
+        private readonly ITechnologyRepository _technologyRepo;
+        private readonly IAnswerOptionRepository _answerOptionRepo;
 
-        public TechnologyService(DataRepository repository)
+        public TechnologyService(IQuestionRepository questionRepo, 
+            ITechnologyRepository technologyRepo, 
+            IAnswerOptionRepository answerOptionRepo)
         {
-            _repository = repository;
+            _questionRepo = questionRepo;
+            _technologyRepo = technologyRepo;
+            _answerOptionRepo = answerOptionRepo;
         }
 
-        public IActionResult GetAllQuestions(string technologyName)
+        public async Task<IActionResult> GetAllQuestions(string technologyName)
         {
             if (string.IsNullOrWhiteSpace(technologyName))
             {
@@ -21,41 +29,55 @@ namespace TechnologiesAPI
 
             technologyName = technologyName.ToLower();
 
-            var questions = _repository.GetQuestions(technologyName);
-            if (questions == null)
+            var questions = await _technologyRepo.GetAllQuestionsByTechnologyName(technologyName);
+            if (questions == null || !questions.Any())
             {
                 return new NotFoundObjectResult($"Технология '{technologyName}' не найдена.");
             }
 
-            var result = questions.ToDictionary(
-                q => q.Key,
-                q => new Question()
-                {
-                    Text = q.Value.Text,
-                    Answers = q.Value.Answers
-                });
+
+            var result = new Dictionary<string, object>();
+
+            foreach (var question in questions)
+            {
+                result.Add(
+                    question.ShortName,
+                    new
+                    {
+                        question.Text,
+                        question.AnswerOption
+                    }
+                );
+            }
 
             return new OkObjectResult(new { Technology = technologyName, Questions = result });
         }
 
-        public IActionResult CheckAnswer(string technologyName, string questionSlug, string userAnswer)
+        public async Task<IActionResult> CheckAnswer(string questionShortName, string userAnswer)
         {
-            if (string.IsNullOrWhiteSpace(technologyName) || string.IsNullOrWhiteSpace(questionSlug) || string.IsNullOrWhiteSpace(userAnswer))
+            if (string.IsNullOrWhiteSpace(questionShortName) || string.IsNullOrWhiteSpace(userAnswer))
             {
-                return new BadRequestObjectResult("Имя технологии, название вопроса и ответ не могут быть пустыми.");
+                return new BadRequestObjectResult("Название вопроса и ответ должны быть заполнены");
             }
 
-            technologyName = technologyName.ToLower();
-            questionSlug = questionSlug.ToLower();
+            questionShortName = questionShortName.ToLower();
+            userAnswer = userAnswer.Trim();
 
-            var question = _repository.GetQuestion(technologyName, questionSlug);
-            if (question == null)
+            var answerOptions = await _answerOptionRepo.GetAllByQuestionShortName(questionShortName);
+
+            if (answerOptions == null || !answerOptions.Any())
             {
-                return new NotFoundObjectResult($"Вопрос '{questionSlug}' для технологии '{technologyName}' не найден.");
+                return new NotFoundObjectResult($"Вопроса {questionShortName} не существует");
             }
 
-            var isCorrect = string.Equals(userAnswer, question.CorrectAnswer, StringComparison.OrdinalIgnoreCase);
-            return new OkObjectResult(new { IsCorrect = isCorrect });
+            var correctAnswer = answerOptions.FirstOrDefault(x => x.IsCorrect);
+
+            var isCorrect = string.Equals(correctAnswer.Text.Trim(), userAnswer, StringComparison.OrdinalIgnoreCase);
+
+            return new OkObjectResult(new
+            {
+                isCorrect
+            });
         }
     }
 }

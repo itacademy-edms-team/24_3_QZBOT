@@ -9,7 +9,11 @@ namespace Models
     public class Technology
     {
         public int Id { get; set; }
-        public string Title { get; set; } // заметка: нужно будет сделать уникальным
+        public string Title { get; set; }
+        public int? ParentTechnologyId { get; set; }
+        public Technology? ParentTechnology { get; set; }
+        public ICollection<Technology> ChildTechnologies { get; set; } = new List<Technology>();
         public ICollection<Question> Questions { get; set; } = new List<Question>();
+        public ICollection<UsersTechnologies> UsersTechnologies { get; set; } = new List<UsersTechnologies>();
     }
 }

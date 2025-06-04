@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Data.Repository
 {
@@ -20,6 +21,32 @@ namespace Data.Repository
         public async Task<IEnumerable<Question>> GetAllAsync()
         {
             return await _context.Questions.ToListAsync();
+        }
+
+        public async Task<IEnumerable<Question>> GetAllByTechnologyName(string technologyName)
+        {
+            return await _context.Questions
+                .Include(x => x.Technology)
+                .Where(x => x.Technology.Title.ToLower() == technologyName.ToLower())
+                .ToListAsync();
+        }
+
+        public async Task<bool> CheckExistsQuestionByText(string text)
+        {
+            var quest = await _context.Questions
+                .Where(t => t.Text == text)
+                .FirstOrDefaultAsync();
+
+            return quest != null;
+        }
+
+        public async Task<bool> CheckExistsQuestionByShortName(string shortName)
+        {
+            var quest = await _context.Questions
+                .Where(t => t.ShortName == shortName)
+                .FirstOrDefaultAsync();
+
+            return quest != null;
         }
 
         public async Task<Question> GetByIdAsync(int id)

@@ -13,16 +13,16 @@ namespace TechnologiesAPI.Controllers
             _service = service;
         }
 
-        [HttpPost("{technologyName}/{questionSlug}/check")]
-        public IActionResult CheckAnswer(string technologyName, string questionSlug, [FromBody] string userAnswer)
+        [HttpPost("{questionSlug}/check")]
+        public async Task<IActionResult> CheckAnswer(string questionSlug, [FromBody] string userAnswer)
         {
-            return _service.CheckAnswer(technologyName, questionSlug, userAnswer);
+            return await _service.CheckAnswer(questionSlug, userAnswer);
         }
 
         [HttpGet("{technologyName}")]
-        public IActionResult GetAllQuestions(string technologyName)
+        public async Task<IActionResult> GetAllQuestions(string technologyName)
         {
-            return _service.GetAllQuestions(technologyName);
+            return await _service.GetAllQuestions(technologyName);
         }
     }
 }

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BotTG
 {
-    public class UserState
+    public class UserLocalState
     {
         public string Technology { get; set; }
         public int CurrentQuestionIndex { get; set; } = 0;

@@ -6,13 +6,14 @@ using System.Threading.Tasks;
 
 namespace Models
 {
-    public class Question
+    public class UsersTechnologies
     {
         public int Id { get; set; }
-        public string ShortName { get; set; } 
+        public long UserId { get; set; }
         public int TechnologyId { get; set; }
-        public string Text { get; set; }
+        public bool IsCompleted { get; set; }
+        public DateTime CompletedAt { get; set; } = DateTime.UtcNow;
+        public User User { get; set; }
         public Technology Technology { get; set; }
-        public ICollection<AnswerOption> AnswerOption { get; set; } = new List<AnswerOption>();
     }
 }
