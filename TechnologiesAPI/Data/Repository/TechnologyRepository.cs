@@ -188,15 +188,22 @@ namespace Data.Repository
 
         public async Task AddFromTelegram(string parentTechnologyTitle, Technology technology, List<Question> questions)
         {
-            var parentTechId = await _context.Technologies
+            var tech = new Technology();
+            tech = technology;
+
+            if (parentTechnologyTitle == null)
+            {
+                tech.ParentTechnologyId = null;
+            }
+            else
+            {
+                var parentTechId = await _context.Technologies
                 .Where(t => t.Title == parentTechnologyTitle)
                 .Select(t => t.Id)
                 .FirstAsync();
 
-
-            var tech = new Technology();
-            tech = technology;
-            tech.ParentTechnologyId = parentTechId;
+                tech.ParentTechnologyId = parentTechId;
+            }
 
             await _context.AddAsync(tech);
 

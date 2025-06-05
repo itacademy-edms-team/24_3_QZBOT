@@ -352,8 +352,6 @@ namespace BotTG
                                         text: $"Данные отправлены"
                                     );
 
-                                // параметры: technology, list<question>, parentTechTitle, 
-                                // тут будет метод из репозитория для отправки данных
                                 await techRepo.AddFromTelegram(parentTechTitle, technology, questions);
 
                                 _adminStates.Remove(msg.From.Id);
@@ -371,59 +369,67 @@ namespace BotTG
                                             {
                                                 await botClient.SendMessage(
                                                         chatId: msg.From.Id,
-                                                        text: $"Курс '{courseName}' уже существует. Операция прервана"
+                                                        text: $"Курс '{courseName}' уже существует. Попробуйте еще раз"
                                                     );
 
-                                                _adminStates.Remove(msg.From.Id);
-                                                return;
+                                                //_adminStates.Remove(msg.From.Id);
+                                            }
+                                            else
+                                            {
+                                                tempCourses[msg.From.Id].Title = courseName;
+                                                _adminStates[msg.From.Id] = AdminState.WaitingForParentCourseName;
+                                                await botClient.SendMessage(
+                                                        chatId: msg.From.Id,
+                                                        text: $"Название курса '{courseName}' сохранено. Введите название предшествующей технологии (если такой нет, введите 'no'):"
+                                                    );
+
+                                                tempCourses[msg.From.Id].Questions = new List<Question>();
                                             }
 
-                                            tempCourses[msg.From.Id].Title = courseName;
-                                            _adminStates[msg.From.Id] = AdminState.WaitingForParentCourseName;
-                                            await botClient.SendMessage(
-                                                    chatId: msg.From.Id,
-                                                    text: $"Название курса '{courseName}' сохранено. Введите название предшествующей технологии (если такой нет, введите 'no'):"
-                                                );
-
-                                            tempCourses[msg.From.Id].Questions = new List<Question>();
                                             break;
                                         }
 
                                     case AdminState.WaitingForParentCourseName:
+                                        
+                                        string parentTech = msg.Text;
+                                        if (parentTech == "no")
                                         {
-                                            string parentTech = msg.Text;
+                                            tempCourses[msg.From.Id].TitleOfParentCourse = null;
 
-                                            if (parentTech == "no")
-                                            {
-                                                tempCourses[msg.From.Id].TitleOfParentCourse = null;
-                                            }
+                                            await botClient.SendMessage(
+                                                    chatId: msg.From.Id,
+                                                    text: "Курс будет для начинающих\nВведите текст первого вопроса"
+                                                );
 
-                                            else if (await techRepo.CheckExistsTechnologyByTitle(parentTech))
-                                            {
-                                                tempCourses[msg.From.Id].TitleOfParentCourse = parentTech;
-                                                var nameOfCourse = tempCourses[msg.From.Id].Title;
-
-                                                await botClient.SendMessage(
-                                                        chatId: msg.From.Id,
-                                                        text: $"Курс '{nameOfCourse}' успешно прикреплен к курсу '{parentTech}'" +
-                                                        $"\nВведите текст первого вопроса"
-                                                    );
-
-                                                _adminStates[msg.From.Id] = AdminState.WaitingForQuestion;
-                                            }
-                                            else
-                                            {
-                                                await botClient.SendMessage(
-                                                        chatId: msg.From.Id,
-                                                        text: $"Технологии '{parentTech}' не существует. Операция прервана"
-                                                    );
-
-                                                _adminStates.Remove(msg.From.Id);
-                                                return;
-                                            }
-
-                                            break;
+                                            _adminStates[msg.From.Id] = AdminState.WaitingForQuestion;
                                         }
+
+                                        else if (await techRepo.CheckExistsTechnologyByTitle(parentTech))
+                                        {
+                                            tempCourses[msg.From.Id].TitleOfParentCourse = parentTech;
+                                            var nameOfCourse = tempCourses[msg.From.Id].Title;
+
+                                            await botClient.SendMessage(
+                                                    chatId: msg.From.Id,
+                                                    text: $"Курс '{nameOfCourse}' успешно прикреплен к курсу '{parentTech}'" +
+                                                    $"\nВведите текст первого вопроса"
+                                                );
+
+                                            _adminStates[msg.From.Id] = AdminState.WaitingForQuestion;
+                                        }
+                                        else
+                                        {
+                                            await botClient.SendMessage(
+                                                    chatId: msg.From.Id,
+                                                    text: $"Технологии '{parentTech}' не существует. Введите заново"
+                                                );
+
+                                            //_adminStates.Remove(msg.From.Id);
+                                            //return;
+                                        }
+
+                                        break;
+                                        
 
                                     case AdminState.WaitingForQuestion:
                                         {
@@ -433,11 +439,11 @@ namespace BotTG
                                             {
                                                 await botClient.SendMessage(
                                                         chatId: msg.From.Id,
-                                                        text: "Такой вопрос уже существует. Операция прервана"
+                                                        text: "Такой вопрос уже существует. Введите заново"
                                                     );
 
-                                                _adminStates.Remove(msg.From.Id);
-                                                return;
+                                                //_adminStates.Remove(msg.From.Id);
+                                                break;
                                             }
 
                                             if (question[question.Length - 1] != '?') // question.Contains("?")
@@ -471,11 +477,11 @@ namespace BotTG
                                             {
                                                 await botClient.SendMessage(
                                                         chatId: msg.From.Id,
-                                                        text: $"Короткое название '{shortName}' уже существует. Операция прервана"
+                                                        text: $"Короткое название '{shortName}' уже существует. Введите заново"
                                                     );
 
-                                                _adminStates.Remove(msg.From.Id);
-                                                return;
+                                                //_adminStates.Remove(msg.From.Id);
+                                                break;
                                             }
 
                                             string questionText = tempCourses[msg.From.Id].Questions.Last().Text;
@@ -503,8 +509,8 @@ namespace BotTG
                                                         text: $"Нельзя внести только один вариант ответа. Операция прервана"
                                                     );
 
-                                                _adminStates.Remove(msg.From.Id);
-                                                return;
+                                                //_adminStates.Remove(msg.From.Id);
+                                                break;
                                             }
 
                                             string[] Answers = textOfAnswers.Split(",");
@@ -576,10 +582,11 @@ namespace BotTG
                                             {
                                                 await botClient.SendMessage(
                                                         chatId: msg.From.Id,
-                                                        text: $"Некорректный номер ответа"
+                                                        text: $"Некорректный номер ответа. Попробуйте еще раз"
                                                     );
 
-                                                _adminStates[msg.From.Id] = AdminState.WaitingForAnswers;
+                                                //_adminStates.Remove(msg.From.Id);
+                                                //_adminStates[msg.From.Id] = AdminState.WaitingForAnswers;
                                                 break;
                                             }
 
