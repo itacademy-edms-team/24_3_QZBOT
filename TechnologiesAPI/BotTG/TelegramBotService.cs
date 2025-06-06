@@ -183,12 +183,24 @@ namespace BotTG
                         }
                         else if (msg.Text == "/deleteprogress")
                         {
-                            await userRepo.DeleteByChatIdAsync(msg.Chat.Id);
+                            if (!await userRepo.ExistsByChatIdAsync(msg.Chat.Id))
+                            {
+                                await botClient.SendMessage(
+                                        chatId: msg.Chat.Id,
+                                        text: "Вас нет в базе данных"
+                                    );
+                            }
+                            else
+                            {
+                                await userRepo.DeleteByChatIdAsync(msg.Chat.Id);
 
-                            await botClient.SendMessage(
-                                    chatId: msg.Chat.Id,
-                                    text: $"Ваш прогресс удален"
-                                );
+                                await botClient.SendMessage(
+                                        chatId: msg.Chat.Id,
+                                        text: $"Ваш прогресс удален"
+                                    );
+
+                                _userStates.Remove(msg.Chat.Id);
+                            }
                         }
 
                         else if (msg.Text == "/checkcources")
@@ -232,54 +244,11 @@ namespace BotTG
                                         chatId: msg.Chat.Id,
                                         text: "Вы вошли в процедуру добавления курса\n" +
                                         "Важно: <b>не пишите ничего лишнего</b>.\nДля выхода из процедуры отправьте /stop\n" +
-                                        "1. Отправьте название технологии",
+                                        "Введите <b>название технологии</b>",
                                         parseMode: ParseMode.Html
                                     );
 
-                            //var button1 = InlineKeyboardButton.WithCallbackData("Добавить", "add_technology");
-                            //var button2 = InlineKeyboardButton.WithCallbackData("Редактировать", "edit_technology");
-
-                            //var butRow = new[] { button1, button2 };
-                            //var markup = new InlineKeyboardMarkup(new[] { butRow });
-
-                            //await botClient.SendMessage(
-                            //        chatId: msg.Chat.Id,
-                            //        text: "Вы открыли админскую панель",
-                            //        replyMarkup: markup,
-                            //        cancellationToken: cancellationToken
-                            //    );
-
-                            //if (_superUsers.TryGetValue(msg.Chat.Id, out var supUser))
-                            //{
-                            //    supUser.SecretWordCount++;
-
-                            //    var button1 = InlineKeyboardButton.WithCallbackData("Добавить", "callback_1");
-                            //    var button2 = InlineKeyboardButton.WithCallbackData("Редактировать", "callback_2");
-
-                            //    var butRow = new[] {button1, button2 };
-                            //    var markup = new InlineKeyboardMarkup(new[] { butRow });
-
-                            //    if (supUser.SecretWordCount == 10)
-                            //    {
-                            //        await botClient.SendMessage(
-                            //                chatId: msg.Chat.Id,
-                            //                text: "Вы открыли админскую панель",
-                            //                replyMarkup: markup
-                            //            );
-                            //    }
-                            //}
-                            //else
-                            //{
-                            //    SuperUser superUser = new SuperUser()
-                            //    {
-                            //        SecretWordCount = 0,
-                            //    };
-                            //    _superUsers.Add(msg.Chat.Id, superUser);
-                            //}
-
-                            //await botClient.DeleteMessage(msg.Chat.Id, msg.MessageId, cancellationToken);
                         }
-                        // админская панель
 
                         else if (_adminStates.ContainsKey(msg.From.Id))
                         {
@@ -294,6 +263,67 @@ namespace BotTG
 
                                 return;
                             }
+                            else if (msg.Text == "/cancel")
+                            {
+                                switch (_adminStates[msg.From.Id])
+                                {
+                                    case AdminState.WaitingForQuestion:
+                                        if (tempCourses[msg.Chat.Id].Questions.Count > 0)
+                                        {
+                                            await botClient.SendMessage(
+                                                    chatId: msg.From.Id,
+                                                    text: $"Вопрос с вариантами ответов уже внесен и отменить нельзя, " +
+                                                    $"двигайтесь дальше",
+                                                    cancellationToken: cancellationToken
+                                                );
+
+                                            return;
+                                        }
+
+                                        await botClient.SendMessage(
+                                                chatId: msg.From.Id,
+                                                text: $"Ввод предшествующего курса отменен. Повторите попытку",
+                                                cancellationToken: cancellationToken
+                                            );                                        
+                                        
+                                        _adminStates[msg.From.Id] = AdminState.WaitingForParentCourseName;
+                                        return;
+
+                                    case AdminState.WaitingForShortNameQuestion:
+                                        await botClient.SendMessage(
+                                                chatId: msg.From.Id,
+                                                text: $"Ввод вопроса отменен. Повторите попытку",
+                                                cancellationToken: cancellationToken
+                                            );
+
+                                        var lastQue = tempCourses[msg.From.Id].Questions.Last();
+                                        tempCourses[msg.From.Id].Questions.Remove(lastQue);
+
+                                        _adminStates[msg.From.Id] = AdminState.WaitingForQuestion;
+                                        return;
+
+                                    case AdminState.WaitingForAnswers:
+                                        await botClient.SendMessage(
+                                                chatId: msg.From.Id,
+                                                text: $"Ввод короткого названия вопроса отменен. Повторите попытку",
+                                                cancellationToken: cancellationToken
+                                            );
+                                        _adminStates[msg.From.Id] = AdminState.WaitingForShortNameQuestion;
+                                        return;
+
+                                    case AdminState.WaitingForRightAnswer:
+                                        await botClient.SendMessage(
+                                                chatId: msg.From.Id,
+                                                text: $"Ввод вариантов ответа отменен. Повторите попытку",
+                                                cancellationToken: cancellationToken
+                                            );
+                                        _adminStates[msg.From.Id] = AdminState.WaitingForAnswers;
+                                        return;
+
+                                    default:
+                                        break;
+                                }
+                            }
                             else if (msg.Text == "/go")
                             {
                                 var currentCourse = tempCourses[msg.From.Id];
@@ -301,17 +331,17 @@ namespace BotTG
                                 if (string.IsNullOrWhiteSpace(currentCourse.Title))
                                 {
                                     await botClient.SendMessage(
-                                            chatId: msg.Chat.Id, 
-                                            text: "Данные не заполнены! Отправка не удалась, операция прервана"
+                                            chatId: msg.Chat.Id,
+                                            text: "Данные не заполнены! Отправка не удалась"
                                         );
                                     return;
                                 }
 
-                                if (currentCourse.Questions.Count == 0)
+                                if (currentCourse.Questions.Count < 5)
                                 {
                                     await botClient.SendMessage(
-                                            chatId: msg.Chat.Id, 
-                                            text: "Данные не заполнены! Отправка не удалась, операция прервана"
+                                            chatId: msg.Chat.Id,
+                                            text: "Мало вопросов! Добавьте больше"
                                         );
                                     return;
                                 }
@@ -321,8 +351,8 @@ namespace BotTG
                                     if (question.AnswerOption.Count == 0)
                                     {
                                         await botClient.SendMessage(
-                                                chatId: msg.Chat.Id, 
-                                                text: "Данные не заполнены! Отправка не удалась, операция прервана"
+                                                chatId: msg.Chat.Id,
+                                                text: "Данные не заполнены! Отправка не удалась"
                                             );
                                         return;
                                     }
@@ -336,7 +366,7 @@ namespace BotTG
 
                                 var technology = new Technology()
                                 {
-                                    Title = input.Title                                    
+                                    Title = input.Title
                                 };
 
                                 var questions = new List<Question>();
@@ -369,7 +399,7 @@ namespace BotTG
                                     {
                                         await botClient.SendMessage(
                                                 chatId: msg.From.Id,
-                                                text: $"Курс '{courseName}' уже существует. Попробуйте еще раз"
+                                                text: $"Курс '{courseName}' уже существует. Повторите попытку"
                                             );
                                     }
                                     else
@@ -378,7 +408,9 @@ namespace BotTG
                                         _adminStates[msg.From.Id] = AdminState.WaitingForParentCourseName;
                                         await botClient.SendMessage(
                                                 chatId: msg.From.Id,
-                                                text: $"Название курса '{courseName}' сохранено. Введите название предшествующей технологии (если такой нет, введите 'no'):"
+                                                text: $"Название курса '{courseName}' сохранено. Введите <b>название " +
+                                                $"предшествующей технологии</b> (если такой нет, введите 'no'):",
+                                                parseMode: ParseMode.Html
                                             );
 
                                         tempCourses[msg.From.Id].Questions = new List<Question>();
@@ -396,7 +428,10 @@ namespace BotTG
 
                                         await botClient.SendMessage(
                                                 chatId: msg.From.Id,
-                                                text: "Курс будет для начинающих\nВведите текст первого вопроса"
+                                                text: "Курс будет для начинающих\n" +
+                                                "Для отмены отправьте /cancel\n" +
+                                                "Введите <b>текст первого вопроса</b>",
+                                                parseMode: ParseMode.Html
                                             );
 
                                         _adminStates[msg.From.Id] = AdminState.WaitingForQuestion;
@@ -409,8 +444,10 @@ namespace BotTG
 
                                         await botClient.SendMessage(
                                                 chatId: msg.From.Id,
-                                                text: $"Курс '{nameOfCourse}' успешно прикреплен к курсу '{parentTech}'" +
-                                                $"\nВведите текст первого вопроса"
+                                                text: $"Курс '{nameOfCourse}' успешно прикреплен к курсу '{parentTech}'\n" +
+                                                $"Для отмены отправьте /cancel\n" +
+                                                $"Введите <b>текст первого вопроса</b>",
+                                                parseMode: ParseMode.Html
                                             );
 
                                         _adminStates[msg.From.Id] = AdminState.WaitingForQuestion;
@@ -419,7 +456,7 @@ namespace BotTG
                                     {
                                         await botClient.SendMessage(
                                                 chatId: msg.From.Id,
-                                                text: $"Технологии '{parentTech}' не существует. Введите заново"
+                                                text: $"Технологии '{parentTech}' не существует. Повторите попытку"
                                             );
                                     }
 
@@ -434,7 +471,7 @@ namespace BotTG
                                     {
                                         await botClient.SendMessage(
                                                 chatId: msg.From.Id,
-                                                text: "Такой вопрос уже существует. Введите заново"
+                                                text: "Такой вопрос уже существует. Повторите попытку"
                                             );
 
                                         break;
@@ -452,8 +489,10 @@ namespace BotTG
 
                                     await botClient.SendMessage(
                                             chatId: msg.From.Id,
-                                            text: $"Вопрос '{question}' успешно добавлен. Введите короткое " +
-                                            $"название вопроса (например 'variablesPython')"
+                                            text: $"Вопрос '{question}' успешно добавлен. " +
+                                            $"Для отмены отправьте /cancel\n" +
+                                            $"Введите <b>короткое название вопроса</b> (например 'variablesPython')",
+                                            parseMode: ParseMode.Html
                                         );
 
                                     _adminStates[msg.From.Id] = AdminState.WaitingForShortNameQuestion;
@@ -469,7 +508,7 @@ namespace BotTG
                                     {
                                         await botClient.SendMessage(
                                                 chatId: msg.From.Id,
-                                                text: $"Короткое название '{shortName}' уже существует. Введите заново"
+                                                text: $"Короткое название '{shortName}' уже существует. Повторите попытку"
                                             );
 
                                         break;
@@ -480,7 +519,10 @@ namespace BotTG
                                     await botClient.SendMessage(
                                             chatId: msg.From.Id,
                                             text: $"Короткое название '{shortName}' успешно добавлено.\n" +
-                                            $"Введите варианты ответов на вопрос '{questionText}' через запятую без пробелов"
+                                            $"Для отмены отправьте /cancel\n" +
+                                            $"Введите <b>варианты ответов</b> на вопрос '{questionText}' <b>через точку с запятой " +
+                                            $"без пробелов между ними</b>",
+                                            parseMode: ParseMode.Html
                                         );
 
                                     tempCourses[msg.From.Id].Questions.Last().ShortName = shortName;
@@ -493,40 +535,47 @@ namespace BotTG
                                         
                                     string textOfAnswers = msg.Text;
 
-                                    if (!textOfAnswers.Contains(","))
+                                    if (!textOfAnswers.Contains(";"))
                                     {
                                         await botClient.SendMessage(
                                                 chatId: msg.From.Id,
-                                                text: $"Нельзя внести только один вариант ответа. Операция прервана"
+                                                text: $"Нельзя внести только один вариант ответа. Повторите попытку"
                                             );
 
                                         break;
                                     }
 
-                                    string[] Answers = textOfAnswers.Split(",");
+                                    string[] Answers = textOfAnswers.Split(";");
 
                                     var lastQuestion = tempCourses[msg.From.Id].Questions.Last();
 
                                     lastQuestion.AnswerOption.Clear();
+                                    var answ = new List<string>();
 
                                     foreach (var answer in Answers)
                                     {
+                                        if (answer == string.Empty)
+                                        {
+                                            continue;
+                                        }
+                                        answ.Add(answer);
                                         lastQuestion.AnswerOption.Add(new AnswerOption { Text = answer });
                                     }
 
-
                                     string strAnswers = "";
-                                    for (int i = 0; i < Answers.Length; i++)
+                                    for (int i = 0; i < answ.Count; i++)
                                     {
-                                        strAnswers += $"{i+1}. {Answers[i]}\n";
+                                        strAnswers += $"{i+1}. {answ[i]}\n";
                                     }
 
 
                                     await botClient.SendMessage(
                                             chatId: msg.From.Id,
                                             text: $"Варианты ответов успешно внесены, " +
-                                            $"теперь отправьте номер правильного варианта ответа среди них\n" +
-                                            $"{strAnswers}"
+                                            $"теперь отправьте <b>номер правильного варианта ответа среди них</b>\n" +
+                                            $"<b>Важно: отменить это действие не получится!</b>\n" +
+                                            $"{strAnswers}",
+                                            parseMode: ParseMode.Html
                                         );
 
                                     _adminStates[msg.From.Id] = AdminState.WaitingForRightAnswer;
@@ -546,12 +595,14 @@ namespace BotTG
                                     if (int.TryParse(msg.Text, out int correctIndex) && correctIndex > 0 && correctIndex <= lastQuest.AnswerOption.Count)
                                     {
                                         lastQuest.AnswerOption.ElementAt(correctIndex - 1).IsCorrect = true;
+                                        var countQuestions = tempCourses[msg.From.Id].Questions.Count;
 
                                         await botClient.SendMessage(
                                                 chatId: msg.From.Id,
                                                 text: $"Ответ '{lastQuest.AnswerOption.ElementAt(correctIndex - 1).Text}' " +
-                                                $"установлен как правильный. Введите следующий вопрос для этого курса. " +
-                                                $"Если вопросов достаточно, для завершения отправьте '/go'"
+                                                $"установлен как правильный. Введите <b>следующий вопрос</b> для этого курса. " +
+                                                $"Если вопросов достаточно ({countQuestions}), для завершения отправьте '/go'",
+                                                parseMode: ParseMode.Html
                                             );
                                         _adminStates[msg.From.Id] = AdminState.WaitingForQuestion;
                                     }
@@ -559,7 +610,7 @@ namespace BotTG
                                     {
                                         await botClient.SendMessage(
                                                 chatId: msg.From.Id,
-                                                text: $"Некорректный номер ответа. Попробуйте еще раз"
+                                                text: $"Некорректный номер ответа. Повторите попытку"
                                             );
                                     }
 
