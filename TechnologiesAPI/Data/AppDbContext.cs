@@ -56,6 +56,15 @@ namespace Data
                 .Property(u => u.ChatId)
                 .ValueGeneratedNever();
 
+            modelBuilder.Entity<User>()
+                .Property(u => u.LastName)
+                .HasMaxLength(500)
+                .IsRequired(false);
+
+            modelBuilder.Entity<User>()
+                .Property(u => u.FirstName)
+                .HasMaxLength(500);
+
             modelBuilder.Entity<UsersTechnologies>()
                 .HasOne(ut => ut.User)
                 .WithMany(u => u.UserTechnologies)
