@@ -82,8 +82,7 @@ namespace Data.Repository
             if (await CheckFinishedTechnology(userId, technologyId))
             {
                 var dates = await _context.UsersTechnologies
-                .Where(ut => ut.UserId == userId)
-                .Where(ut => ut.TechnologyId == technologyId) // в один where
+                .Where(ut => ut.UserId == userId && ut.TechnologyId == technologyId)
                 .Select(ut => ut.CompletedAt)
                 .FirstAsync();
                 

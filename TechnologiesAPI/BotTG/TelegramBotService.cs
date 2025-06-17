@@ -12,6 +12,7 @@ using Microsoft.VisualBasic;
 using Models;
 using System.ComponentModel;
 using System.Data.Entity.SqlServer;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
@@ -23,6 +24,9 @@ using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.ReplyMarkups;
+using YamlDotNet;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 
 namespace BotTG
@@ -35,7 +39,7 @@ namespace BotTG
         private readonly IServiceProvider _serviceProvider;
 
         private static readonly Dictionary<long, UserLocalState> _userStates = new();
-        private static readonly Dictionary<long, SuperUser> _superUsers = new();
+        private static Dictionary<long, ConfirmationAdd> _confirm = new(); 
         private static Dictionary<long, AdminState> _adminStates = new();
         private static Dictionary<long, CourseInput> tempCourses = new();
         private static readonly object _lock = new();
@@ -102,6 +106,146 @@ namespace BotTG
                 if (update.Type == UpdateType.Message)
                 {
                     var msg = update.Message;
+                    if (msg.Document != null)
+                    {
+                        if (msg.Document.MimeType == "application/yaml")
+                        {
+                            if (_confirm.TryGetValue(msg.From.Id, out var conf))
+                            {
+                                _confirm.Remove(msg.From.Id);
+                            }
+
+                            if (msg.Caption != null)
+                            {
+                                if (msg.Caption == "/readfile")
+                                {
+                                    string fileContent = await ReadFile(msg, botClient);
+
+                                    await botClient.SendMessage(
+                                            chatId: msg.From.Id,
+                                            text: $"Содержимое файла:\n```\n{fileContent}\n```",
+                                            parseMode: ParseMode.MarkdownV2
+                                        );
+                                }
+                                else if (msg.Caption == "/addcourse")
+                                {
+                                    string fileContent = await ReadFile(msg, botClient);
+
+                                    var deserializer = new DeserializerBuilder()
+                                        .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                                        .WithNamingConvention(UnderscoredNamingConvention.Instance)
+                                        .Build();
+
+                                    try
+                                    {
+                                        var tech = deserializer.Deserialize<Technology>(fileContent);
+                                    }
+                                    catch (Exception)
+                                    {
+                                        await botClient.SendMessage(
+                                                chatId: msg.From.Id,
+                                                text: "Удостоверьтесь в правильности данных в файле"
+                                            );
+                                        return;
+                                    } // тут костыль жесткий
+
+                                    var t = deserializer.Deserialize<Technology>(fileContent);
+
+                                    if (await techRepo.CheckExistsTechnologyByTitle(t.Title))
+                                    {
+                                        await botClient.SendMessage(
+                                                msg.From.Id,
+                                                text: "Данная технология уже существует!"
+                                            );
+                                        return;
+                                    }
+
+                                    foreach (var quest in t.Questions)
+                                    {
+                                        var haveTrue = false;
+                                        foreach (var answer in quest.AnswerOption)
+                                        {
+                                            if (haveTrue && answer.IsCorrect)
+                                            {
+                                                await botClient.SendMessage(
+                                                        chatId: msg.From.Id,
+                                                        text: $"Для вопроса '{quest.Text}' выбрано несколько правильных ответов, ошибка"
+                                                    );
+                                                return;
+                                            }
+
+                                            if (answer.IsCorrect)
+                                            {
+                                                haveTrue = true;
+                                            }
+                                        }
+                                        if (!haveTrue)
+                                        {
+                                            await botClient.SendMessage(
+                                                    chatId: msg.From.Id,
+                                                    text: $"Для вопроса '{quest.Text}' не введен правильный вариант ответа, ошибка"
+                                                );
+                                            return;
+                                        }
+                                    }
+
+                                    string stringOfData = "";
+                                    foreach (var quest in t.Questions)
+                                    {
+                                        stringOfData += $"\n{quest.Text}:\n";
+
+                                        foreach (var answer in quest.AnswerOption)
+                                        {
+                                            stringOfData += $"- {answer.Text} - {answer.IsCorrect}\n";
+                                        }
+                                    }
+
+
+                                    await botClient.SendMessage(
+                                            chatId: msg.From.Id,
+                                            text: $"Будет передано:\n" +
+                                            $"{t.Title}:\nПредшествующий курс: {t.ParentTechnologyId} {stringOfData}\n\n" +
+                                            $"Подтвердить? (+/-)"
+                                        );
+
+                                    if (_confirm.TryGetValue(msg.From.Id, out var confi))
+                                    {
+                                        _confirm.Remove(msg.From.Id);
+                                    }
+
+                                    _confirm.Add(msg.From.Id, new ConfirmationAdd());
+
+                                    _confirm[msg.From.Id].Technology = t;
+                                    _confirm[msg.From.Id].ConfirmToAdd = ConfirmToAdd.Confirm;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var fileType = "";
+
+                            foreach (var item in msg.Document.FileName)
+                            {
+                                if (item == '.')
+                                {
+                                    fileType = "";
+                                }
+                                else
+                                {
+                                    fileType += item;
+                                }
+                            }
+
+                            await botClient.SendMessage(
+                                    chatId: msg.From.Id,
+                                    text: $"Ты отправил документ {msg.Document.FileName}\n" +
+                                    $"Thambnail: {msg.Document.Thumbnail}\n" +
+                                    $"MimeType: {msg.Document.MimeType}\n" +
+                                    $"FileSize: {msg.Document.FileSize}\n" +
+                                    $"тип файла: {fileType}"
+                                );
+                        }
+                    }
 
                     if (msg.Text != null)
                     {
@@ -160,25 +304,6 @@ namespace BotTG
                                         chatId: msg.Chat.Id,
                                         text: $"Привет, {msg.Chat.FirstName}! Тебя нет в нашей базе данных"
                                     );
-
-                                // код ниже - добавление пользователя в БД
-
-                                //var fullname = $"{msg.Chat.FirstName} {msg.Chat.LastName}";
-                                //var user = new Models.User
-                                //{
-                                //    ChatId = msg.Chat.Id,
-                                //    FullName = fullname,
-                                //    FirstName = msg.Chat.FirstName,
-                                //    LastName = msg.Chat.LastName
-                                //};
-
-                                //await userRepo.AddAsync(user);
-
-
-                                //await botClient.SendMessage(
-                                //        chatId: msg.Chat.Id,
-                                //        text: $"Привет, {msg.Chat.FirstName}! Ты внесен в базу данных"
-                                //    );
                             }
                         }
                         else if (msg.Text == "/deleteprogress")
@@ -202,7 +327,7 @@ namespace BotTG
                                 _userStates.Remove(msg.Chat.Id);
                             }
                         }
-
+                        
                         else if (msg.Text == "/checkcources")
                         {
                             var technologies = await userRepo.GetAllCompletedTechnologiesByIdAsync(msg.Chat.Id);
@@ -213,10 +338,10 @@ namespace BotTG
                             {
                                 var date = await userRepo.GetDateOfFinishTechnologyByUserId(msg.Chat.Id, te.Id);
 
-                                str += $"{count}. {te.Title}. Дата прохождения: {date.AddHours(7)}\n";
+                                str += $"{count}. {te.Title}. Дата прохождения: {date} (UTC)\n";
                                 count++;
                             }
-                            
+
                             if (technologies.Count() == 0)
                             {
                                 await botClient.SendMessage(
@@ -237,6 +362,11 @@ namespace BotTG
                         // админская панель
                         else if (msg.Text == "/addcourse")
                         {
+                            //if (msg.Document.MimeType != null)
+                            //{
+
+                            //}
+
                             _adminStates[msg.From.Id] = AdminState.WaitingForCourseName;
                             var newTechnology = new CourseInput();
 
@@ -248,6 +378,28 @@ namespace BotTG
                                         parseMode: ParseMode.Html
                                     );
 
+                        }
+
+                        else if (_confirm[msg.From.Id].ConfirmToAdd == ConfirmToAdd.Confirm)
+                        {
+                            if (msg.Text == "+")
+                            {
+                                await techRepo.AddAsync(_confirm[msg.From.Id].Technology);
+
+                                await botClient.SendMessage(
+                                        chatId: msg.From.Id,
+                                        text: "Данные отправлены"
+                                    );
+                            }
+                            else if (msg.Text == "-")
+                            {
+                                _confirm.Remove(msg.From.Id);
+
+                                await botClient.SendMessage(
+                                        chatId: msg.From.Id,
+                                        text: "Отправка отменена"
+                                    );
+                            }
                         }
 
                         else if (_adminStates.ContainsKey(msg.From.Id))
@@ -284,8 +436,8 @@ namespace BotTG
                                                 chatId: msg.From.Id,
                                                 text: $"Ввод предшествующего курса отменен. Повторите попытку",
                                                 cancellationToken: cancellationToken
-                                            );                                        
-                                        
+                                            );
+
                                         _adminStates[msg.From.Id] = AdminState.WaitingForParentCourseName;
                                         return;
 
@@ -388,10 +540,10 @@ namespace BotTG
                                 return;
                             }
 
-                            switch (_adminStates[msg.From.Id])  
+                            switch (_adminStates[msg.From.Id])
                             {
                                 case AdminState.WaitingForCourseName:
-                                        
+
                                     tempCourses[msg.From.Id] = new CourseInput();
                                     string courseName = msg.Text;
 
@@ -417,10 +569,10 @@ namespace BotTG
                                     }
 
                                     break;
-                                        
+
 
                                 case AdminState.WaitingForParentCourseName:
-                                        
+
                                     string parentTech = msg.Text;
                                     if (parentTech == "no")
                                     {
@@ -461,10 +613,10 @@ namespace BotTG
                                     }
 
                                     break;
-                                        
+
 
                                 case AdminState.WaitingForQuestion:
-                                        
+
                                     string question = msg.Text;
 
                                     if (await questionRepo.CheckExistsQuestionByText(question))
@@ -497,11 +649,11 @@ namespace BotTG
 
                                     _adminStates[msg.From.Id] = AdminState.WaitingForShortNameQuestion;
                                     break;
-                                        
+
 
 
                                 case AdminState.WaitingForShortNameQuestion:
-                                        
+
                                     string shortName = msg.Text;
 
                                     if (await questionRepo.CheckExistsQuestionByShortName(shortName))
@@ -529,10 +681,10 @@ namespace BotTG
 
                                     _adminStates[msg.From.Id] = AdminState.WaitingForAnswers;
                                     break;
-                                        
+
 
                                 case AdminState.WaitingForAnswers:
-                                        
+
                                     string textOfAnswers = msg.Text;
 
                                     if (!textOfAnswers.Contains(";"))
@@ -565,7 +717,7 @@ namespace BotTG
                                     string strAnswers = "";
                                     for (int i = 0; i < answ.Count; i++)
                                     {
-                                        strAnswers += $"{i+1}. {answ[i]}\n";
+                                        strAnswers += $"{i + 1}. {answ[i]}\n";
                                     }
 
 
@@ -580,10 +732,10 @@ namespace BotTG
 
                                     _adminStates[msg.From.Id] = AdminState.WaitingForRightAnswer;
                                     break;
-                                        
+
 
                                 case AdminState.WaitingForRightAnswer:
-                                        
+
                                     var currentCourse = tempCourses[msg.From.Id];
                                     var lastQuest = tempCourses[msg.From.Id].Questions.Last();
 
@@ -615,7 +767,7 @@ namespace BotTG
                                     }
 
                                     break;
-                                        
+
                                 default:
                                     break;
                             }
@@ -941,7 +1093,7 @@ namespace BotTG
         }
 
         /// <summary>
-        /// Метод для построение кнопок с технологиями
+        /// Метод для построения кнопок с технологиями
         /// </summary>
         /// <param name="listOfTech">Список технологий</param>
         /// <returns>Кнопки с технологиями</returns>
@@ -961,6 +1113,36 @@ namespace BotTG
 
             var markup = new InlineKeyboardMarkup(buttonRows.ToArray());
             return markup;
+        }
+
+        /// <summary>
+        /// Метод для чтения файла, отправленного пользователем
+        /// </summary>
+        /// <param name="msg">Объект сообщения</param>
+        /// <param name="botClient">Объект бота</param>
+        /// <returns>Текст из файла</returns>
+        private static async Task<string> ReadFile(Message msg, ITelegramBotClient botClient)
+        {
+            var fileId = msg.Document.FileId;
+
+            // Получаем информацию о файле
+            var fileInfo = await botClient.GetFile(fileId);
+
+            // Формируем URL для скачивания файла
+            var filePath = fileInfo.FilePath;
+            var fileStream = new MemoryStream();
+
+            // Загружаем содержимое
+            await botClient.DownloadFile(filePath, fileStream);
+
+            // Перемещаем указатель потока на начало
+            fileStream.Position = 0;
+
+            // Читаем содержимое
+            using var reader = new StreamReader(fileStream);
+            string fileContent = await reader.ReadToEndAsync();
+
+            return fileContent;
         }
     }
 }
