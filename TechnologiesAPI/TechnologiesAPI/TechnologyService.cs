@@ -2,6 +2,7 @@
 using Models;
 using Data;
 using Data.Repository;
+using TechnologiesAPI.DTOs;
 
 namespace TechnologiesAPI
 {
@@ -78,6 +79,33 @@ namespace TechnologiesAPI
             {
                 isCorrect
             });
+        }
+
+        public async Task<IActionResult> AddTechnology(TechnologyDto dto)
+        {
+            var technology = new Technology
+            {
+                Title = dto.Title,
+                ParentTechnologyId = dto.ParentTechnologyId,
+                Questions = dto.Questions.Select(q => new Question
+                {
+                    ShortName = q.ShortName,
+                    Text = q.Text,
+                    AnswerOption = q.AnswerOptions.Select(a => new AnswerOption
+                    {
+                        Text = a.Text,
+                        IsCorrect = a.IsCorrect
+                    }).ToList()
+                }).ToList()
+            };
+
+            if (await _technologyRepo.CheckExistsTechnologyByTitle(technology.Title))
+            {
+                return new BadRequestObjectResult($"Данная технология уже существует!");
+            }
+
+            await _technologyRepo.AddAsync(technology);
+            return new OkObjectResult(technology);
         }
     }
 }

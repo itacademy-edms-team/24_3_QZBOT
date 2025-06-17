@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using TechnologiesAPI.DTOs;
 
 namespace TechnologiesAPI.Controllers
 {
@@ -17,6 +18,12 @@ namespace TechnologiesAPI.Controllers
         public async Task<IActionResult> CheckAnswer(string questionSlug, [FromBody] string userAnswer)
         {
             return await _service.CheckAnswer(questionSlug, userAnswer);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddTechnology([FromBody] TechnologyDto dto)
+        {
+            return await _service.AddTechnology(dto);
         }
 
         [HttpGet("{technologyName}")]

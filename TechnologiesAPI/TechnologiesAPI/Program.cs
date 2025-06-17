@@ -16,7 +16,6 @@ builder.Services.AddSwaggerGen();
 
 string connection = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(connection));
-//builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer("Data Source=WIN-57GSVVQFVLA;Initial Catalog=MyBotDB;Integrated Security=True;Pooling=True;Encrypt=False;Trust Server Certificate=True"));
 
 builder.Services.AddScoped<IQuestionRepository, QuestionRepository>();
 builder.Services.AddScoped<ITechnologyRepository, TechnologyRepository>();
