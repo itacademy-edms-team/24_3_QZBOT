@@ -214,6 +214,27 @@ namespace Data.Repository
             await _context.SaveChangesAsync();
         }
 
+        public async Task AddFromTelegram(int parentTechnologyId, Technology technology, List<Question> questions)
+        {
+            var tech = new Technology();
+            tech = technology;
+
+            tech.ParentTechnologyId = parentTechnologyId;
+
+            await _context.Technologies.AddAsync(tech);
+
+            foreach (var question in questions)
+            {
+                tech.Questions.Add(question);
+            }
+            await _context.SaveChangesAsync();
+        }
+
+        //public async Task AddFromTelegramTest(Technology technology)
+        //{
+            
+        //}
+        
         public async Task UpdateAsync(Technology technology)
         {
             _context.Technologies.Update(technology);

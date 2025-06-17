@@ -86,7 +86,23 @@ namespace Data.Repository
         /// <param name="technology">Объект технологии</param>
         Task AddAsync(Technology technology);
 
+        /// <summary>
+        /// Добавление технологии из телеграма
+        /// </summary>
+        /// <param name="ParentTechnologyTitle">Название предшествующей технологии</param>
+        /// <param name="technology">Объект технологии</param>
+        /// <param name="questions">Список объектов вопросов</param>
+        /// <returns></returns>
         Task AddFromTelegram(string ParentTechnologyTitle, Technology technology, List<Question> questions);
+
+        /// <summary>
+        /// Добавление технологии из телеграма
+        /// </summary>
+        /// <param name="ParentTechnologyId">Id предшествующей технологии</param>
+        /// <param name="technology">Объект технологии</param>
+        /// <param name="questions">Список объектов вопросов</param>
+        /// <returns></returns>
+        Task AddFromTelegram(int ParentTechnologyId, Technology technology, List<Question> questions);
 
         /// <summary>
         /// Обновление технологии
