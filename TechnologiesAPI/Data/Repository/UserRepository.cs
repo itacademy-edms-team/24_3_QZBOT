@@ -60,15 +60,26 @@ namespace Data.Repository
             var technologies = await _context.UsersTechnologies
                 .Where(ut => ut.UserId == userId)
                 .Where(ut => ut.TechnologyId == technologyId)
-                .ToListAsync();
+                .FirstOrDefaultAsync();
 
-            // тут костыль из-за невозможности получить один объект
-
-            if (technologies.Count > 0)
+            if (technologies != null)
             {
                 return true;
             }
             else return false;
+        }
+
+        public async Task<bool> CheckUserAdmin(long userId)
+        {
+            var admin = await _context.Admins
+                .Where(a => a.UserId == userId)
+                .FirstOrDefaultAsync();
+
+            if (admin == null)
+            {
+                return false;
+            }
+            else return true;
         }
 
         public async Task<IEnumerable<Technology>> GetNewTechnologiesByParentTechnologyId(int technologyId)

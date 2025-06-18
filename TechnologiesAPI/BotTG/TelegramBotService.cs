@@ -1,4 +1,5 @@
 ﻿using Azure.Core;
+using BotTG.DTO;
 using Data;
 using Data.Repository;
 using DotNetEnv;
@@ -14,9 +15,11 @@ using System.ComponentModel;
 using System.Data.Entity.SqlServer;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
+using System.Transactions;
 using System.Xml.Linq;
 using Telegram.Bot;
 using Telegram.Bot.Exceptions;
@@ -119,104 +122,135 @@ namespace BotTG
                             {
                                 if (msg.Caption == "/readfile")
                                 {
-                                    string fileContent = await ReadFile(msg, botClient);
+                                    if (await userRepo.CheckUserAdmin(msg.From.Id))
+                                    {
+                                        string fileContent = await ReadFile(msg, botClient);
 
-                                    await botClient.SendMessage(
-                                            chatId: msg.From.Id,
-                                            text: $"Содержимое файла:\n```\n{fileContent}\n```",
-                                            parseMode: ParseMode.MarkdownV2
-                                        );
+                                        await botClient.SendMessage(
+                                                chatId: msg.From.Id,
+                                                text: $"Содержимое файла:\n```\n{fileContent}\n```",
+                                                parseMode: ParseMode.MarkdownV2
+                                            );
+                                    }
                                 }
                                 else if (msg.Caption == "/addcourse")
                                 {
-                                    string fileContent = await ReadFile(msg, botClient);
-
-                                    var deserializer = new DeserializerBuilder()
-                                        .WithNamingConvention(CamelCaseNamingConvention.Instance)
-                                        .WithNamingConvention(UnderscoredNamingConvention.Instance)
-                                        .Build();
-
-                                    try
+                                    if (await userRepo.CheckUserAdmin(msg.From.Id))
                                     {
-                                        var tech = deserializer.Deserialize<Technology>(fileContent);
-                                    }
-                                    catch (Exception)
-                                    {
-                                        await botClient.SendMessage(
-                                                chatId: msg.From.Id,
-                                                text: "Удостоверьтесь в правильности данных в файле"
-                                            );
-                                        return;
-                                    } // тут костыль жесткий
+                                        string fileContent = await ReadFile(msg, botClient);
 
-                                    var t = deserializer.Deserialize<Technology>(fileContent);
+                                        var deserializer = new DeserializerBuilder()
+                                            .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                                            .WithNamingConvention(UnderscoredNamingConvention.Instance)
+                                            .Build();
 
-                                    if (await techRepo.CheckExistsTechnologyByTitle(t.Title))
-                                    {
-                                        await botClient.SendMessage(
-                                                msg.From.Id,
-                                                text: "Данная технология уже существует!"
-                                            );
-                                        return;
-                                    }
-
-                                    foreach (var quest in t.Questions)
-                                    {
-                                        var haveTrue = false;
-                                        foreach (var answer in quest.AnswerOption)
+                                        try
                                         {
-                                            if (haveTrue && answer.IsCorrect)
-                                            {
-                                                await botClient.SendMessage(
-                                                        chatId: msg.From.Id,
-                                                        text: $"Для вопроса '{quest.Text}' выбрано несколько правильных ответов, ошибка"
-                                                    );
-                                                return;
-                                            }
-
-                                            if (answer.IsCorrect)
-                                            {
-                                                haveTrue = true;
-                                            }
+                                            var tech = deserializer.Deserialize<TechnologyDto>(fileContent);
                                         }
-                                        if (!haveTrue)
+                                        catch (Exception)
                                         {
                                             await botClient.SendMessage(
                                                     chatId: msg.From.Id,
-                                                    text: $"Для вопроса '{quest.Text}' не введен правильный вариант ответа, ошибка"
+                                                    text: "Удостоверьтесь в правильности данных в файле"
                                                 );
                                             return;
                                         }
-                                    }
 
-                                    string stringOfData = "";
-                                    foreach (var quest in t.Questions)
-                                    {
-                                        stringOfData += $"\n{quest.Text}:\n";
+                                        var t = deserializer.Deserialize<TechnologyDto>(fileContent);
 
-                                        foreach (var answer in quest.AnswerOption)
+
+                                        if (await techRepo.CheckExistsTechnologyByTitle(t.Title))
                                         {
-                                            stringOfData += $"- {answer.Text} - {answer.IsCorrect}\n";
+                                            await botClient.SendMessage(
+                                                    msg.From.Id,
+                                                    text: "Данная технология уже существует!"
+                                                );
+                                            return;
+                                        }
+
+                                        foreach (var quest in t.Questions)
+                                        {
+                                            var haveTrue = false;
+                                            foreach (var answer in quest.AnswerOption)
+                                            {
+                                                if (haveTrue && answer.IsCorrect)
+                                                {
+                                                    await botClient.SendMessage(
+                                                            chatId: msg.From.Id,
+                                                            text: $"Для вопроса '{quest.Text}' выбрано несколько правильных ответов, ошибка"
+                                                        );
+                                                    return;
+                                                }
+
+                                                if (answer.IsCorrect)
+                                                {
+                                                    haveTrue = true;
+                                                }
+                                            }
+                                            if (!haveTrue)
+                                            {
+                                                await botClient.SendMessage(
+                                                        chatId: msg.From.Id,
+                                                        text: $"Для вопроса '{quest.Text}' не введен правильный вариант ответа, ошибка"
+                                                    );
+                                                return;
+                                            }
+                                        }
+
+                                        string stringOfData = "";
+                                        foreach (var quest in t.Questions)
+                                        {
+                                            stringOfData += $"\n{quest.Text}:\n";
+
+                                            foreach (var answer in quest.AnswerOption)
+                                            {
+                                                stringOfData += $"- {answer.Text} - {answer.IsCorrect}\n";
+                                            }
+                                        }
+
+                                        try
+                                        {
+                                            var tec = MakeDtoToTechnology(techRepo, t);
+                                        }
+                                        catch (Exception)
+                                        {
+                                            await botClient.SendMessage(
+                                                    chatId: msg.From.Id,
+                                                    text: "Такой родительской технологии не существует"
+                                                );
+                                            return;
+                                        }
+
+                                        var te = await MakeDtoToTechnology(techRepo, t);
+
+                                        if (await techRepo.CheckValidTechnology(te) == "true")
+                                        {
+                                            await botClient.SendMessage(
+                                                chatId: msg.From.Id,
+                                                text: $"Будет передано:\n" +
+                                                $"{t.Title}:\nПредшествующий курс: {t.ParentTechnologyTitle} {stringOfData}\n\n" +
+                                                $"Подтвердить? (+/-)"
+                                            );
+
+                                            if (_confirm.TryGetValue(msg.From.Id, out var confi))
+                                            {
+                                                _confirm.Remove(msg.From.Id);
+                                            }
+
+                                            _confirm.Add(msg.From.Id, new ConfirmationAdd());
+
+                                            _confirm[msg.From.Id].Technology = t;
+                                            _confirm[msg.From.Id].ConfirmToAdd = ConfirmToAdd.Confirm;
+                                        }
+                                        else
+                                        {
+                                            await botClient.SendMessage(
+                                                    chatId: msg.From.Id,
+                                                    text: $"{await techRepo.CheckValidTechnology(te)}"
+                                                );
                                         }
                                     }
-
-
-                                    await botClient.SendMessage(
-                                            chatId: msg.From.Id,
-                                            text: $"Будет передано:\n" +
-                                            $"{t.Title}:\nПредшествующий курс: {t.ParentTechnologyId} {stringOfData}\n\n" +
-                                            $"Подтвердить? (+/-)"
-                                        );
-
-                                    if (_confirm.TryGetValue(msg.From.Id, out var confi))
-                                    {
-                                        _confirm.Remove(msg.From.Id);
-                                    }
-
-                                    _confirm.Add(msg.From.Id, new ConfirmationAdd());
-
-                                    _confirm[msg.From.Id].Technology = t;
-                                    _confirm[msg.From.Id].ConfirmToAdd = ConfirmToAdd.Confirm;
                                 }
                             }
                         }
@@ -362,11 +396,6 @@ namespace BotTG
                         // админская панель
                         else if (msg.Text == "/addcourse")
                         {
-                            //if (msg.Document.MimeType != null)
-                            //{
-
-                            //}
-
                             _adminStates[msg.From.Id] = AdminState.WaitingForCourseName;
                             var newTechnology = new CourseInput();
 
@@ -384,7 +413,24 @@ namespace BotTG
                         {
                             if (msg.Text == "+")
                             {
-                                await techRepo.AddAsync(_confirm[msg.From.Id].Technology);
+                                try // проверить это место
+                                {
+                                    await MakeDtoToTechnology(techRepo, _confirm[msg.From.Id].Technology);
+                                }
+                                catch (Exception)
+                                {
+                                    await botClient.SendMessage(
+                                            chatId: msg.From.Id,
+                                            text: "Такой родительской технологии не существует"
+                                        );
+                                }
+
+                                var te = await MakeDtoToTechnology(techRepo, _confirm[msg.From.Id].Technology);
+
+                                if (await techRepo.CheckValidTechnology(te) == "true")
+                                {
+                                    await techRepo.AddAsync(te);
+                                }
 
                                 await botClient.SendMessage(
                                         chatId: msg.From.Id,
@@ -1143,6 +1189,20 @@ namespace BotTG
             string fileContent = await reader.ReadToEndAsync();
 
             return fileContent;
+        }
+
+        private static async Task<Technology> MakeDtoToTechnology(ITechnologyRepository repo, TechnologyDto dto)
+        {
+            var parentId = await repo.GetIdByTitleAsync(dto.ParentTechnologyTitle);
+
+            var technology = new Technology()
+            {
+                Title = dto.Title,
+                ParentTechnologyId = parentId,
+                Questions = dto.Questions
+            };
+
+            return technology;
         }
     }
 }

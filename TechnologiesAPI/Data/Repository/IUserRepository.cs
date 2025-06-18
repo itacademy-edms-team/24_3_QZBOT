@@ -59,6 +59,13 @@ namespace Data.Repository
         Task<bool> CheckFinishedTechnology(long userId, int technologyId);
 
         /// <summary>
+        /// Проверка, является ли пользователь админом
+        /// </summary>
+        /// <param name="userId">Id пользователя</param>
+        /// <returns>True - админ/False - нет</returns>
+        Task<bool> CheckUserAdmin(long userId);
+
+        /// <summary>
         /// Получение списка технологий, доступных после прохождения определенной технологии по ее Id
         /// </summary>
         /// <param name="technologyId">Id технологии</param>

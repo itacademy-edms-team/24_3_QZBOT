@@ -16,6 +16,7 @@ namespace Data
         public DbSet<Question> Questions { get; set; }
         public DbSet<AnswerOption> AnswerOptions { get; set; }
         public DbSet<UsersTechnologies> UsersTechnologies { get; set; }
+        public DbSet<Admins> Admins { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -64,6 +65,15 @@ namespace Data
             modelBuilder.Entity<User>()
                 .Property(u => u.FirstName)
                 .HasMaxLength(500);
+
+            modelBuilder.Entity<Admins>()
+                .HasKey(a => a.UserId);
+
+            modelBuilder.Entity<Admins>()
+                .HasOne(a => a.User)
+                .WithMany()
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<UsersTechnologies>()
                 .HasOne(ut => ut.User)

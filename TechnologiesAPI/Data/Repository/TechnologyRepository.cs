@@ -4,6 +4,7 @@ using Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Quic;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -29,6 +30,14 @@ namespace Data.Repository
                 .FirstOrDefaultAsync(t => t.Id == id);
         }
 
+        public async Task<int> GetIdByTitleAsync(string title)
+        {
+            return await _context.Technologies
+                .Where(t => t.Title == title)
+                .Select(t => t.Id)
+                .FirstOrDefaultAsync();
+        }
+
         public async Task<bool> CheckExistsTechnologyByTitle(string title)
         {
             var tech = await _context.Technologies
@@ -36,6 +45,96 @@ namespace Data.Repository
             .FirstOrDefaultAsync();
 
             return tech != null;
+        }
+
+        public async Task<string> CheckValidTechnology(Technology tech)
+        {
+            // проверка названия технологии
+            if (await CheckExistsTechnologyByTitle(tech.Title))
+            {
+                return "Данная технология уже существует";
+            }
+            
+
+            // проверка существования родительской технологии
+            var parentId = await _context.Technologies
+                .Where(t => t.Id == tech.ParentTechnologyId)
+                .Select(t => t.Id)
+                .FirstAsync();
+
+            var parentTitle = await _context.Technologies
+                .Where(t => t.Id == parentId)
+                .Select(t => t.Title)
+                .FirstAsync();
+
+            if (!await CheckExistsTechnologyByTitle(parentTitle))
+            {
+                return "Такой родительской технологии не существует";
+            }
+
+
+            // проверка количества вопросов
+            if (tech.Questions.Count < 5)
+            {
+                return "Недостаточно вопросов";
+            }
+
+
+            // проверка существования вопросов
+            var questionsShortName = new List<string>();
+            var questionsText = new List<string>();
+            foreach (var quest in tech.Questions)
+            {
+                var qu = await _context.Questions
+                    .Where(q => q.ShortName == quest.ShortName)
+                    .Select(q => q.ShortName)
+                    .FirstAsync();
+
+                questionsShortName.Add(qu);
+
+
+                var que = await _context.Questions
+                    .Where(q => q.Text == quest.Text)
+                    .Select(q => q.Text)
+                    .FirstAsync();
+
+                questionsText.Add(que);
+            }
+            if (questionsShortName.Count > 0)
+            {
+                return "Такое короткое название вопроса уже существует";
+            }
+            if (questionsText.Count > 0)
+            {
+                return "Такой вопрос уже существует";
+            }
+
+
+            // проверка вариантов ответов
+            foreach (var quest in tech.Questions)
+            {
+                var haveTrue = false;
+                foreach (var answer in quest.AnswerOption)
+                {
+                    if (haveTrue && answer.IsCorrect)
+                    {
+                        return $"Для вопроса '{quest.Text}' выбрано несколько правильных ответов, ошибка";
+                    }
+
+                    if (answer.IsCorrect)
+                    {
+                        haveTrue = true;
+                    }
+                }
+                if (!haveTrue)
+                {
+                    return $"Для вопроса '{quest.Text}' не введен правильный вариант ответа, ошибка";
+                }
+            }
+
+
+
+            return "true";
         }
 
         public async Task<IEnumerable<Technology>> GetFinishedTechnologiesByUserIdAsync(long userId)
@@ -229,11 +328,6 @@ namespace Data.Repository
             }
             await _context.SaveChangesAsync();
         }
-
-        //public async Task AddFromTelegramTest(Technology technology)
-        //{
-            
-        //}
         
         public async Task UpdateAsync(Technology technology)
         {

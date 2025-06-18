@@ -23,11 +23,25 @@ namespace Data.Repository
         Task<Technology> GetByIdAsync(int id);
 
         /// <summary>
+        /// Получение id технологии по ее названию
+        /// </summary>
+        /// <param name="title">Название технологии</param>
+        /// <returns>Id технологии</returns>
+        Task<int> GetIdByTitleAsync(string title);
+
+        /// <summary>
         /// Проверка на существование технологии по названию
         /// </summary>
         /// <param name="title">Название технологии</param>
         /// <returns>True - существует/False - нет</returns>
         Task<bool> CheckExistsTechnologyByTitle(string title);
+
+        /// <summary>
+        /// Проверка на возможность добавления технологии
+        /// </summary>
+        /// <param name="technology">Объект технологии</param>
+        /// <returns>true - валидно, иначе - текст ошибки</returns>
+        Task<string> CheckValidTechnology(Technology technology);
 
         /// <summary>
         /// Получение списка технологий, пройденных пользователем по его Id

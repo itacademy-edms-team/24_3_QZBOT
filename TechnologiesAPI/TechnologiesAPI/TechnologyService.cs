@@ -99,13 +99,15 @@ namespace TechnologiesAPI
                 }).ToList()
             };
 
-            if (await _technologyRepo.CheckExistsTechnologyByTitle(technology.Title))
+            if (await _technologyRepo.CheckValidTechnology(technology) == "true")
             {
-                return new BadRequestObjectResult($"Данная технология уже существует!");
+                await _technologyRepo.AddAsync(technology);
+                return new OkObjectResult(technology);
             }
-
-            await _technologyRepo.AddAsync(technology);
-            return new OkObjectResult(technology);
+            else
+            {
+                return new BadRequestObjectResult($"{await _technologyRepo.CheckValidTechnology(technology)}");
+            }
         }
     }
 }
