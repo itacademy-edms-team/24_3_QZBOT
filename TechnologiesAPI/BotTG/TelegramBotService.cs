@@ -120,9 +120,9 @@ namespace BotTG
 
                             if (msg.Caption != null)
                             {
-                                if (msg.Caption == "/readfile")
+                                if (await userRepo.CheckUserAdmin(msg.From.Id))
                                 {
-                                    if (await userRepo.CheckUserAdmin(msg.From.Id))
+                                    if (msg.Caption == "/readfile")
                                     {
                                         string fileContent = await ReadFile(msg, botClient);
 
@@ -132,10 +132,7 @@ namespace BotTG
                                                 parseMode: ParseMode.MarkdownV2
                                             );
                                     }
-                                }
-                                else if (msg.Caption == "/addcourse")
-                                {
-                                    if (await userRepo.CheckUserAdmin(msg.From.Id))
+                                    else if (msg.Caption == "/addcourse")
                                     {
                                         string fileContent = await ReadFile(msg, botClient);
 
@@ -323,23 +320,23 @@ namespace BotTG
                             }
                             
                         }
-                        else if (msg.Text == "/checkdb")
-                        {
-                            if (await userRepo.ExistsByChatIdAsync(msg.Chat.Id))
-                            {
-                                await botClient.SendMessage(
-                                        chatId: msg.Chat.Id,
-                                        text: $"Привет, {msg.Chat.FirstName}! Ты уже есть в базе данных"
-                                    );
-                            }
-                            else
-                            {
-                                await botClient.SendMessage(
-                                        chatId: msg.Chat.Id,
-                                        text: $"Привет, {msg.Chat.FirstName}! Тебя нет в нашей базе данных"
-                                    );
-                            }
-                        }
+                        //else if (msg.Text == "/checkdb")
+                        //{
+                        //    if (await userRepo.ExistsByChatIdAsync(msg.Chat.Id))
+                        //    {
+                        //        await botClient.SendMessage(
+                        //                chatId: msg.Chat.Id,
+                        //                text: $"Привет, {msg.Chat.FirstName}! Ты уже есть в базе данных"
+                        //            );
+                        //    }
+                        //    else
+                        //    {
+                        //        await botClient.SendMessage(
+                        //                chatId: msg.Chat.Id,
+                        //                text: $"Привет, {msg.Chat.FirstName}! Тебя нет в нашей базе данных"
+                        //            );
+                        //    }
+                        //}
                         else if (msg.Text == "/deleteprogress")
                         {
                             if (!await userRepo.ExistsByChatIdAsync(msg.Chat.Id))
@@ -351,7 +348,7 @@ namespace BotTG
                             }
                             else
                             {
-                                await userRepo.DeleteByChatIdAsync(msg.Chat.Id);
+                                await userRepo.DeleteProgressByChatIdAsync(msg.Chat.Id);
 
                                 await botClient.SendMessage(
                                         chatId: msg.Chat.Id,
