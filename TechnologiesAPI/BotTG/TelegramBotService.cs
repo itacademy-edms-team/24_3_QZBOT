@@ -406,42 +406,45 @@ namespace BotTG
 
                         }
 
-                        else if (_confirm[msg.From.Id].ConfirmToAdd == ConfirmToAdd.Confirm)
+                        else if (_confirm.TryGetValue(msg.From.Id, out var conf))
                         {
-                            if (msg.Text == "+")
+                            if (_confirm[msg.From.Id].ConfirmToAdd == ConfirmToAdd.Confirm)
                             {
-                                try // проверить это место
+                                if (msg.Text == "+")
                                 {
-                                    await MakeDtoToTechnology(techRepo, _confirm[msg.From.Id].Technology);
-                                }
-                                catch (Exception)
-                                {
+                                    try
+                                    {
+                                        await MakeDtoToTechnology(techRepo, _confirm[msg.From.Id].Technology);
+                                    }
+                                    catch (Exception)
+                                    {
+                                        await botClient.SendMessage(
+                                                chatId: msg.From.Id,
+                                                text: "Такой родительской технологии не существует"
+                                            );
+                                    }
+
+                                    var te = await MakeDtoToTechnology(techRepo, _confirm[msg.From.Id].Technology);
+
+                                    if (await techRepo.CheckValidTechnology(te) == "true")
+                                    {
+                                        await techRepo.AddAsync(te);
+                                    }
+
                                     await botClient.SendMessage(
                                             chatId: msg.From.Id,
-                                            text: "Такой родительской технологии не существует"
+                                            text: "Данные отправлены"
                                         );
                                 }
-
-                                var te = await MakeDtoToTechnology(techRepo, _confirm[msg.From.Id].Technology);
-
-                                if (await techRepo.CheckValidTechnology(te) == "true")
+                                else if (msg.Text == "-")
                                 {
-                                    await techRepo.AddAsync(te);
+                                    _confirm.Remove(msg.From.Id);
+
+                                    await botClient.SendMessage(
+                                            chatId: msg.From.Id,
+                                            text: "Отправка отменена"
+                                        );
                                 }
-
-                                await botClient.SendMessage(
-                                        chatId: msg.From.Id,
-                                        text: "Данные отправлены"
-                                    );
-                            }
-                            else if (msg.Text == "-")
-                            {
-                                _confirm.Remove(msg.From.Id);
-
-                                await botClient.SendMessage(
-                                        chatId: msg.From.Id,
-                                        text: "Отправка отменена"
-                                    );
                             }
                         }
 
