@@ -83,10 +83,12 @@ namespace TechnologiesAPI
 
         public async Task<IActionResult> AddTechnology(TechnologyDto dto)
         {
+            var parentId = await _technologyRepo.GetIdByTitleAsync(dto.ParentTechnologyTitle);
+
             var technology = new Technology
             {
                 Title = dto.Title,
-                ParentTechnologyId = dto.ParentTechnologyId,
+                ParentTechnologyId = parentId,
                 Questions = dto.Questions.Select(q => new Question
                 {
                     ShortName = q.ShortName,

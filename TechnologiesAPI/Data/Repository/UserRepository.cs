@@ -114,17 +114,11 @@ namespace Data.Repository
 
         public async Task DeleteByChatIdAsync(long chatId)
         {
-            var users = await _context.Users
+            var user = await _context.Users
                 .Where(u => u.ChatId == chatId)
-                .ToListAsync(); // FirstAsync
-
-            // тут очень жесткий костыль из-за
-            // невозможности достать из контекста один объект
-
-            var user = users[0];
+                .FirstOrDefaultAsync();
 
             _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
 
             var progress = await _context.UsersTechnologies
                 .Where(ut => ut.UserId == chatId)
@@ -133,8 +127,23 @@ namespace Data.Repository
             foreach (var pr in progress)
             {
                 _context.UsersTechnologies.Remove(pr);
-                await _context.SaveChangesAsync();
             }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteProgressByChatIdAsync(long chatId)
+        {
+            var courses = await _context.UsersTechnologies
+               .Where(ut => ut.UserId == chatId)
+               .ToListAsync();
+
+            foreach (var course in courses)
+            {
+                _context.UsersTechnologies.Remove(course);
+            }
+
+            await _context.SaveChangesAsync();
         }
     }
 }

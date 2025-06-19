@@ -93,5 +93,12 @@ namespace Data.Repository
         /// <param name="chatId">ChatId пользователя</param>
         /// <returns></returns>
         Task DeleteByChatIdAsync(long chatId);
+
+        /// <summary>
+        /// Удаление прогресса пользователя из БД
+        /// </summary>
+        /// <param name="chatId">Id пользователя</param>
+        /// <returns></returns>
+        Task DeleteProgressByChatIdAsync(long chatId);
     }
 }

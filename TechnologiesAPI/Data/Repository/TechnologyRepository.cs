@@ -60,12 +60,12 @@ namespace Data.Repository
             var parentId = await _context.Technologies
                 .Where(t => t.Id == tech.ParentTechnologyId)
                 .Select(t => t.Id)
-                .FirstAsync();
+                .FirstOrDefaultAsync();
 
             var parentTitle = await _context.Technologies
                 .Where(t => t.Id == parentId)
                 .Select(t => t.Title)
-                .FirstAsync();
+                .FirstOrDefaultAsync();
 
             if (!await CheckExistsTechnologyByTitle(parentTitle))
             {
@@ -88,17 +88,24 @@ namespace Data.Repository
                 var qu = await _context.Questions
                     .Where(q => q.ShortName == quest.ShortName)
                     .Select(q => q.ShortName)
-                    .FirstAsync();
-
-                questionsShortName.Add(qu);
+                    .FirstOrDefaultAsync();
+                
+                if (qu != null)
+                {
+                    questionsShortName.Add(qu);
+                }
 
 
                 var que = await _context.Questions
                     .Where(q => q.Text == quest.Text)
                     .Select(q => q.Text)
-                    .FirstAsync();
+                    .FirstOrDefaultAsync();
 
-                questionsText.Add(que);
+                if (que != null)
+                {
+                    questionsText.Add(que);
+                }
+
             }
             if (questionsShortName.Count > 0)
             {
