@@ -1,6 +1,0 @@
-@TGBot_HostAddress = http://localhost:5249
-
-GET {{TGBot_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
