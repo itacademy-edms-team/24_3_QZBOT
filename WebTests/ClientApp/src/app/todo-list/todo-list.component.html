@@ -1,0 +1,8 @@
+<h2>Todo List</h2>
+
+<ul>
+  <li *ngFor="let t of todos">
+    <input type="checkbox" [checked]="t.isDone" disabled>
+    {{ t.title }}
+  </li>
+</ul>
