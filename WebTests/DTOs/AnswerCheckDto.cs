@@ -4,6 +4,6 @@
     {
         public string Title { get; set; }
         public int QuestionId { get; set; }
-        public int SelectedOption { get; set; }
+        public int SelectedOptionIndex { get; set; }
     }
 }

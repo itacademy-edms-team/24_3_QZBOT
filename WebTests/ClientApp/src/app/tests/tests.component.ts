@@ -16,18 +16,22 @@ export class TestComponent implements OnInit {
   answers: { [id: number]: string } = {};
   currentQuestion: any;
 
-  selectedAnswers(questionId: number, option: string) {
+  selectedAnswers(questionId: number, option: string, title: string) {
     const selectedIndex = this.currentQuestion.options.indexOf(option);
 
-    this.testService.checkAnswer(this.title, questionId, selectedIndex).subscribe({
-      next: isCorrect => {
-        if (isCorrect) {
+    console.log('Selected option: ', option, 'Index: ', selectedIndex, 'Title: ', title);
+
+    this.testService.checkAnswer(title, questionId, selectedIndex).subscribe({
+      next: (response) => {
+        console.log('Server response: ', response);
+        if (response) {
           alert("Правильно");
         } else {
           alert("Неправильно");
         }
-      }
-    })
+      },
+      error: (err) => console.error('Error: ', err)
+    });
   }
 
   nextQuestion() {
@@ -48,6 +52,7 @@ export class TestComponent implements OnInit {
       const testName = params.get('name');
       if (testName) {
         this.loadTests(testName);
+        this.title = testName;
       }
     });
   }

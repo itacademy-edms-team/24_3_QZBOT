@@ -76,9 +76,9 @@ namespace WebTests.Controllers
             }
 
             int correctOption = (int)question.CorrectOption;
-            bool isCorrect = dto.SelectedOption == correctOption;
+            bool isCorrect = dto.SelectedOptionIndex == correctOption;
 
-            return Ok(new { isCorrect });
+            return Ok( isCorrect );
         }
     }
 }
