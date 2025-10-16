@@ -1,4 +1,4 @@
-<h2>Список тестов</h2>
+<!--<h2>Список тестов</h2>
 
 <div *ngIf="errorMessage" class="error">
   {{ errorMessage }}
@@ -12,9 +12,26 @@
       {{ option }}
     </li>
   </ul>
-</div>
+</div>-->
 
 
 <ng-template #noTests>
   <p>Пока нет доступных тестов.</p>
 </ng-template>
+
+
+<div *ngIf="currentQuestion">
+  <h3>{{ currentQuestion.question }}</h3>
+
+  <ul>
+    <li *ngFor="let option of currentQuestion.options">
+      <label>
+        <input type="radio" name="answer" [value]="option"
+               (change)="selectedAnswers(currentQuestion.id, option)" />
+        {{ option }}
+      </label>
+    </li>
+  </ul>
+
+  <button (click)="nextQuestion()">Следующий вопрос</button>
+</div>

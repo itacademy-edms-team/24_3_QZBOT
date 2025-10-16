@@ -17,6 +17,14 @@ export class TestService {
   getTestById(id: number): Observable<any> {
     return this.http.get<any>(`${this.baseUrl}/${id}`);
   }
+
+  checkAnswer(title: string, questionId: number, selectedOptionIndex: number) {
+    return this.http.post<boolean>(`https://localhost:44356/api/test/check`, {
+      title,
+      questionId,
+      selectedOptionIndex
+    });
+  }
 }
 
 export interface Test {

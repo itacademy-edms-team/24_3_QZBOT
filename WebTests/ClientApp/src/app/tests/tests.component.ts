@@ -11,6 +11,32 @@ export class TestComponent implements OnInit {
 
   tests: Test[] = [];
   errorMessage = '';
+  title: string = '';
+  currentQuestionIndex = 0;
+  answers: { [id: number]: string } = {};
+  currentQuestion: any;
+
+  selectedAnswers(questionId: number, option: string) {
+    const selectedIndex = this.currentQuestion.options.indexOf(option);
+
+    this.testService.checkAnswer(this.title, questionId, selectedIndex).subscribe({
+      next: isCorrect => {
+        if (isCorrect) {
+          alert("Правильно");
+        } else {
+          alert("Неправильно");
+        }
+      }
+    })
+  }
+
+  nextQuestion() {
+    const currentIndex = this.tests.indexOf(this.currentQuestion);
+    if (currentIndex < this.tests.length - 1) {
+      this.currentQuestion = this.tests[currentIndex + 1];
+    }
+  }
+
 
   constructor(
     private testService: TestService,
@@ -28,8 +54,15 @@ export class TestComponent implements OnInit {
 
   loadTests(name: string) {
     this.testService.getTestsByName(name).subscribe({
-      next: data => this.tests = data,
-      error: err => console.error(err)
+      next: (data) => {
+        this.tests = data;
+
+        if (data.length > 0) {
+          this.currentQuestion = data[0];
+        }
+      },
+      error: (err) => console.error(err),
     });
   }
+
 }

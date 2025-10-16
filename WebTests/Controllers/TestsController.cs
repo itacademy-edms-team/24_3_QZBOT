@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using WebTests.DTOs;
 
 namespace WebTests.Controllers
 {
@@ -54,6 +55,30 @@ namespace WebTests.Controllers
                 return Ok(questions);
             }
             return NotFound();
+        }
+
+        [HttpPost("check")]
+        public IActionResult CheckAnswer([FromBody] AnswerCheckDto dto)
+        {
+            var testResult = GetTest(dto.Title) as OkObjectResult;
+            if (testResult?.Value == null)
+            {
+                return NotFound("Такого теста нет");
+            }
+
+            var questions = ((IEnumerable<dynamic>)testResult.Value).ToList();
+
+            var question = questions.FirstOrDefault(q => (int)q.Id == dto.QuestionId);
+
+            if (question == null)
+            {
+                return NotFound("Вопрос не найден");
+            }
+
+            int correctOption = (int)question.CorrectOption;
+            bool isCorrect = dto.SelectedOption == correctOption;
+
+            return Ok(new { isCorrect });
         }
     }
 }
