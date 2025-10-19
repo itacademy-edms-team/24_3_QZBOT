@@ -26,6 +26,13 @@ namespace WebTests.Controllers
                         Question = "Переменная в Python",
                         Options = new[] { "run", "get", "int" },
                         CorrectOption = 2
+                    },
+                    new
+                    {
+                        Id = 3,
+                        Question = "Константа в Python",
+                        Options = new[] { "CAPSLOCK", "нет" },
+                        CorrectOption = 0
                     }
                 };
 
