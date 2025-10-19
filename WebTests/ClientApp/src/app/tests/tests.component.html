@@ -16,5 +16,12 @@
     </li>
   </ul>
 
-  <button (click)="nextQuestion()">Следующий вопрос</button>
+  <div *ngIf="!isFirst">
+    <button (click)="lastQuestion()">Предыдущий вопрос</button>
+  </div>
+
+  <div *ngIf="!isLast">
+    <button (click)="nextQuestion()">Следующий вопрос</button>
+  </div>
+  
 </div>

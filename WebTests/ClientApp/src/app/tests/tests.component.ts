@@ -15,6 +15,9 @@ export class TestComponent implements OnInit {
   currentQuestionIndex = 0;
   answers: { [id: number]: string } = {};
   currentQuestion: any;
+  isFirst: boolean = true;
+  isLast: boolean = false;
+
 
   selectedAnswers(questionId: number, option: string, title: string) {
     const selectedIndex = this.currentQuestion.options.indexOf(option);
@@ -35,10 +38,23 @@ export class TestComponent implements OnInit {
   }
 
   nextQuestion() {
-    const currentIndex = this.tests.indexOf(this.currentQuestion);
-    if (currentIndex < this.tests.length - 1) {
-      this.currentQuestion = this.tests[currentIndex + 1];
+    const currentQuestionIndex = this.tests.indexOf(this.currentQuestion);
+    if (currentQuestionIndex < this.tests.length - 1) {
+      this.currentQuestion = this.tests[currentQuestionIndex + 1];
     }
+
+    this.updateIsLast();
+    this.updateIsFirst();
+  }
+
+  lastQuestion() {
+    const currentQuestionIndex = this.tests.indexOf(this.currentQuestion);
+    if (currentQuestionIndex > 0) {
+      this.currentQuestion = this.tests[currentQuestionIndex - 1];
+    }
+
+    this.updateIsLast();
+    this.updateIsFirst();
   }
 
 
@@ -65,9 +81,31 @@ export class TestComponent implements OnInit {
         if (data.length > 0) {
           this.currentQuestion = data[0];
         }
+
+        this.updateIsLast();
+        this.updateIsFirst();
       },
       error: (err) => console.error(err),
     });
   }
 
+  updateIsLast() {
+    const currentQuestionIndex = this.tests.indexOf(this.currentQuestion);
+
+    if (currentQuestionIndex == this.tests.length - 1) {
+      this.isLast = true;
+    } else {
+      this.isLast = false;
+    }
+  }
+
+  updateIsFirst() {
+    const currentQuestionIndex = this.tests.indexOf(this.currentQuestion);
+
+    if (currentQuestionIndex == 0) {
+      this.isFirst = true;
+    } else {
+      this.isFirst = false;
+    }
+  }
 }
