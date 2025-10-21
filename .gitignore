@@ -9,3 +9,7 @@ node_modules
 *sln.DotSettings.user
 *csproj.user
 
+/WebTests/ClientApp/.angular
+/WebTests/ClientApp/.angular/cache
+/WebTests/ClientApp/.angular/cache/15.2.11
+/WebTests/ClientApp/.angular/cache/15.2.11/angular-webpack/faf834b4ba44b7c150ff7179d57d22f818d0f000
