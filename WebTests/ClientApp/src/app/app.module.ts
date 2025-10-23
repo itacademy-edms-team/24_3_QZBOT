@@ -10,6 +10,7 @@ import { HomeComponent } from './home/home.component';
 import { AppRoutingModule } from './app-routing.module';
 import { TestComponent } from './tests/tests.component';
 import { TestsListComponent } from './tests-list/tests-list.component';
+import { ManagementComponent } from './management/management.component';
 
 @NgModule({
   declarations: [
@@ -17,7 +18,8 @@ import { TestsListComponent } from './tests-list/tests-list.component';
     NavMenuComponent,
     HomeComponent,
     TestComponent,
-    TestsListComponent
+    TestsListComponent,
+    ManagementComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
@@ -26,7 +28,8 @@ import { TestsListComponent } from './tests-list/tests-list.component';
     RouterModule.forRoot([
       { path: '', component: HomeComponent, pathMatch: 'full' },
       { path: 'tests/:name', component: TestComponent },
-      { path: 'tests', component: TestsListComponent }
+      { path: 'tests', component: TestsListComponent },
+      { path: 'management', component: ManagementComponent }
     ]),
     AppRoutingModule
   ],
