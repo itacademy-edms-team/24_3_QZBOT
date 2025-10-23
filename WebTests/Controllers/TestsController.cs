@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using WebTests.Data;
 using WebTests.DTOs;
 
 namespace WebTests.Controllers
@@ -7,83 +9,46 @@ namespace WebTests.Controllers
     [Route("api/[controller]")]
     public class TestsController : ControllerBase
     {
-        [HttpGet("{tech}")]
-        public IActionResult GetTest(string tech)
+        private readonly AppDbContext _context;
+
+        public TestsController(AppDbContext context)
         {
-            if (tech.ToLower() == "python")
-            {
-                var questions = new[]
-                {
-                    new {
-                        Id = 1,
-                        Question = "Что делает функция len() в Python?",
-                        Options = new[] { "Измеряет длину объекта", "Удаляет элемент", "Создает список" },
-                        CorrectOption = 0
-                    },
-                    new
-                    {
-                        Id = 2,
-                        Question = "Переменная в Python",
-                        Options = new[] { "run", "get", "int" },
-                        CorrectOption = 2
-                    },
-                    new
-                    {
-                        Id = 3,
-                        Question = "Константа в Python",
-                        Options = new[] { "CAPSLOCK", "нет" },
-                        CorrectOption = 0
-                    }
-                };
+            _context = context;
+        }
 
-                return Ok(questions);
-            }
+        [HttpGet("{title}")]
+        public IActionResult GetTest(string title)
+        {
+            var tests = _context.Tests
+                .Include(t => t.Questions)
+                .ThenInclude(q => q.Options)
+                .Where(t => t.Title == title)
+                .ToList();
 
-            else if (tech.ToLower() == "csharp")
-            {
-                var questions = new[]
-                {
-                    new
-                    {
-                        Id = 1,
-                        Question = "Что делает функция len() в C#?",
-                        Options = new[] { "Измеряет длину объекта", "Удаляет элемент", "Нет такой функции" },
-                        CorrectOption = 2
-                    },
-                    new
-                    {
-                        Id = 2,
-                        Question = "Что делает джун на C#?",
-                        Options = new[] { "Измеряет длину объекта", "Ищет работу", "Нет такой функции" },
-                        CorrectOption = 2
-                    }
-                };
-
-                return Ok(questions);
-            }
-            return NotFound();
+            return Ok(tests);
         }
 
         [HttpPost("check")]
         public IActionResult CheckAnswer([FromBody] AnswerCheckDto dto)
         {
-            var testResult = GetTest(dto.Title) as OkObjectResult;
-            if (testResult?.Value == null)
-            {
-                return NotFound("Такого теста нет");
-            }
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Title))
+                return BadRequest("Неверный запрос.");
 
-            var questions = ((IEnumerable<dynamic>)testResult.Value).ToList();
-
-            var question = questions.FirstOrDefault(q => (int)q.Id == dto.QuestionId);
+            var question = _context.Questions
+                .Include(q => q.Options)
+                .Include(q => q.Test)
+                .FirstOrDefault(q =>
+                    q.Id == dto.QuestionId &&
+                    q.Test.Title.ToLower() == dto.Title.ToLower());
 
             if (question == null)
-            {
-                return NotFound("Вопрос не найден");
-            }
+                return NotFound("Вопрос или тест не найден.");
 
-            int correctOption = (int)question.CorrectOption;
-            bool isCorrect = dto.SelectedOptionIndex == correctOption;
+            if (dto.SelectedOptionIndex < 0 || dto.SelectedOptionIndex >= question.Options.Count)
+                return BadRequest("Некорректный индекс варианта.");
+
+            var selectedOption = question.Options[dto.SelectedOptionIndex];
+            bool isCorrect = selectedOption.IsCorrect;
 
             return Ok( isCorrect );
         }

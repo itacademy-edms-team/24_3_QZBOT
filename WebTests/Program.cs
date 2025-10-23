@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using WebTests.Data;
+
 var builder = WebApplication.CreateBuilder(args);
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
@@ -13,6 +16,8 @@ builder.Services.AddCors(options =>
         });
 });
 
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
 // Add services to the container.
