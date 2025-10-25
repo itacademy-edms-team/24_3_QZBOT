@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { TestService, Test, Question, Option } from '../services/test.service';
+import { TestService, Test, Question, Option } from '../../services/test.service';
 
 @Component({
   selector: 'app-test',

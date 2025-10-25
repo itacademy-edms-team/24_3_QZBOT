@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { TestComponent } from '../tests/tests.component';
-import { TestService, Test, Question, Option } from '../services/test.service';
+import { TestService, Test, Question, Option } from '../../services/test.service';
 
 @Component({
   selector: 'app-tests-list',

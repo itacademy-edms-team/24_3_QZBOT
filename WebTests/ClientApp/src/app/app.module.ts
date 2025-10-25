@@ -8,10 +8,12 @@ import { AppComponent } from './app.component';
 import { NavMenuComponent } from './nav-menu/nav-menu.component';
 import { HomeComponent } from './home/home.component';
 import { AppRoutingModule } from './app-routing.module';
-import { TestComponent } from './tests/tests.component';
-import { TestsListComponent } from './tests-list/tests-list.component';
+import { TestComponent } from './tests/tests/tests.component';
+import { TestsListComponent } from './tests/tests-list/tests-list.component';
 import { ManagementComponent } from './management/management.component';
-import { ManagementCreateComponent } from './management/management-create/management-create.component'
+import { ManagementCreateComponent } from './management/management-create/management-create.component';
+import { ManagementEditComponent } from './management/management-edit/management-edit/management-edit.component';
+import { ManagementEditListComponent } from './management/management-edit/management-edit-list/management-edit-list.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +23,9 @@ import { ManagementCreateComponent } from './management/management-create/manage
     TestComponent,
     TestsListComponent,
     ManagementComponent,
-    ManagementCreateComponent
+    ManagementCreateComponent,
+    ManagementEditComponent,
+    ManagementEditListComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
@@ -32,7 +36,9 @@ import { ManagementCreateComponent } from './management/management-create/manage
       { path: 'tests/:name', component: TestComponent },
       { path: 'tests', component: TestsListComponent },
       { path: 'management', component: ManagementComponent },
-      { path: 'management/create', component: ManagementCreateComponent }
+      { path: 'management/create', component: ManagementCreateComponent },
+      { path: 'management/edit', component: ManagementEditListComponent },
+      { path: 'management/edit/:title', component: ManagementEditComponent }
     ]),
     AppRoutingModule
   ],

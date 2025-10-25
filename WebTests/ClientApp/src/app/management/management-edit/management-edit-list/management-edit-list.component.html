@@ -1,0 +1,13 @@
+<h2>Редактирование</h2>
+
+<p>Выберите тест для редактирования</p>
+
+<div *ngIf="tests;else no_tests">
+  <ul>
+    <li *ngFor="let test of tests"><h4><a [routerLink]="['management/edit', test.title]">{{ test.title }}</a></h4></li>
+  </ul>
+</div>
+
+<ng-template #no_tests>
+  <h3>Нет тестов</h3>
+</ng-template>
