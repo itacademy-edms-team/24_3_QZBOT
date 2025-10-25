@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { TestService, Test } from '../services/test.service';
+import { TestService, Test, Question, Option } from '../services/test.service';
 
 @Component({
   selector: 'app-test',
@@ -10,6 +10,7 @@ import { TestService, Test } from '../services/test.service';
 export class TestComponent implements OnInit {
 
   tests: Test[] = [];
+  questions: Question[] = [];
   errorMessage = '';
   title: string = '';
   currentQuestionIndex = 0;
@@ -17,6 +18,21 @@ export class TestComponent implements OnInit {
   currentQuestion: any;
   isFirst: boolean = true;
   isLast: boolean = false;
+
+  constructor(
+    private testService: TestService,
+    private route: ActivatedRoute,
+  ) { }
+
+  ngOnInit() {
+    this.route.paramMap.subscribe(params => {
+      const testName = params.get('name');
+      if (testName) {
+        this.loadTests(testName);
+        this.title = testName;
+      }
+    });
+  }
 
 
   selectedAnswers(questionId: number, option: string, title: string) {
@@ -38,9 +54,9 @@ export class TestComponent implements OnInit {
   }
 
   nextQuestion() {
-    const currentQuestionIndex = this.tests.indexOf(this.currentQuestion);
-    if (currentQuestionIndex < this.tests.length - 1) {
-      this.currentQuestion = this.tests[currentQuestionIndex + 1];
+    const currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
+    if (currentQuestionIndex < this.questions.length - 1) {
+      this.currentQuestion = this.questions[currentQuestionIndex + 1];
     }
 
     this.updateIsLast();
@@ -48,35 +64,20 @@ export class TestComponent implements OnInit {
   }
 
   lastQuestion() {
-    const currentQuestionIndex = this.tests.indexOf(this.currentQuestion);
+    const currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
     if (currentQuestionIndex > 0) {
-      this.currentQuestion = this.tests[currentQuestionIndex - 1];
+      this.currentQuestion = this.questions[currentQuestionIndex - 1];
     }
 
     this.updateIsLast();
     this.updateIsFirst();
-  }
+  }  
 
-
-  constructor(
-    private testService: TestService,
-    private route: ActivatedRoute,
-  ) { }
-
-  ngOnInit() {
-    this.route.paramMap.subscribe(params => {
-      const testName = params.get('name');
-      if (testName) {
-        this.loadTests(testName);
-        this.title = testName;
-      }
-    });
-  }
 
   loadTests(name: string) {
     this.testService.getTestsByName(name).subscribe({
       next: (data) => {
-        this.tests = data;
+        this.questions = data;
 
         if (data.length > 0) {
           this.currentQuestion = data[0];
@@ -90,9 +91,9 @@ export class TestComponent implements OnInit {
   }
 
   updateIsLast() {
-    const currentQuestionIndex = this.tests.indexOf(this.currentQuestion);
+    const currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
 
-    if (currentQuestionIndex == this.tests.length - 1) {
+    if (currentQuestionIndex == this.questions.length - 1) {
       this.isLast = true;
     } else {
       this.isLast = false;
@@ -100,7 +101,7 @@ export class TestComponent implements OnInit {
   }
 
   updateIsFirst() {
-    const currentQuestionIndex = this.tests.indexOf(this.currentQuestion);
+    const currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
 
     if (currentQuestionIndex == 0) {
       this.isFirst = true;

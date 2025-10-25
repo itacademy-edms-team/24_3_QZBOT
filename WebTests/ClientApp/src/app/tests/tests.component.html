@@ -3,15 +3,15 @@
 </ng-template>
 
 
-<div *ngIf="currentQuestion">
-  <h3>{{ currentQuestion.question }}</h3>
+<div *ngIf="currentQuestion;else no_questions">
+  <h3>{{ currentQuestion.text }}</h3>
 
   <ul>
     <li *ngFor="let option of currentQuestion.options">
       <label>
         <input type="radio" name="answer" [value]="option"
                (change)="selectedAnswers(currentQuestion.id, option, title)" />
-        {{ option }}
+        {{ option.text }}
       </label>
     </li>
   </ul>
@@ -25,3 +25,7 @@
   </div>
   
 </div>
+
+<ng-template #no_questions>
+  <h3>В данном тесте нет вопросов</h3>
+</ng-template>

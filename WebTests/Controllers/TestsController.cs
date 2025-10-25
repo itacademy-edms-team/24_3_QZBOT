@@ -16,16 +16,23 @@ namespace WebTests.Controllers
             _context = context;
         }
 
+        [HttpGet("all")]
+        public IActionResult GetAllTests()
+        {
+            var tests = _context.Tests.ToList();
+            return Ok(tests);
+        }
+
         [HttpGet("{title}")]
         public IActionResult GetTest(string title)
         {
-            var tests = _context.Tests
-                .Include(t => t.Questions)
-                .ThenInclude(q => q.Options)
+            var questions = _context.Tests
                 .Where(t => t.Title == title)
+                .SelectMany(t => t.Questions)
+                .Include(q => q.Options)
                 .ToList();
 
-            return Ok(tests);
+            return Ok(questions);
         }
 
         [HttpPost("check")]
