@@ -18,6 +18,10 @@ export class TestService {
     return this.http.get<Test[]>(`${this.baseUrl}/all`);
   }
 
+  checkTestExists(name: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.baseUrl}/exist/${name}`)
+  }
+
   checkAnswer(title: string, questionId: number, selectedOptionIndex: number) {
     return this.http.post<boolean>(`https://localhost:44356/api/tests/check`, {
       title,

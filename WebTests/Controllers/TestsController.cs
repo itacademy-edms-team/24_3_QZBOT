@@ -35,6 +35,21 @@ namespace WebTests.Controllers
             return Ok(questions);
         }
 
+        [HttpGet("exist/{title}")]
+        public IActionResult CheckTestExists(string title)
+        {
+            var test = _context.Tests.FirstOrDefault(t => t.Title == title);
+
+            if (test == null)
+            {
+                return Ok(false);
+            } 
+            else
+            {
+                return Ok(true);
+            }
+        }
+
         [HttpPost("check")]
         public IActionResult CheckAnswer([FromBody] AnswerCheckDto dto)
         {

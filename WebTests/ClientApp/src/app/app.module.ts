@@ -11,6 +11,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { TestComponent } from './tests/tests.component';
 import { TestsListComponent } from './tests-list/tests-list.component';
 import { ManagementComponent } from './management/management.component';
+import { ManagementCreateComponent } from './management/management-create/management-create.component'
 
 @NgModule({
   declarations: [
@@ -19,7 +20,8 @@ import { ManagementComponent } from './management/management.component';
     HomeComponent,
     TestComponent,
     TestsListComponent,
-    ManagementComponent
+    ManagementComponent,
+    ManagementCreateComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
@@ -29,7 +31,8 @@ import { ManagementComponent } from './management/management.component';
       { path: '', component: HomeComponent, pathMatch: 'full' },
       { path: 'tests/:name', component: TestComponent },
       { path: 'tests', component: TestsListComponent },
-      { path: 'management', component: ManagementComponent }
+      { path: 'management', component: ManagementComponent },
+      { path: 'management/create', component: ManagementCreateComponent }
     ]),
     AppRoutingModule
   ],

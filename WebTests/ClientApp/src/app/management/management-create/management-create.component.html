@@ -1,0 +1,10 @@
+<h2>Создание теста</h2>
+<p>Пока здесь создается проверка на существование теста по названию</p>
+<br />
+
+<input type="text" name="test-title" [(ngModel)]="test_title" placeholder="Название теста" />
+<button type="submit" (click)="btnClick()">Проверить</button>
+
+<div *ngIf="is_exist == true">  
+  <p>Такой тест уже существует</p>
+</div>
