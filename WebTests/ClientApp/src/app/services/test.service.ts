@@ -23,11 +23,15 @@ export class TestService {
   }
 
   checkAnswer(title: string, questionId: number, selectedOptionIndex: number) {
-    return this.http.post<boolean>(`https://localhost:44356/api/tests/check`, {
+    return this.http.post<boolean>(`${this.baseUrl}/check`, {
       title,
       questionId,
       selectedOptionIndex
     });
+  }
+
+  addTest(test: Test) {
+    return this.http.post<boolean>(`${this.baseUrl}/add`, { test });
   }
 }
 

@@ -1,27 +1,27 @@
-<ng-template #no_tests>
-  <p>Пока нет доступных тестов.</p>
-</ng-template>
-
-
 <div *ngIf="currentQuestion;else no_questions">
   <h3>{{ currentQuestion.text }}</h3>
 
-  <ul>
-    <li *ngFor="let option of currentQuestion.options">
+  <!--<ul>-->
+    <p *ngFor="let option of currentQuestion.options">
       <label>
-        <input type="radio" name="answer" [value]="option"
+        <input class="form-check-input" type="radio" name="answer" [value]="option"
                (change)="selectedAnswers(currentQuestion.id, option, title)" />
         {{ option.text }}
       </label>
-    </li>
-  </ul>
+    </p>
+  <!--</ul>-->
 
   <div *ngIf="!isFirst">
-    <button (click)="lastQuestion()">Предыдущий вопрос</button>
+    <button class="btn btn-danger" (click)="lastQuestion()">Предыдущий вопрос</button>
   </div>
 
   <div *ngIf="!isLast">
-    <button (click)="nextQuestion()">Следующий вопрос</button>
+    <button class="btn btn-outline-primary" (click)="nextQuestion()">Следующий вопрос</button>
+  </div>
+
+  <div *ngIf="isLast">
+    <br />
+    <button class="btn btn-dark" (click)="finishTest()">Завершить тест</button>
   </div>
   
 </div>

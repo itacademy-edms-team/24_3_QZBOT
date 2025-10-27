@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebTests.Data;
+using WebTests.Models;
 using WebTests.DTOs;
 
 namespace WebTests.Controllers
@@ -73,6 +74,24 @@ namespace WebTests.Controllers
             bool isCorrect = selectedOption.IsCorrect;
 
             return Ok( isCorrect );
+        }
+
+        [HttpPost("add")]
+        public IActionResult AddTest(Test test)
+        {
+            _context.Add(test);
+            _context.SaveChanges();
+            return Ok(true);
+        }
+
+        [HttpPost("edit/{title}")]
+        public IActionResult EditTest(string title, List<Question> questions)
+        {
+            var changedTest = _context.Tests.FirstOrDefault(t => t.Title == title);
+            changedTest.Questions = questions;
+
+            _context.SaveChanges();
+            return Ok(true);
         }
     }
 }

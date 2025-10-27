@@ -109,4 +109,8 @@ export class TestComponent implements OnInit {
       this.isFirst = false;
     }
   }
+
+  finishTest() {
+    alert("Тест завершен!");
+  }
 }

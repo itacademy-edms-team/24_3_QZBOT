@@ -38,7 +38,7 @@ import { ManagementEditListComponent } from './management/management-edit/manage
       { path: 'management', component: ManagementComponent },
       { path: 'management/create', component: ManagementCreateComponent },
       { path: 'management/edit', component: ManagementEditListComponent },
-      { path: 'management/edit/:title', component: ManagementEditComponent }
+      { path: 'management/edit/:name', component: ManagementEditComponent }
     ]),
     AppRoutingModule
   ],
