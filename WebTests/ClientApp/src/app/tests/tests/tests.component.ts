@@ -19,6 +19,9 @@ export class TestComponent implements OnInit {
   isFirst: boolean = true;
   isLast: boolean = false;
 
+  isModalOpen: boolean = false;
+  textModal: string = '';
+
   constructor(
     private testService: TestService,
     private route: ActivatedRoute,
@@ -44,9 +47,11 @@ export class TestComponent implements OnInit {
       next: (response) => {
         console.log('Server response: ', response);
         if (response) {
-          alert("Правильно");
+          this.isModalOpen = true;
+          this.textModal = "Правильно";
         } else {
-          alert("Неправильно");
+          this.isModalOpen = true;
+          this.textModal = "Неправильно";
         }
       },
       error: (err) => console.error('Error: ', err)
@@ -111,6 +116,11 @@ export class TestComponent implements OnInit {
   }
 
   finishTest() {
-    alert("Тест завершен!");
+    this.isModalOpen = true;
+    this.textModal = "Тест завершен!";
+  }
+
+  closeModal() {
+    this.isModalOpen = false;
   }
 }

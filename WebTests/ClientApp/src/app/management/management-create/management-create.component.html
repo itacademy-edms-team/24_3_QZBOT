@@ -1,10 +1,26 @@
 <h2>Создание теста</h2>
-<p>Пока здесь проверка на существование теста по названию</p>
 <br />
 
 <input type="text" name="test-title" [(ngModel)]="test_title" placeholder="Название теста" />
-<button type="submit" (click)="btnClick()">Проверить</button>
+<button type="submit" (click)="btnClick()">Добавить</button>
 
-<div *ngIf="is_exist == true">  
+<div *ngIf="is_exist">  
   <p>Такой тест уже существует</p>
+</div>
+
+<div *ngIf="confirm_add">
+  <p>Подтвердите добавление теста {{ test_title_adding }}</p>
+
+  <!--<input type="text" name="question_1" value="" [(ngModel)]="test_question_1" placeholder="Вопрос 1"/>
+  <ul>
+    <li><input type="radio" name="question_1_option_1_iscorrect" [(ngModel)]="question_1_option_1_iscorrect"><input type="text" name="question_1_option_1" value="" [(ngModel)]="test_question_1_option_1" placeholder="Вариант 1" /></li>
+    <li><input type="radio" name="question_1_option_2_iscorrect" [(ngModel)]="question_1_option_2_iscorrect"><input type="text" name="question_1_option_2" value="" [(ngModel)]="test_question_1_option_2" placeholder="Вариант 2" /></li>
+    <li><input type="radio" name="question_1_option_3_iscorrect" [(ngModel)]="question_1_option_3_iscorrect"><input type="text" name="question_1_option_3" value="" [(ngModel)]="test_question_1_option_3" placeholder="Вариант 3" /></li>
+  </ul>-->
+
+  <button (click)="btnConfirm()">Подтвердить</button>
+</div>
+
+<div *ngIf="success_add">
+  <p>Тест успешно добавлен!</p>
 </div>

@@ -77,11 +77,65 @@ namespace WebTests.Controllers
         }
 
         [HttpPost("add")]
-        public IActionResult AddTest(Test test)
+        public IActionResult AddTest([FromBody] TestDto dto)
         {
-            _context.Add(test);
-            _context.SaveChanges();
-            return Ok(true);
+            try
+            {
+                var test = new Test();
+
+                test.Title = dto.Title;
+
+                if (dto.Questions == null)
+                {
+                    return BadRequest("Questions пусты");
+                }
+
+                foreach (var question in dto.Questions)
+                {
+                    if (question.Options == null)
+                    {
+                        continue;
+                    }
+
+                    var quest = new Question()
+                    {
+                        Text = question.Text
+                    };
+
+                    if (quest.Options == null)
+                    {
+                        quest.Options = new List<AnswerOption>();
+                    }
+
+                    foreach (var option in question.Options)
+                    {
+                        var opt = new AnswerOption()
+                        {
+                            Text = option.Text,
+                            IsCorrect = option.IsCorrect
+                        };
+
+                        quest.Options.Add(opt);
+                    }
+
+                    if (test.Questions == null)
+                    {
+                        test.Questions = new List<Question>();
+                    }
+
+                    test.Questions.Add(quest);
+                }
+
+                _context.Add(test);
+                _context.SaveChanges();
+
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error: {ex.Message}");
+                throw;
+            }
         }
 
         [HttpPost("edit/{title}")]

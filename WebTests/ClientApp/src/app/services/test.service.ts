@@ -30,8 +30,11 @@ export class TestService {
     });
   }
 
-  addTest(test: Test) {
-    return this.http.post<boolean>(`${this.baseUrl}/add`, { test });
+  addTest(title: string, questions: Question[]) {
+    return this.http.post<boolean>(`${this.baseUrl}/add`, {
+      title,
+      questions
+    });
   }
 }
 
