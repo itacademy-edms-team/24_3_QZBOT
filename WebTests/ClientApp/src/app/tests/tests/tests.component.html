@@ -1,0 +1,40 @@
+<div *ngIf="currentQuestion;else no_questions">
+  <h3>{{ currentQuestion.text }}</h3>
+
+  <!--<ul>-->
+  <p *ngFor="let option of currentQuestion.options">
+    <label>
+      <input class="form-check-input" type="radio" name="answer" [value]="option"
+             (change)="selectedAnswers(currentQuestion.id, option, title)" />
+      {{ option.text }}
+    </label>
+  </p>
+  <!--</ul>-->
+
+  <div *ngIf="!isFirst">
+    <button class="btn btn-danger" (click)="lastQuestion()">Предыдущий вопрос</button>
+  </div>
+
+  <div *ngIf="!isLast">
+    <button class="btn btn-outline-primary" (click)="nextQuestion()">Следующий вопрос</button>
+  </div>
+
+  <div *ngIf="isLast">
+    <br />
+    <button class="btn btn-dark" (click)="finishTest()">Завершить тест</button>
+  </div>
+
+</div>
+
+<ng-template #no_questions>
+  <h3>В данном тесте нет вопросов</h3>
+</ng-template>
+
+<div class="modal fade" [class.show]="isModalOpen" [style.display]="isModalOpen ? 'block' : 'none'">
+  <div class="modal-dialog">
+    <div class="modal-content p-3">
+      <p>{{ textModal }}</p>
+      <button type="button" (click)="closeModal()">Ок</button>
+    </div>
+  </div>
+</div>

@@ -10,26 +10,48 @@ export class TestService {
 
   constructor(private http: HttpClient) { }
 
-  getTestsByName(name: string): Observable<Test[]> {
-    return this.http.get<Test[]>(`${this.baseUrl}/${name}`);
+  getTestsByName(name: string): Observable<Question[]> {
+    return this.http.get<Question[]>(`${this.baseUrl}/${name}`);
   }
 
-  getTestById(id: number): Observable<any> {
-    return this.http.get<any>(`${this.baseUrl}/${id}`);
+  getAllTests(): Observable<Test[]> {
+    return this.http.get<Test[]>(`${this.baseUrl}/all`);
+  }
+
+  checkTestExists(name: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.baseUrl}/exist/${name}`)
   }
 
   checkAnswer(title: string, questionId: number, selectedOptionIndex: number) {
-    return this.http.post<boolean>(`https://localhost:44356/api/tests/check`, {
+    return this.http.post<boolean>(`${this.baseUrl}/check`, {
       title,
       questionId,
       selectedOptionIndex
+    });
+  }
+
+  addTest(title: string, questions: Question[]) {
+    return this.http.post<boolean>(`${this.baseUrl}/add`, {
+      title,
+      questions
     });
   }
 }
 
 export interface Test {
   id: number;
-  question: string;
-  options: string[];
-  correctOption: number;
+  title: string;
+  questions: Question[];
+}
+
+export interface Question {
+  id: number;
+  text: string;
+  options: Option[];
+}
+
+export interface Option {
+  id: number;
+  text: string;
+  isCorrect: boolean;
 }
