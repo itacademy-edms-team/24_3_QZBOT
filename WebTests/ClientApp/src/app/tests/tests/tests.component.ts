@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { TestService, Test } from '../services/test.service';
+import { TestService, Test, Question, Option } from '../../services/test.service';
 
 @Component({
   selector: 'app-test',
@@ -10,6 +10,7 @@ import { TestService, Test } from '../services/test.service';
 export class TestComponent implements OnInit {
 
   tests: Test[] = [];
+  questions: Question[] = [];
   errorMessage = '';
   title: string = '';
   currentQuestionIndex = 0;
@@ -18,45 +19,8 @@ export class TestComponent implements OnInit {
   isFirst: boolean = true;
   isLast: boolean = false;
 
-
-  selectedAnswers(questionId: number, option: string, title: string) {
-    const selectedIndex = this.currentQuestion.options.indexOf(option);
-
-    console.log('Selected option: ', option, 'Index: ', selectedIndex, 'Title: ', title);
-
-    this.testService.checkAnswer(title, questionId, selectedIndex).subscribe({
-      next: (response) => {
-        console.log('Server response: ', response);
-        if (response) {
-          alert("Правильно");
-        } else {
-          alert("Неправильно");
-        }
-      },
-      error: (err) => console.error('Error: ', err)
-    });
-  }
-
-  nextQuestion() {
-    const currentQuestionIndex = this.tests.indexOf(this.currentQuestion);
-    if (currentQuestionIndex < this.tests.length - 1) {
-      this.currentQuestion = this.tests[currentQuestionIndex + 1];
-    }
-
-    this.updateIsLast();
-    this.updateIsFirst();
-  }
-
-  lastQuestion() {
-    const currentQuestionIndex = this.tests.indexOf(this.currentQuestion);
-    if (currentQuestionIndex > 0) {
-      this.currentQuestion = this.tests[currentQuestionIndex - 1];
-    }
-
-    this.updateIsLast();
-    this.updateIsFirst();
-  }
-
+  isModalOpen: boolean = false;
+  textModal: string = '';
 
   constructor(
     private testService: TestService,
@@ -73,10 +37,52 @@ export class TestComponent implements OnInit {
     });
   }
 
+
+  selectedAnswers(questionId: number, option: string, title: string) {
+    const selectedIndex = this.currentQuestion.options.indexOf(option);
+
+    console.log('Selected option: ', option, 'Index: ', selectedIndex, 'Title: ', title);
+
+    this.testService.checkAnswer(title, questionId, selectedIndex).subscribe({
+      next: (response) => {
+        console.log('Server response: ', response);
+        if (response) {
+          this.isModalOpen = true;
+          this.textModal = "Правильно";
+        } else {
+          this.isModalOpen = true;
+          this.textModal = "Неправильно";
+        }
+      },
+      error: (err) => console.error('Error: ', err)
+    });
+  }
+
+  nextQuestion() {
+    const currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
+    if (currentQuestionIndex < this.questions.length - 1) {
+      this.currentQuestion = this.questions[currentQuestionIndex + 1];
+    }
+
+    this.updateIsLast();
+    this.updateIsFirst();
+  }
+
+  lastQuestion() {
+    const currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
+    if (currentQuestionIndex > 0) {
+      this.currentQuestion = this.questions[currentQuestionIndex - 1];
+    }
+
+    this.updateIsLast();
+    this.updateIsFirst();
+  }  
+
+
   loadTests(name: string) {
     this.testService.getTestsByName(name).subscribe({
       next: (data) => {
-        this.tests = data;
+        this.questions = data;
 
         if (data.length > 0) {
           this.currentQuestion = data[0];
@@ -90,9 +96,9 @@ export class TestComponent implements OnInit {
   }
 
   updateIsLast() {
-    const currentQuestionIndex = this.tests.indexOf(this.currentQuestion);
+    const currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
 
-    if (currentQuestionIndex == this.tests.length - 1) {
+    if (currentQuestionIndex == this.questions.length - 1) {
       this.isLast = true;
     } else {
       this.isLast = false;
@@ -100,12 +106,21 @@ export class TestComponent implements OnInit {
   }
 
   updateIsFirst() {
-    const currentQuestionIndex = this.tests.indexOf(this.currentQuestion);
+    const currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
 
     if (currentQuestionIndex == 0) {
       this.isFirst = true;
     } else {
       this.isFirst = false;
     }
+  }
+
+  finishTest() {
+    this.isModalOpen = true;
+    this.textModal = "Тест завершен!";
+  }
+
+  closeModal() {
+    this.isModalOpen = false;
   }
 }

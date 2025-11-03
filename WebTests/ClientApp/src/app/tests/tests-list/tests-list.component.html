@@ -1,0 +1,11 @@
+<h2>Доступные тесты:</h2>
+
+<div *ngIf="tests;else no_tests">
+  <ul>
+    <li *ngFor="let test of tests"><h4><a [routerLink]="['/tests', test.title]">{{ test.title }}</a></h4></li>
+  </ul>
+</div>
+
+<ng-template #no_tests>
+  <h3>Нет тестов</h3>
+</ng-template>

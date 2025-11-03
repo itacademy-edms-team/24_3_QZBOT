@@ -1,0 +1,24 @@
+<h2>Редактирование {{ title }}</h2>
+
+<div *ngIf="!isEmpty;else no_question">
+  <div *ngFor="let question of questions">
+    <p><input type="text" value="{{ question.text }}" /></p>
+
+    <div *ngIf="question.options">
+      <div *ngFor="let option of question.options">
+        <ul>
+          <li><input type="text" value="{{ option.text }}" /></li>
+        </ul>
+      </div>
+    </div>
+    <ul>
+      <li><button class="btn btn-primary">Добавить вариант ответа</button></li>
+    </ul>
+
+  </div>
+</div>
+<p><button class="btn btn-primary">Добавить вопрос</button></p>
+
+<ng-template #no_question>
+  <p>В данном тесте нет вопросов</p>
+</ng-template>
