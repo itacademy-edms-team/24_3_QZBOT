@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { TestService, Test } from '../../services/test.service';
+import { TestService, Test, Question } from '../../services/test.service';
 
 @Component({
   selector: 'app-management-create',
@@ -13,29 +13,51 @@ export class ManagementCreateComponent {
   is_exist: boolean = false;
   confirm_add: boolean = false;
   success_add: boolean = false;
-
-  test_question_1: string = '';
-  question_1_option_1_iscorrect: boolean = false;
-  test_question_1_option_1: string = '';
-
-  question_1_option_2_iscorrect: boolean = false;
-  test_question_1_option_2: string = '';
-
-  question_1_option_3_iscorrect: boolean = false;
-  test_question_1_option_3: string = '';
-
+  test_empty: boolean = false;
+  text_error: string = '';
 
   constructor(
     private testService: TestService
   ) { }
 
-  btnClick() {
+  btnAdd() {
     this.success_add = false;
+
+    if (this.test_title.length == 0) {
+      this.text_error = "Пустое поле названия";
+      return;
+    }
 
     this.testService.checkTestExists(this.test_title).subscribe({
       next: (data) => {
         this.is_exist = data;
+
         if (!this.is_exist) {
+
+          for (var i = 0; i < this.test.questions.length; i++) {
+
+            if (this.test.questions[i].text == "") {
+              this.confirm_add = false;
+              this.success_add = false;
+              this.text_error = "Поле вопроса на заполнено";
+              return;
+            }
+
+            if (this.test.questions[i].options.length == 0) {
+              this.text_error = "У вопроса " + (i + 1) + " нет вариантов ответов";
+              return;
+            }
+
+            for (var j = 0; j < this.test.questions[i].options.length; j++) {
+              if (this.test.questions[i].options[j].text == "") {
+                this.confirm_add = false;
+                this.success_add = false;
+                this.text_error = "Поле варианта " + (j+1) + " вопроса " + (i+1) + " не заполнено";
+                return;
+              }
+            }
+          }
+
           this.confirm_add = true;
           this.test_title_adding = this.test_title;
         } else {
@@ -48,14 +70,44 @@ export class ManagementCreateComponent {
 
   btnConfirm() {
     this.test.title = this.test_title;
-    this.test.questions = [];
     this.testService.addTest(this.test.title, this.test.questions).subscribe({
       next: (data) => {
         if (data) {
           this.confirm_add = false;
           this.success_add = true;
+          this.text_error = "";
         }
       }
+    });
+  }
+
+  addQuestion() {
+    this.test.questions.push({
+      id: 0,
+      text: '',
+      options: []
+    });
+  }
+
+  removeQuestion(index: number) {
+    this.test.questions.splice(index, 1);
+  }
+
+  addOption(questions: Question) {
+    questions.options.push({
+      id: 0,
+      text: '',
+      isCorrect: false
+    })
+  }
+
+  removeOption(question: Question, index: number) {
+    question.options.splice(index, 1);
+  }
+
+  selectCorrectOption(question: any, selectedIndex: number) {
+    question.options.forEach((option: any, index: number) => {
+      option.isCorrect = index === selectedIndex;
     });
   }
 }
