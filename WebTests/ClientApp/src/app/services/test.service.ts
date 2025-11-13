@@ -36,6 +36,10 @@ export class TestService {
       questions
     });
   }
+
+  editTest(title: string, questions: Question[]) {
+    return this.http.post<boolean>(`${this.baseUrl}/edit/${title}`, questions);
+  }
 }
 
 export interface Test {

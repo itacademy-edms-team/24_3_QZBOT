@@ -8,9 +8,9 @@ import { ActivatedRoute, Router } from '@angular/router';
   styleUrls: ['./management-edit.component.css']
 })
 export class ManagementEditComponent implements OnInit {
-  isEmpty: boolean = false;
-  questions: Question[] = [];
-  title: string = '';
+  test: Test = { id: 0, title: '', questions: [] }
+  //test_title: string = "";
+  text_error: string = "";
 
   constructor(
     private route: ActivatedRoute,
@@ -22,17 +22,57 @@ export class ManagementEditComponent implements OnInit {
     this.route.paramMap.subscribe(params => {
       const testName = params.get('name');
       if (testName) {
-        this.title = testName;
+        this.test.title = testName;
       }
 
-      this.testService.getTestsByName(this.title).subscribe({
+      this.testService.getTestsByName(this.test.title).subscribe({
         next: (data) => {
-          if (data.length == 0) {
-            this.isEmpty = true;
-          }
-          this.questions = data;
+          this.test.questions = data;
         }
-      })
+      });
     });
+  }
+
+  addQuestion() {
+    this.test.questions.push({
+      id: 0,
+      text: '',
+      options: []
+    })
+  }
+
+  removeQuestion(index: number) {
+    this.test.questions.splice(index, 1);
+  }
+
+  addOption(questions: Question) {
+    questions.options.push({
+      id: 0,
+      text: '',
+      isCorrect: false
+    });
+  }
+
+  removeOption(question: Question, index: number) {
+    question.options.splice(index, 1);
+  }
+
+  selectCorrectOption(question: any, selectedIndex: number) {
+    question.options.forEach((option: any, index: number) => {
+      option.isCorrect = index === selectedIndex;
+    });
+  }
+
+  btnSaveChanges() {
+    this.testService.editTest(this.test.title, this.test.questions).subscribe({
+      next: (data) => {
+        if (data) {
+          this.text_error = "Тест успешно изменен"
+        }
+        else {
+          this.text_error = "Тест не изменен"
+        }
+      }
+    })
   }
 }

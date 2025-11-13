@@ -1,23 +1,39 @@
-<h2>Редактирование {{ title }}</h2>
+<h2>Редактирование {{ test.title }}</h2>
 
-<div *ngIf="!isEmpty;else no_question">
-  <div *ngFor="let question of questions">
-    <p><input type="text" value="{{ question.text }}" /></p>
+<p>{{ text_error }}</p>
 
-    <div *ngIf="question.options">
-      <div *ngFor="let option of question.options">
-        <ul>
-          <li><input type="text" value="{{ option.text }}" /></li>
-        </ul>
-      </div>
-    </div>
-    <ul>
-      <li><button class="btn btn-primary">Добавить вариант ответа</button></li>
-    </ul>
+<label>Название: </label>
+<input type="text" name="test-title" [(ngModel)]="test.title" placeholder="Название теста" />
 
-  </div>
+<div *ngFor="let question of test.questions; let i = index">
+  <h3>Вопрос {{ i + 1 }}</h3>
+  <input type="text" placeholder="Текст вопроса" [(ngModel)]="question.text" />
+
+  <ul>
+    <li *ngFor="let option of question.options; let j = index">
+      <input type="radio"
+             [name]="'correct_' + i"
+             [checked]="option.isCorrect"
+             (change)="selectCorrectOption(question, j)"
+             />
+             
+      <input type="text" placeholder="Вариант {{ j + 1 }}" [(ngModel)]="option.text" />
+      <button type="button" (click)="removeOption(question, j)">Удалить</button>
+    </li>
+  </ul>
+
+  <button type="button" (click)="addOption(question)">Добавить вариант</button>
+  <button type="button" (click)="removeQuestion(i)">Удалить вопрос</button>
+  <br />
 </div>
-<p><button class="btn btn-primary">Добавить вопрос</button></p>
+
+<br />
+<button type="button" (click)="addQuestion()">Добавить вопрос</button>
+
+<br />
+<div *ngIf="test.questions.length > 2 and test.title != ''">
+  <button type="button" (click)="btnSaveChanges()">Редактировать</button>
+</div>
 
 <ng-template #no_question>
   <p>В данном тесте нет вопросов</p>
