@@ -9,7 +9,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 })
 export class ManagementEditComponent implements OnInit {
   test: Test = { id: 0, title: '', questions: [] }
-  //test_title: string = "";
+  test_title: string = "";
+  edited_test: Test = { id: 0, title: '', questions: [] }
   text_error: string = "";
   confirm_edit: boolean = false;
   changes: string[] = [];
@@ -40,7 +41,7 @@ export class ManagementEditComponent implements OnInit {
   }
 
   addQuestion() {
-    this.test.questions.push({
+    this.edited_test.questions.push({
       id: 0,
       text: '',
       options: []
@@ -48,7 +49,7 @@ export class ManagementEditComponent implements OnInit {
   }
 
   removeQuestion(index: number) {
-    this.test.questions.splice(index, 1);
+    this.edited_test.questions.splice(index, 1);
   }
 
   addOption(questions: Question) {
@@ -70,13 +71,36 @@ export class ManagementEditComponent implements OnInit {
   }
 
   btnSaveChanges() {
-    this.testService.editTest(this.test.title, this.test.questions).subscribe({
+    if (this.testService.checkTest(this.edited_test) == "true") {
+      this.changes = this.testService.getTestChanges(this.test, this.edited_test);
+
+      if (this.changes.length == 0) {
+        this.text_error = "Нет изменений";
+        return;
+      }
+
+      this.is_editing_locked = true;
+      this.confirm_edit = true;
+    } else {
+      this.text_error = this.testService.checkTest(this.edited_test);
+    }
+  }
+
+  btnCancel() {
+    this.confirm_edit = false;
+    this.is_editing_locked = false;
+  }
+
+  btnConfirm() {
+    this.testService.editTest(this.test.id, this.edited_test).subscribe({
       next: (data) => {
         if (data) {
-          this.text_error = "Тест успешно изменен"
+          this.success_edit = true;
+          this.is_editing_locked = false;
+          this.text_error = "";
         }
         else {
-          this.text_error = "Тест не изменен"
+          this.text_error = "Ошибка редактирования теста"
         }
       }
     })
