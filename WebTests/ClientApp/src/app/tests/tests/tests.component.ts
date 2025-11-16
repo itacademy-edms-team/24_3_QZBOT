@@ -80,7 +80,7 @@ export class TestComponent implements OnInit {
 
 
   loadTests(name: string) {
-    this.testService.getTestsByName(name).subscribe({
+    this.testService.getTestByName(name).subscribe({
       next: (data) => {
         this.questions = data;
 

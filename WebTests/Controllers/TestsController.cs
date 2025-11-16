@@ -25,7 +25,7 @@ namespace WebTests.Controllers
         }
 
         [HttpGet("{title}")]
-        public IActionResult GetTestByName(string title)
+        public IActionResult GetTestByTitle(string title)
         {
             var questions = _context.Tests
                 .Where(t => t.Title == title)
@@ -34,6 +34,16 @@ namespace WebTests.Controllers
                 .ToList();
 
             return Ok(questions);
+        }
+
+        [HttpGet("{id}/title")]
+        public IActionResult GetTestTitleById(int id)
+        {
+            var title = _context.Tests
+                .Where(t => t.Id == id)
+                .Select(t => t.Title);
+
+            return Ok(title);
         }
 
         [HttpGet("id/{id}")]
