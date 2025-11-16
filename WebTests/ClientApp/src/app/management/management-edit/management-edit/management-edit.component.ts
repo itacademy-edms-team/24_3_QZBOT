@@ -81,6 +81,7 @@ export class ManagementEditComponent implements OnInit {
 
       this.is_editing_locked = true;
       this.confirm_edit = true;
+      this.text_error = "";
     } else {
       this.text_error = this.testService.checkTest(this.edited_test);
     }
