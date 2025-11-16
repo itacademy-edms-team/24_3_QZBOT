@@ -20,7 +20,11 @@ namespace WebTests.Controllers
         [HttpGet("all")]
         public IActionResult GetAllTests()
         {
-            var tests = _context.Tests.ToList();
+            var tests = _context.Tests
+                .Include(q => q.Questions)
+                .ThenInclude(o => o.Options)
+                .ToList();
+
             return Ok(tests);
         }
 
@@ -29,21 +33,11 @@ namespace WebTests.Controllers
         {
             var questions = _context.Tests
                 .Where(t => t.Title == title)
-                .SelectMany(t => t.Questions)
-                .Include(q => q.Options)
-                .ToList();
+                .Include(t => t.Questions)
+                .ThenInclude(q => q.Options)
+                .FirstOrDefault();
 
             return Ok(questions);
-        }
-
-        [HttpGet("{id}/title")]
-        public IActionResult GetTestTitleById(int id)
-        {
-            var title = _context.Tests
-                .Where(t => t.Id == id)
-                .Select(t => t.Title);
-
-            return Ok(title);
         }
 
         [HttpGet("id/{id}")]
@@ -51,9 +45,9 @@ namespace WebTests.Controllers
         {
             var questions = _context.Tests
                 .Where(t => t.Id == id)
-                .SelectMany(t => t.Questions)
-                .Include(q => q.Options)
-                .ToList();
+                .Include(t => t.Questions)
+                .ThenInclude(q => q.Options)
+                .FirstOrDefault();
 
             return Ok(questions);
         }

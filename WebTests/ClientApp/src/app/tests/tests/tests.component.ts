@@ -9,10 +9,8 @@ import { TestService, Test, Question, Option } from '../../services/test.service
 })
 export class TestComponent implements OnInit {
 
-  tests: Test[] = [];
-  questions: Question[] = [];
+  test: Test = { id: 0, title: '', questions: [] };
   errorMessage = '';
-  title: string = '';
   currentQuestionIndex = 0;
   answers: { [id: number]: string } = {};
   currentQuestion: any;
@@ -32,7 +30,7 @@ export class TestComponent implements OnInit {
       const testName = params.get('name');
       if (testName) {
         this.loadTests(testName);
-        this.title = testName;
+        this.test.title = testName;
       }
     });
   }
@@ -59,9 +57,9 @@ export class TestComponent implements OnInit {
   }
 
   nextQuestion() {
-    const currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
-    if (currentQuestionIndex < this.questions.length - 1) {
-      this.currentQuestion = this.questions[currentQuestionIndex + 1];
+    const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
+    if (currentQuestionIndex < this.test.questions.length - 1) {
+      this.currentQuestion = this.test.questions[currentQuestionIndex + 1];
     }
 
     this.updateIsLast();
@@ -69,9 +67,9 @@ export class TestComponent implements OnInit {
   }
 
   lastQuestion() {
-    const currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
+    const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
     if (currentQuestionIndex > 0) {
-      this.currentQuestion = this.questions[currentQuestionIndex - 1];
+      this.currentQuestion = this.test.questions[currentQuestionIndex - 1];
     }
 
     this.updateIsLast();
@@ -82,10 +80,10 @@ export class TestComponent implements OnInit {
   loadTests(name: string) {
     this.testService.getTestByName(name).subscribe({
       next: (data) => {
-        this.questions = data;
+        this.test = data;
 
-        if (data.length > 0) {
-          this.currentQuestion = data[0];
+        if (data.questions.length > 0) {
+          this.currentQuestion = data.questions[0];
         }
 
         this.updateIsLast();
@@ -96,9 +94,9 @@ export class TestComponent implements OnInit {
   }
 
   updateIsLast() {
-    const currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
+    const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
 
-    if (currentQuestionIndex == this.questions.length - 1) {
+    if (currentQuestionIndex == this.test.questions.length - 1) {
       this.isLast = true;
     } else {
       this.isLast = false;
@@ -106,7 +104,7 @@ export class TestComponent implements OnInit {
   }
 
   updateIsFirst() {
-    const currentQuestionIndex = this.questions.indexOf(this.currentQuestion);
+    const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
 
     if (currentQuestionIndex == 0) {
       this.isFirst = true;

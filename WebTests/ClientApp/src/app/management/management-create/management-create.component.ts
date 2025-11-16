@@ -28,7 +28,7 @@ export class ManagementCreateComponent {
       return;
     }
 
-    this.testService.checkTestExists(this.test_title).subscribe({
+    this.testService.checkTestExists(this.test.title).subscribe({
       next: (data) => {
         this.is_exist = data;
 

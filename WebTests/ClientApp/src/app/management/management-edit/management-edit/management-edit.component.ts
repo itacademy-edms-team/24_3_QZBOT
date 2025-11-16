@@ -11,6 +11,10 @@ export class ManagementEditComponent implements OnInit {
   test: Test = { id: 0, title: '', questions: [] }
   //test_title: string = "";
   text_error: string = "";
+  confirm_edit: boolean = false;
+  changes: string[] = [];
+  is_editing_locked: boolean = false;
+  success_edit: boolean = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -20,14 +24,16 @@ export class ManagementEditComponent implements OnInit {
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
-      const testName = params.get('name');
-      if (testName) {
-        this.test.title = testName;
+      const test_id = params.get('id') as unknown as number;
+      if (test_id) {
+        this.test.id = test_id;
       }
 
-      this.testService.getTestsByName(this.test.title).subscribe({
+      this.testService.getTestById(this.test.id).subscribe({
         next: (data) => {
-          this.test.questions = data;
+          this.test = data;
+          this.edited_test = JSON.parse(JSON.stringify(this.test));
+          this.test_title = data.title;
         }
       });
     });

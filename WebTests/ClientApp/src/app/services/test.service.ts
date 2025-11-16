@@ -10,20 +10,22 @@ export class TestService {
 
   constructor(private http: HttpClient) { }
 
-  getTestTitleById(id: number): Observable<string> {
-    return this.http.get<string>(`${this.baseUrl}/${id}/title`);
-  }
 
-  getTestByName(name: string): Observable<Question[]> {
-    return this.http.get<Question[]>(`${this.baseUrl}/${name}`);
-  }
-
-  getTestById(id: number): Observable<Question[]> {
-    return this.http.get<Question[]>(`${this.baseUrl}/id/${id}`)
-  }
 
   getAllTests(): Observable<Test[]> {
     return this.http.get<Test[]>(`${this.baseUrl}/all`);
+  }
+
+
+
+  getTestByName(name: string): Observable<Test> {
+    return this.http.get<Test>(`${this.baseUrl}/${name}`);
+  }
+
+
+
+  getTestById(id: number): Observable<Test> {
+    return this.http.get<Test>(`${this.baseUrl}/id/${id}`)
   }
 
   checkTestExists(name: string): Observable<boolean> {
