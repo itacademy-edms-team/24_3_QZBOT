@@ -10,17 +10,31 @@ export class TestService {
 
   constructor(private http: HttpClient) { }
 
-  getTestsByName(name: string): Observable<Question[]> {
-    return this.http.get<Question[]>(`${this.baseUrl}/${name}`);
-  }
+
 
   getAllTests(): Observable<Test[]> {
     return this.http.get<Test[]>(`${this.baseUrl}/all`);
   }
 
+
+
+  getTestByName(name: string): Observable<Test> {
+    return this.http.get<Test>(`${this.baseUrl}/${name}`);
+  }
+
+
+
+  getTestById(id: number): Observable<Test> {
+    return this.http.get<Test>(`${this.baseUrl}/id/${id}`)
+  }
+
+
+
   checkTestExists(name: string): Observable<boolean> {
     return this.http.get<boolean>(`${this.baseUrl}/exist/${name}`)
   }
+
+
 
   checkAnswer(title: string, questionId: number, selectedOptionIndex: number) {
     return this.http.post<boolean>(`${this.baseUrl}/check`, {
@@ -30,13 +44,111 @@ export class TestService {
     });
   }
 
+
+
   addTest(title: string, questions: Question[]) {
     return this.http.post<boolean>(`${this.baseUrl}/add`, {
       title,
       questions
     });
   }
+
+
+
+  editTest(id: number, test: Test) {
+    return this.http.post<boolean>(`${this.baseUrl}/edit/${id}`, test);
+  }
+
+
+
+  getTestChanges(original: Test, updated: Test) {
+    const changes: string[] = [];
+
+    if (original.title !== updated.title) {
+      changes.push(`Название теста изменено с "${original.title}" на "${updated.title}"`);
+    }
+
+    updated.questions.forEach((newQuestion, i) => {
+      const oldQuestion = original.questions[i];
+
+      if (!oldQuestion) {
+        changes.push(`Добавлен новый вопрос: "${newQuestion.text}"`);
+        return;
+      }
+
+      if (oldQuestion.text !== newQuestion.text) {
+        changes.push(`Изменён текст вопроса ${i + 1}: "${oldQuestion.text}" → "${newQuestion.text}"`);
+      }
+
+      const oldCorrect = oldQuestion.options.findIndex(o => o.isCorrect);
+      const newCorrect = newQuestion.options.findIndex(o => o.isCorrect);
+
+      if (oldCorrect !== newCorrect) {
+        changes.push(`Изменён правильный ответ в вопросе ${i + 1}`);
+      }
+
+      newQuestion.options.forEach((newOpt, j) => {
+        const oldOpt = oldQuestion.options[j];
+
+        if (!oldOpt) {
+          changes.push(`Добавлен новый вариант в вопросе ${i + 1}: "${newOpt.text}"`);
+          return;
+        }
+
+        if (oldOpt.text !== newOpt.text) {
+          changes.push(`Изменён вариант ${j + 1} в вопросе ${i + 1}: "${oldOpt.text}" → "${newOpt.text}"`);
+        }
+      });
+    });
+
+    if (original.questions.length > updated.questions.length) {
+      changes.push(`Удалено ${original.questions.length - updated.questions.length} вопрос(ов)`);
+    }
+
+    return changes;
+  }
+
+
+
+
+  checkTest(test: Test) {
+    for (var i = 0; i < test.questions.length; i++) {
+
+      if (test.questions[i].text == "") {
+        return "Поле вопроса на заполнено";
+      }
+
+      if (test.questions[i].options.length == 0) {
+        return "У вопроса " + (i + 1) + " нет вариантов ответов";
+      }
+
+      if (test.questions[i].options.length < 2) {
+        return "Для вопроса " + (i + 1) + " добавлено слишком мало вариантов ответа";
+      }
+
+      var count_of_true: number = 0;
+      for (var j = 0; j < test.questions[i].options.length; j++) {
+        if (test.questions[i].options[j].text == "") {
+          return "Поле варианта " + (j + 1) + " вопроса " + (i + 1) + " не заполнено";
+        }
+
+        if (test.questions[i].options[j].isCorrect == true) {
+          count_of_true += 1;
+        }
+      }
+
+      if (count_of_true > 1) {
+        return "Для вопроса " + (i + 1) + " указано несколько правильных вариантов ответа";
+      }
+      else if (count_of_true == 0) {
+        return "Для вопроса " + (i + 1) + " не указан правильный вариант ответа";
+      }
+    }
+
+    return "true";
+  }
 }
+
 
 export interface Test {
   id: number;

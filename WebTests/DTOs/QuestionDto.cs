@@ -2,7 +2,7 @@
 {
     public class QuestionDto
     {
-        public string Text { get; set; } = "None";
+        public string Text { get; set; }
         public List<AnswerOptionDto> Options { get; set; }
     }
 }

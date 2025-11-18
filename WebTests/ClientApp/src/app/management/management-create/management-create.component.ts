@@ -8,13 +8,11 @@ import { TestService, Test, Question } from '../../services/test.service';
 })
 export class ManagementCreateComponent {
   test: Test = { id: 0, title: '', questions: [] };
-  test_title: string = '';
-  test_title_adding: string = '';
   is_exist: boolean = false;
   confirm_add: boolean = false;
   success_add: boolean = false;
-  test_empty: boolean = false;
   text_error: string = '';
+  is_editing_locked: boolean = false;
 
   constructor(
     private testService: TestService
@@ -23,44 +21,27 @@ export class ManagementCreateComponent {
   btnAdd() {
     this.success_add = false;
 
-    if (this.test_title.length == 0) {
+    if (this.test.title.length == 0) {
       this.text_error = "Пустое поле названия";
       return;
     }
 
-    this.testService.checkTestExists(this.test_title).subscribe({
+    this.testService.checkTestExists(this.test.title).subscribe({
       next: (data) => {
         this.is_exist = data;
 
         if (!this.is_exist) {
 
-          for (var i = 0; i < this.test.questions.length; i++) {
-
-            if (this.test.questions[i].text == "") {
-              this.confirm_add = false;
-              this.success_add = false;
-              this.text_error = "Поле вопроса на заполнено";
-              return;
-            }
-
-            if (this.test.questions[i].options.length == 0) {
-              this.text_error = "У вопроса " + (i + 1) + " нет вариантов ответов";
-              return;
-            }
-
-            for (var j = 0; j < this.test.questions[i].options.length; j++) {
-              if (this.test.questions[i].options[j].text == "") {
-                this.confirm_add = false;
-                this.success_add = false;
-                this.text_error = "Поле варианта " + (j+1) + " вопроса " + (i+1) + " не заполнено";
-                return;
-              }
-            }
+          if (this.testService.checkTest(this.test) == "true") {
+            this.confirm_add = true;
+            this.is_editing_locked = true;
+            this.text_error = "";
+          } else {
+            this.text_error = this.testService.checkTest(this.test);
           }
 
-          this.confirm_add = true;
-          this.test_title_adding = this.test_title;
         } else {
+          this.text_error == "Такое название уже занято";
           this.confirm_add = false;
           this.success_add = false;
         }
@@ -69,16 +50,21 @@ export class ManagementCreateComponent {
   }
 
   btnConfirm() {
-    this.test.title = this.test_title;
     this.testService.addTest(this.test.title, this.test.questions).subscribe({
       next: (data) => {
         if (data) {
           this.confirm_add = false;
           this.success_add = true;
           this.text_error = "";
+          this.is_editing_locked = false;
         }
       }
     });
+  }
+
+  btnCancel() {
+    this.confirm_add = false;
+    this.is_editing_locked = false;
   }
 
   addQuestion() {

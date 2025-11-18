@@ -1,51 +1,59 @@
 <h2>Создание теста</h2>
 <br />
 
-<input type="text" name="test-title" [(ngModel)]="test_title" placeholder="Название теста" />
-
-<div *ngIf="test_empty">
-  <p>Пустое поле названия</p>
-</div>
-
-<div *ngIf="is_exist">
-  <p>Название такого теста уже существует</p>
-</div>
+<input
+       type="text"
+       name="test-title"
+       [(ngModel)]="test.title"
+       [readonly]="is_editing_locked"
+       placeholder="Название теста" />
 
 <p>{{ text_error }}</p>
 
 
 <div *ngFor="let question of test.questions; let i = index">
   <h3>Вопрос {{ i + 1 }}</h3>
-  <input type="text" placeholder="Текст вопроса" [(ngModel)]="question.text" />
+  <input
+         type="text"
+         [(ngModel)]="question.text"
+         [readonly]="is_editing_locked"
+         placeholder="Текст вопроса" />
 
   <ul>
     <li *ngFor="let option of question.options; let j = index">
       <input type="radio"
              [name]="'correct_' + i"
              [checked]="option.isCorrect"
+             [disabled]="is_editing_locked"
              (change)="selectCorrectOption(question, j)"/>
-      <input type="text" placeholder="Вариант {{ j + 1 }}" [(ngModel)]="option.text" />
-      <button type="button" (click)="removeOption(question, j)">Удалить</button>
+
+      <input
+             type="text"
+             [(ngModel)]="option.text"
+             [readonly]="is_editing_locked"
+             placeholder="Вариант {{ j + 1 }}" />
+
+      <button type="button" [disabled]="is_editing_locked" (click)="removeOption(question, j)">Удалить</button>
     </li>
   </ul>
 
-  <button type="button" (click)="addOption(question)">Добавить вариант</button>
-  <button type="button" (click)="removeQuestion(i)">Удалить вопрос</button>
+  <button type="button" [disabled]="is_editing_locked" (click)="addOption(question)">Добавить вариант</button>
+  <button type="button" [disabled]="is_editing_locked" (click)="removeQuestion(i)">Удалить вопрос</button>
   <br />
 </div>
 
 <br />
-<button type="button" (click)="addQuestion()">Добавить вопрос</button>
+<button type="button" [disabled]="is_editing_locked" (click)="addQuestion()">Добавить вопрос</button>
 
 <br />
 <div *ngIf="test.questions.length > 2 and test_title != ''">
-  <button type="button" (click)="btnAdd()">Добавить тест</button>
+  <button type="button" [disabled]="is_editing_locked" (click)="btnAdd()">Добавить тест</button>
 </div>
 
-
 <div *ngIf="confirm_add">
-  <p>Подтвердите добавление теста {{ test_title }}</p>
+  <p>Подтвердите добавление теста {{ test.title }}</p>
   <button type="button" (click)="btnConfirm()">Подтвердить</button>
+  <button type="button" (click)="btnCancel()">Отменить</button>
 </div>
 
 <div *ngIf="success_add">

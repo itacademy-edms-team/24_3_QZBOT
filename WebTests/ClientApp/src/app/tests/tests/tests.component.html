@@ -5,7 +5,7 @@
   <p *ngFor="let option of currentQuestion.options">
     <label>
       <input class="form-check-input" type="radio" name="answer" [value]="option"
-             (change)="selectedAnswers(currentQuestion.id, option, title)" />
+             (change)="selectedAnswers(currentQuestion.id, option, test.title)" />
       {{ option.text }}
     </label>
   </p>

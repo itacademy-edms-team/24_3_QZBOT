@@ -20,18 +20,34 @@ namespace WebTests.Controllers
         [HttpGet("all")]
         public IActionResult GetAllTests()
         {
-            var tests = _context.Tests.ToList();
+            var tests = _context.Tests
+                .Include(q => q.Questions)
+                .ThenInclude(o => o.Options)
+                .ToList();
+
             return Ok(tests);
         }
 
         [HttpGet("{title}")]
-        public IActionResult GetTest(string title)
+        public IActionResult GetTestByTitle(string title)
         {
             var questions = _context.Tests
                 .Where(t => t.Title == title)
-                .SelectMany(t => t.Questions)
-                .Include(q => q.Options)
-                .ToList();
+                .Include(t => t.Questions)
+                .ThenInclude(q => q.Options)
+                .FirstOrDefault();
+
+            return Ok(questions);
+        }
+
+        [HttpGet("id/{id}")]
+        public IActionResult GetTestById(int id)
+        {
+            var questions = _context.Tests
+                .Where(t => t.Id == id)
+                .Include(t => t.Questions)
+                .ThenInclude(q => q.Options)
+                .FirstOrDefault();
 
             return Ok(questions);
         }
@@ -138,62 +154,65 @@ namespace WebTests.Controllers
             }
         }
 
-        [HttpPost("edit/{title}")]
-        public IActionResult EditTest(string title, [FromBody] List<QuestionDto> dtos)
+        [HttpPost("edit/{id}")]
+        public IActionResult EditTest(int id, [FromBody] TestDto dto)
         {
             var test = _context.Tests
                 .Include(t => t.Questions)
                 .ThenInclude(q => q.Options)
-                .FirstOrDefault(t => t.Title == title);
+                .FirstOrDefault(t => t.Id == id);
 
             if (test == null)
                 return NotFound("Тест не найден");
 
-            foreach (var dto in dtos)
+            if (!string.IsNullOrWhiteSpace(dto.Title))
+                test.Title = dto.Title;
+
+            var incomingQuestionTexts = dto.Questions.Select(q => q.Text).ToList();
+
+            var questionsToRemove = test.Questions
+                .Where(q => !incomingQuestionTexts.Contains(q.Text))
+                .ToList();
+
+            _context.Questions.RemoveRange(questionsToRemove);
+
+            foreach (var qDto in dto.Questions)
             {
-                var existingQuestion = test.Questions.FirstOrDefault(q => q.Text == dto.Text);
+                var existingQuestion = test.Questions
+                    .FirstOrDefault(q => q.Text == qDto.Text);
 
                 if (existingQuestion == null)
                 {
-                    var newQ = new Question
+                    var newQuestion = new Question
                     {
-                        Text = dto.Text,
+                        Text = qDto.Text,
                         TestId = test.Id,
-                        Options = dto.Options.Select(o => new AnswerOption
+                        Options = qDto.Options.Select(o => new AnswerOption
                         {
                             Text = o.Text,
                             IsCorrect = o.IsCorrect,
                         }).ToList()
                     };
 
-                    test.Questions.Add(newQ);
+                    test.Questions.Add(newQuestion);
                 }
                 else
                 {
-                    existingQuestion.Options.Clear();
-                    existingQuestion.Options = dto.Options.Select(o => new AnswerOption
+                    existingQuestion.Text = qDto.Text;
+
+                    _context.AnswerOptions.RemoveRange(existingQuestion.Options);
+
+                    existingQuestion.Options = qDto.Options.Select(o => new AnswerOption
                     {
                         Text = o.Text,
-                        IsCorrect = o.IsCorrect
+                        IsCorrect = o.IsCorrect,
                     }).ToList();
                 }
             }
 
-            var newTexts = dtos.Select(q => q.Text).ToList();
-            var toDelete = test.Questions.Where(q => !newTexts.Contains(q.Text)).ToList();
-            _context.Questions.RemoveRange(toDelete);
-
-            var emptyOptions = _context.AnswerOptions.Where(o => o.QuestionId == null).ToList();
-            _context.AnswerOptions.RemoveRange(emptyOptions);
-
             _context.SaveChanges();
-
-            var pendingDeletions = _context.ChangeTracker.Entries()
-                .Where(e => e.State == EntityState.Deleted)
-                .ToList();
 
             return Ok(true);
         }
-
     }
 }
