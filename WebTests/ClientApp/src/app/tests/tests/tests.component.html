@@ -4,24 +4,31 @@
   <!--<ul>-->
   <p *ngFor="let option of currentQuestion.options">
     <label>
-      <input class="form-check-input" type="radio" name="answer" [value]="option"
+      <input class="form-check-input"
+             type="radio"
+             name="answer"
+             [value]="option"
+             [disabled]="isLocked"
              (change)="selectedAnswers(currentQuestion.id, option, test.title)" />
       {{ option.text }}
     </label>
   </p>
   <!--</ul>-->
 
-  <div *ngIf="!isFirst">
+  <!--<div *ngIf="!isFirst">
     <button class="btn btn-danger" (click)="lastQuestion()">Предыдущий вопрос</button>
-  </div>
+  </div>-->
 
   <div *ngIf="!isLast">
-    <button class="btn btn-outline-primary" (click)="nextQuestion()">Следующий вопрос</button>
+    <button class="btn btn-outline-primary"
+            (click)="nextQuestion()"
+            [disabled]="isLocked === false">Далее</button>
   </div>
 
   <div *ngIf="isLast">
     <br />
-    <button class="btn btn-dark" (click)="finishTest()">Завершить тест</button>
+    <button class="btn btn-dark"
+            (click)="finishTest()">Завершить тест</button>
   </div>
 
 </div>
