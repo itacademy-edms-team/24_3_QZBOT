@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { TestService, Test, Question, Option } from '../../services/test.service';
 
 @Component({
@@ -19,12 +19,14 @@ export class TestComponent implements OnInit {
   isLocked: boolean = false;
   rightAnswers: number = 0;
 
+  isFinishModalOpen: boolean = false;
   isModalOpen: boolean = false;
   textModal: string = '';
 
   constructor(
     private testService: TestService,
     private route: ActivatedRoute,
+    private router: Router,
   ) { }
 
   ngOnInit() {
@@ -122,11 +124,16 @@ export class TestComponent implements OnInit {
   }
 
   finishTest() {
-    this.isModalOpen = true;
-    this.textModal = "Тест завершен! Правильно " + this.rightAnswers + "/" + this.test.questions.length;
+    this.isFinishModalOpen = true;
+    this.textModal = "Тест завершен! Результат " + this.rightAnswers + "/" + this.test.questions.length;
   }
 
   closeModal() {
     this.isModalOpen = false;
+  }
+
+  closeFinishModal() {
+    this.isFinishModalOpen = false;
+    this.router.navigate(['/tests'])
   }
 }
