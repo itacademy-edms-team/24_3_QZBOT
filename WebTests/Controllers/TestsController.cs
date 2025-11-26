@@ -33,6 +33,7 @@ namespace WebTests.Controllers
         {
             var questions = _context.Tests
                 .Where(t => t.Title == title)
+                .Include(t => t.Types)
                 .Include(t => t.Questions)
                 .ThenInclude(q => q.Options)
                 .FirstOrDefault();
@@ -45,6 +46,7 @@ namespace WebTests.Controllers
         {
             var questions = _context.Tests
                 .Where(t => t.Id == id)
+                .Include(t => t.Types)
                 .Include(t => t.Questions)
                 .ThenInclude(q => q.Options)
                 .FirstOrDefault();

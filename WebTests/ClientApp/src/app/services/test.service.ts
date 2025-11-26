@@ -156,6 +156,12 @@ export interface Test {
   questions: Question[];
 }
 
+export interface TestType {
+  id: number;
+  name: string;
+  desription: string;
+}
+
 export interface Question {
   id: number;
   text: string;
