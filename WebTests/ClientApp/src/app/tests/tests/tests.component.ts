@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { TestService, Test, Question, Option } from '../../services/test.service';
 
 @Component({
@@ -16,13 +16,17 @@ export class TestComponent implements OnInit {
   currentQuestion: any;
   isFirst: boolean = true;
   isLast: boolean = false;
+  isLocked: boolean = false;
+  rightAnswers: number = 0;
 
+  isFinishModalOpen: boolean = false;
   isModalOpen: boolean = false;
   textModal: string = '';
 
   constructor(
     private testService: TestService,
     private route: ActivatedRoute,
+    private router: Router,
   ) { }
 
   ngOnInit() {
@@ -39,17 +43,17 @@ export class TestComponent implements OnInit {
   selectedAnswers(questionId: number, option: string, title: string) {
     const selectedIndex = this.currentQuestion.options.indexOf(option);
 
-    console.log('Selected option: ', option, 'Index: ', selectedIndex, 'Title: ', title);
-
     this.testService.checkAnswer(title, questionId, selectedIndex).subscribe({
       next: (response) => {
-        console.log('Server response: ', response);
         if (response) {
           this.isModalOpen = true;
           this.textModal = "Правильно";
+          this.isLocked = true;
+          this.rightAnswers += 1;
         } else {
           this.isModalOpen = true;
           this.textModal = "Неправильно";
+          this.isLocked = true;
         }
       },
       error: (err) => console.error('Error: ', err)
@@ -57,24 +61,30 @@ export class TestComponent implements OnInit {
   }
 
   nextQuestion() {
-    const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
-    if (currentQuestionIndex < this.test.questions.length - 1) {
-      this.currentQuestion = this.test.questions[currentQuestionIndex + 1];
+    if (!this.isLocked) {
+      return;
     }
 
+    const i = this.test.questions.indexOf(this.currentQuestion);
+
+    if (i < this.test.questions.length - 1) {
+      this.currentQuestion = this.test.questions[i + 1];
+    }
+
+    this.isLocked = false;
     this.updateIsLast();
     this.updateIsFirst();
   }
 
-  lastQuestion() {
-    const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
-    if (currentQuestionIndex > 0) {
-      this.currentQuestion = this.test.questions[currentQuestionIndex - 1];
-    }
+  //lastQuestion() {
+  //  const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
+  //  if (currentQuestionIndex > 0) {
+  //    this.currentQuestion = this.test.questions[currentQuestionIndex - 1];
+  //  }
 
-    this.updateIsLast();
-    this.updateIsFirst();
-  }  
+  //  this.updateIsLast();
+  //  this.updateIsFirst();
+  //}  
 
 
   loadTests(name: string) {
@@ -114,11 +124,16 @@ export class TestComponent implements OnInit {
   }
 
   finishTest() {
-    this.isModalOpen = true;
-    this.textModal = "Тест завершен!";
+    this.isFinishModalOpen = true;
+    this.textModal = "Тест завершен! Результат " + this.rightAnswers + "/" + this.test.questions.length;
   }
 
   closeModal() {
     this.isModalOpen = false;
+  }
+
+  closeFinishModal() {
+    this.isFinishModalOpen = false;
+    this.router.navigate(['/tests'])
   }
 }
