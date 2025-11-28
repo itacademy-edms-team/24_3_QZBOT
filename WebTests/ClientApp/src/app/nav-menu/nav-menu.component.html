@@ -30,6 +30,17 @@
               [routerLinkActiveOptions]="{ exact: true }">
             <a class="nav-link text-dark" [routerLink]="['/tests']">Тесты</a>
           </li>
+          <li class="nav-item"
+              [routerLinkActive]="['link-active']"
+              [routerLinkActiveOptions]="{ exact: true }">
+            <div *ngIf="authService.isAuthenticated; else loginLink">
+              <a class="nav-link text-dark" [routerLink]="['/profile', currentUserUsername]">{{ currentUserUsername }}</a>
+            </div>
+
+            <ng-template #loginLink>
+              <a class="nav-link text-dark" [routerLink]="['login']">Войти</a>
+            </ng-template>
+          </li>
         </ul>
       </div>
     </div>

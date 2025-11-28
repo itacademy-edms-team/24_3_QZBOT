@@ -43,7 +43,7 @@ namespace WebTests.Controllers
             if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
             {
                 var token = GenerateJwtToken(user);
-                return Ok(new { token });
+                return Ok(new { token, username = user.UserName });
             }
 
             return Unauthorized(new { message = "Invalid" });

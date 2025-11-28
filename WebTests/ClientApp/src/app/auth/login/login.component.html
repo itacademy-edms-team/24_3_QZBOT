@@ -1,0 +1,12 @@
+<h2>Вход</h2>
+<form (ngSubmit)="onSubmit()">
+  <div>
+    <label>Email:</label>
+    <input [(ngModel)]="model.email" type="email" name="email" required />
+  </div>
+  <div>
+    <label>Пароль:</label>
+    <input [(ngModel)]="model.password" type="password" name="password" required />
+  </div>
+  <button type="submit">Войти</button>
+</form>
