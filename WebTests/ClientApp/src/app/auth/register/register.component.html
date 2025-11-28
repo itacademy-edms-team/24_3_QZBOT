@@ -1,0 +1,28 @@
+<h2>Регистрация</h2>
+<form (ngSubmit)="onSubmit()">
+  <div>
+    <label>Имя пользователя:</label>
+    <input [(ngModel)]="model.username" type="text" name="username" required />
+  </div>
+  <div>
+    <label>Email:</label>
+    <input [(ngModel)]="model.email" type="email" name="email" required />
+  </div>
+  <div>
+    <label>Номер телефона:</label>
+    <input [(ngModel)]="model.phoneNumber" type="tel" name="phoneNumber" required />
+  </div>
+  <div>
+    <label>Пароль:</label>
+    <input [(ngModel)]="model.password" type="password" name="password" required />
+  </div>
+  <div>
+    <label>Повтор пароля:</label>
+    <input [(ngModel)]="confirmPassword" type="password" name="confirmPassword" required />
+  </div>
+  <button type="submit">Зарегистрироваться</button>
+
+  <div *ngIf="textError">
+    <p>{{ textError }}</p>
+  </div>
+</form>

@@ -4,6 +4,13 @@ import { BehaviorSubject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  phoneNumber: string;
+  password: string;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -32,6 +39,10 @@ export class AuthService {
     if (token) {
       this.currentUserSubject.next({ token });
     }
+  }
+
+  register(model: RegisterRequest): Observable<any> {
+    return this.http.post(`${this.apiUrl}/register`, model);
   }
 
   login(model: LoginRequest): Observable<LoginResponse> {
