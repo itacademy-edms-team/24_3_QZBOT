@@ -71,3 +71,9 @@ export class AuthService {
 
   get isAuthenticated(): boolean {
     return !!this.token;
+  }
+
+  get currentUserUsername(): string | null {
+    return localStorage.getItem('username');
+  }
+}
