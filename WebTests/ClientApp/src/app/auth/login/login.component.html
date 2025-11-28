@@ -1,13 +1,25 @@
-<h2>Вход</h2>
-<form (ngSubmit)="onSubmit()">
+<h2>Авторизация</h2>
+<form (ngSubmit)="onSubmit(loginForm)" #loginForm="ngForm">
   <div>
     <label>Email:</label>
-    <input [(ngModel)]="model.email" type="email" name="email" required />
+    <input [(ngModel)]="model.email"
+           type="email"
+           name="email"
+           required
+           email
+           #email="ngModel" />
+    <div *ngIf="email.invalid && email.touched" class="error">
+      Email обязателен и должен быть корректным.
+    </div>
   </div>
   <div>
     <label>Пароль:</label>
-    <input [(ngModel)]="model.password" type="password" name="password" required />
+    <input [(ngModel)]="model.password"
+           type="password"
+           name="password"
+           required
+           #password="ngModel" />
   </div>
-  <button type="submit">Войти</button>
+  <button type="submit" [disabled]="loginForm.invalid">Войти</button>
 </form>
-<a routerLink='/register'>Зарегистрироваться</a>
+<p>Нет аккаунта? <a routerLink='/register'>Зарегистрироваться</a></p>

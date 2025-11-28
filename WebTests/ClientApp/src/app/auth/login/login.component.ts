@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { NgForm, Validators } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { Router } from '@angular/router';
 
@@ -15,11 +16,14 @@ export class LoginComponent {
 
   constructor(private authService: AuthService, private router: Router) { }
 
-  onSubmit() {
-    console.log("Нажимается")
-    this.authService.login(this.model).subscribe({
-      next: () => { },
-      error: (err) => console.error('Ошибка входа: ', err)
-    });
+  onSubmit(form: NgForm) {
+    if (form.valid) {
+      this.authService.login(this.model).subscribe({
+        next: () => { },
+        error: (err) => console.error('Ошибка входа: ', err)
+      });
+    } else {
+      console.log('Форма содержит ошибки');
+    }
   }
 }
