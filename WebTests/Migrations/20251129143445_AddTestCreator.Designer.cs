@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebTests.Data;
 
@@ -11,9 +12,10 @@ using WebTests.Data;
 namespace WebTests.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251129143445_AddTestCreator")]
+    partial class AddTestCreator
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -22,19 +24,6 @@ namespace WebTests.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("TestTestTypes", b =>
-                {
-                    b.Property<int>("TestsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TypesId")
-                        .HasColumnType("int");
-
-                    b.HasKey("TestsId", "TypesId");
-
-                    b.HasIndex("TypesId");
-
-                    b.ToTable("TestTestTypes");
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -302,38 +291,6 @@ namespace WebTests.Migrations
                     b.ToTable("Tests");
                 });
 
-            modelBuilder.Entity("WebTests.Models.TestTypes", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TestTypes");
-                });
-
-            modelBuilder.Entity("TestTestTypes", b =>
-                {
-                    b.HasOne("WebTests.Models.Test", null)
-                        .WithMany()
-                        .HasForeignKey("TestsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("WebTests.Models.TestTypes", null)
-                        .WithMany()
-                        .HasForeignKey("TypesId")
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)

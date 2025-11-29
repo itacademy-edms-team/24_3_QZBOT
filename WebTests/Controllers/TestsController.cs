@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using WebTests.Data;
 using WebTests.Models;
 using WebTests.DTOs;
+using System.Security.Claims;
 
 namespace WebTests.Controllers
 {
@@ -102,6 +103,16 @@ namespace WebTests.Controllers
                 var test = new Test();
 
                 test.Title = dto.Title;
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (userId == null)
+                {
+                    return Unauthorized("Не удалось определить пользователя");
+                }
+
+                test.CreatorId = userId;
+                
 
                 if (dto.Questions == null)
                 {
