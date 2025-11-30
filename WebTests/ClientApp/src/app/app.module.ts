@@ -57,7 +57,7 @@ import { MyTestsComponent } from './tests/my-tests/my-tests.component';
       { path: 'profile', redirectTo: '/profile/me', pathMatch: 'full' },
       { path: 'profile/:name', component: ProfileComponent, canActivate: [authGuard] },
 
-      { path: '/my-tests', component: MyTestsComponent, canActivate: [authGuard] }
+      { path: 'my-tests', component: MyTestsComponent, canActivate: [authGuard] }
     ]),
     AppRoutingModule
   ],
