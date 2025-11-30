@@ -4,6 +4,7 @@ using WebTests.Data;
 using WebTests.Models;
 using WebTests.DTOs;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebTests.Controllers
 {
@@ -24,6 +25,40 @@ namespace WebTests.Controllers
             var tests = _context.Tests
                 .Include(q => q.Questions)
                 .ThenInclude(o => o.Options)
+                .ToList();
+
+            return Ok(tests);
+        }
+
+        [HttpGet("my")]
+        [Authorize]
+        public IActionResult GetMyTests()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var tests = _context.Tests
+                .Where(t => t.CreatorId == userId)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Title,
+                    t.Published
+                })
+                .ToList();
+
+            return Ok(tests);
+        }
+
+        [HttpGet("published")]
+        public IActionResult GetPublishedTests()
+        {
+            var tests = _context.Tests
+                .Where(t => t.Published == true)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Title
+                })
                 .ToList();
 
             return Ok(tests);

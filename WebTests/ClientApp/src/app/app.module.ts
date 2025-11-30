@@ -19,6 +19,7 @@ import { ProfileComponent } from './profile/profile.component';
 import { LoginComponent } from './auth/login/login.component';
 import { RegisterComponent } from './auth/register/register.component';
 import { authGuard } from './auth/auth.guard';
+import { MyTestsComponent } from './tests/my-tests/my-tests.component';
 
 @NgModule({
   declarations: [
@@ -34,6 +35,7 @@ import { authGuard } from './auth/auth.guard';
     ProfileComponent,
     LoginComponent,
     RegisterComponent,
+    MyTestsComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
@@ -53,7 +55,9 @@ import { authGuard } from './auth/auth.guard';
       { path: 'register', component: RegisterComponent },
 
       { path: 'profile', redirectTo: '/profile/me', pathMatch: 'full' },
-      { path: 'profile/:name', component: ProfileComponent, canActivate: [authGuard] }
+      { path: 'profile/:name', component: ProfileComponent, canActivate: [authGuard] },
+
+      { path: '/my-tests', component: MyTestsComponent, canActivate: [authGuard] }
     ]),
     AppRoutingModule
   ],

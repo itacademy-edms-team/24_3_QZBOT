@@ -22,6 +22,12 @@ namespace WebTests.Data
                 .WithMany()
                 .HasForeignKey(t => t.CreatorId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<Test>()
+                .HasOne(t => t.Creator)
+                .WithMany()
+                .HasForeignKey(t => t.CreatorId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

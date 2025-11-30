@@ -11,5 +11,6 @@ namespace WebTests.Models
         public List<TestTypes>? Types { get; set; }
         public string? CreatorId { get; set; }
         public IdentityUser? Creator { get; set; }
+        public bool Published { get; set; } = false;
     }
 }

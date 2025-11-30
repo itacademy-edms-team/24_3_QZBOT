@@ -7,7 +7,7 @@ import { TestService, Test, Question } from '../../services/test.service';
   styleUrls: ['./management-create.component.css']
 })
 export class ManagementCreateComponent {
-  test: Test = { id: 0, title: '', questions: [] };
+  test: Test = { id: 0, title: '', questions: [], creatorId: '', published: false };
   is_exist: boolean = false;
   confirm_add: boolean = false;
   success_add: boolean = false;

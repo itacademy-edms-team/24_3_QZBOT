@@ -8,9 +8,9 @@ import { ActivatedRoute, Router } from '@angular/router';
   styleUrls: ['./management-edit.component.css']
 })
 export class ManagementEditComponent implements OnInit {
-  test: Test = { id: 0, title: '', questions: [] }
+  test: Test = { id: 0, title: '', questions: [], creatorId: '', published: false }
   test_title: string = "";
-  edited_test: Test = { id: 0, title: '', questions: [] }
+  edited_test: Test = { id: 0, title: '', questions: [], creatorId: '', published: false }
   text_error: string = "";
   confirm_edit: boolean = false;
   changes: string[] = [];

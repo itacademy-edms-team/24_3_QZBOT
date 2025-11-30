@@ -30,6 +30,18 @@ export class TestService {
 
 
 
+  getMyTests() {
+    return this.http.get<Test[]>(`${this.baseUrl}/my`);
+  }
+
+
+
+  getPublishedTests() {
+    return this.http.get<Test[]>(`${this.baseUrl}/published`);
+  }
+
+
+
   checkTestExists(name: string): Observable<boolean> {
     return this.http.get<boolean>(`${this.baseUrl}/exist/${name}`)
   }
@@ -154,6 +166,8 @@ export interface Test {
   id: number;
   title: string;
   questions: Question[];
+  creatorId: string;
+  published: boolean;
 }
 
 export interface TestType {
