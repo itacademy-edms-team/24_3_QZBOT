@@ -18,7 +18,7 @@ export class ManagementEditListComponent {
   ) { }
 
   ngOnInit() {
-    this.testService.getAllTests().subscribe({
+    this.testService.getMyTests().subscribe({
       next: (data) => {
         this.tests = data;
       }
