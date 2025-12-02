@@ -8,6 +8,15 @@
        [readonly]="is_editing_locked"
        placeholder="Название теста" />
 
+
+<label>
+  <input type="checkbox"
+         [(ngModel)]="test.published"
+         [disabled]="is_editing_locked" />
+  Опубликовать тест
+</label>
+
+
 <p>{{ text_error }}</p>
 
 
@@ -37,17 +46,26 @@
     </li>
   </ul>
 
-  <button type="button" [disabled]="is_editing_locked" (click)="addOption(question)">Добавить вариант</button>
-  <button type="button" [disabled]="is_editing_locked" (click)="removeQuestion(i)">Удалить вопрос</button>
+  <button type="button"
+          [disabled]="is_editing_locked"
+          (click)="addOption(question)">Добавить вариант</button>
+
+  <button type="button"
+          [disabled]="is_editing_locked"
+          (click)="removeQuestion(i)">Удалить вопрос</button>
   <br />
 </div>
 
 <br />
-<button type="button" [disabled]="is_editing_locked" (click)="addQuestion()">Добавить вопрос</button>
+<button type="button"
+        [disabled]="is_editing_locked"
+        (click)="addQuestion()">Добавить вопрос</button>
 
 <br />
 <div *ngIf="test.questions.length > 2 and test_title != ''">
-  <button type="button" [disabled]="is_editing_locked" (click)="btnAdd()">Добавить тест</button>
+  <button type="button"
+          [disabled]="is_editing_locked"
+          (click)="btnAdd()">Добавить тест</button>
 </div>
 
 <div *ngIf="confirm_add">
@@ -58,4 +76,36 @@
 
 <div *ngIf="success_add">
   <p>Тест успешно добавлен!</p>
+</div>
+
+
+<!--<div *ngIf="json_add == false; else ">-->
+<button type="button"
+        (click)="json_add = true">
+  Добавить с помощью JSON
+  </button>
+<!--</div>-->
+
+
+<div *ngIf="json_add">
+  <textarea [(ngModel)]="json_input" placeholder='{
+    "title": "Название",
+    "questions": [
+        {
+            "text": "Вопрос?",
+            "options": [
+                {
+                    "text": "Правильный вариант ответа",
+                    "isCorrect": true
+                },
+                {
+                    "text": "Неправильный вариант ответа",
+                    "isCorrect": false
+                }
+            ]
+        }
+    ]
+}'></textarea>
+  <button type="button" (click)="loadFromJson()">Импортировать JSON</button>
+  <p>{{ json_error }}</p>
 </div>
