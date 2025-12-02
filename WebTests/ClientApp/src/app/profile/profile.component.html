@@ -1,0 +1,5 @@
+<p>profile {{ username }} works!</p>
+<button *ngIf="authService.isAuthenticated" (click)="onLogout()">Выйти</button>
+
+<br />
+<a [routerLink]="['/my-tests']">Ваши тесты</a>

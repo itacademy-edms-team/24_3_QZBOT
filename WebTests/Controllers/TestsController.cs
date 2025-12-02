@@ -3,6 +3,8 @@ using Microsoft.EntityFrameworkCore;
 using WebTests.Data;
 using WebTests.Models;
 using WebTests.DTOs;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WebTests.Controllers
 {
@@ -23,6 +25,40 @@ namespace WebTests.Controllers
             var tests = _context.Tests
                 .Include(q => q.Questions)
                 .ThenInclude(o => o.Options)
+                .ToList();
+
+            return Ok(tests);
+        }
+
+        [HttpGet("my")]
+        [Authorize]
+        public IActionResult GetMyTests()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var tests = _context.Tests
+                .Where(t => t.CreatorId == userId)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Title,
+                    t.Published
+                })
+                .ToList();
+
+            return Ok(tests);
+        }
+
+        [HttpGet("published")]
+        public IActionResult GetPublishedTests()
+        {
+            var tests = _context.Tests
+                .Where(t => t.Published == true)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Title
+                })
                 .ToList();
 
             return Ok(tests);
@@ -94,6 +130,7 @@ namespace WebTests.Controllers
             return Ok( isCorrect );
         }
 
+        [Authorize]
         [HttpPost("add")]
         public IActionResult AddTest([FromBody] TestDto dto)
         {
@@ -102,6 +139,16 @@ namespace WebTests.Controllers
                 var test = new Test();
 
                 test.Title = dto.Title;
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                if (userId == null)
+                {
+                    return Unauthorized("Не удалось определить пользователя");
+                }
+
+                test.CreatorId = userId;
+                
 
                 if (dto.Questions == null)
                 {
@@ -156,63 +203,42 @@ namespace WebTests.Controllers
             }
         }
 
+        [Authorize]
         [HttpPost("edit/{id}")]
-        public IActionResult EditTest(int id, [FromBody] TestDto dto)
+        public async Task<IActionResult> EditTest(int id, [FromBody] TestDto updated)
         {
-            var test = _context.Tests
+            var test = await _context.Tests
                 .Include(t => t.Questions)
-                .ThenInclude(q => q.Options)
-                .FirstOrDefault(t => t.Id == id);
+                    .ThenInclude(q => q.Options)
+                .FirstOrDefaultAsync(t => t.Id == id);
 
             if (test == null)
-                return NotFound("Тест не найден");
+                return NotFound(false);
 
-            if (!string.IsNullOrWhiteSpace(dto.Title))
-                test.Title = dto.Title;
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var incomingQuestionTexts = dto.Questions.Select(q => q.Text).ToList();
+            if (userId != test.CreatorId)
+                return Forbid();
 
-            var questionsToRemove = test.Questions
-                .Where(q => !incomingQuestionTexts.Contains(q.Text))
-                .ToList();
+            // --- Обновляем базовые поля ---
+            test.Title = updated.Title;
+            test.Published = updated.Published;
 
-            _context.Questions.RemoveRange(questionsToRemove);
+            // --- Полная замена списка вопросов ---
+            _context.AnswerOptions.RemoveRange(test.Questions.SelectMany(q => q.Options));
+            _context.Questions.RemoveRange(test.Questions);
 
-            foreach (var qDto in dto.Questions)
+            test.Questions = updated.Questions.Select(q => new Question
             {
-                var existingQuestion = test.Questions
-                    .FirstOrDefault(q => q.Text == qDto.Text);
-
-                if (existingQuestion == null)
+                Text = q.Text,
+                Options = q.Options.Select(o => new AnswerOption
                 {
-                    var newQuestion = new Question
-                    {
-                        Text = qDto.Text,
-                        TestId = test.Id,
-                        Options = qDto.Options.Select(o => new AnswerOption
-                        {
-                            Text = o.Text,
-                            IsCorrect = o.IsCorrect,
-                        }).ToList()
-                    };
+                    Text = o.Text,
+                    IsCorrect = o.IsCorrect
+                }).ToList()
+            }).ToList();
 
-                    test.Questions.Add(newQuestion);
-                }
-                else
-                {
-                    existingQuestion.Text = qDto.Text;
-
-                    _context.AnswerOptions.RemoveRange(existingQuestion.Options);
-
-                    existingQuestion.Options = qDto.Options.Select(o => new AnswerOption
-                    {
-                        Text = o.Text,
-                        IsCorrect = o.IsCorrect,
-                    }).ToList();
-                }
-            }
-
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             return Ok(true);
         }

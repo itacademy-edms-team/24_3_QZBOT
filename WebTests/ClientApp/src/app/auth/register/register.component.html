@@ -1,0 +1,76 @@
+<h2>Регистрация</h2>
+<form (ngSubmit)="onSubmit(registerForm)" #registerForm="ngForm">
+
+  <div>
+    <label>Имя пользователя:</label>
+    <input [(ngModel)]="model.username"
+           type="text"
+           name="username"
+           required />
+  </div>
+
+  <div>
+    <label>Email:</label>
+    <input [(ngModel)]="model.email"
+           type="email"
+           name="email"
+           required
+           email
+           #email="ngModel" />
+    <div *ngIf="email.invalid && email.touched" class="error">
+      Email обязателен и должен быть корректным.
+    </div>
+  </div>
+
+  <div>
+    <label>Номер телефона:</label>
+    <input [(ngModel)]="model.phoneNumber"
+           type="tel"
+           name="phoneNumber"
+           required />
+  </div>
+
+  <div>
+    <label>Пароль:</label>
+    <input [(ngModel)]="model.password"
+           type="password"
+           name="password"
+           required
+           appPasswordValidator
+           #password="ngModel" />
+    <div *ngIf="password.errors?.['minLength'] && password.touched" class="error">
+      Пароль должен быть не менее 6 символов.
+    </div>
+    <div *ngIf="password.errors?.['missingUpperCase'] && password.touched" class="error">
+      Пароль должен содержать хотя бы одну заглавную букву.
+    </div>
+    <div *ngIf="password.errors?.['missingLowerCase'] && password.touched" class="error">
+      Пароль должен содержать хотя бы одну строчную букву.
+    </div>
+    <div *ngIf="password.errors?.['missingNumbers'] && password.touched" class="error">
+      Пароль должен содержать хотя бы одну цифру.
+    </div>
+    <div *ngIf="password.errors?.['missingSpecialChar'] && password.touched" class="error">
+      Пароль должен содержать хотя бы один специальный символ.
+    </div>
+  </div>
+  <div>
+    <label>Подтвердите пароль:</label>
+    <input [(ngModel)]="confirmPassword"
+           type="password"
+           name="confirmPassword"
+           required
+           #confirmPasswordInput="ngModel" />
+    <div *ngIf="model.password !== confirmPassword && confirmPassword && confirmPasswordInput.touched"
+         class="error">
+      Пароли не совпадают.
+    </div>
+  </div>
+
+  <button type="submit" [disabled]="registerForm.invalid">Зарегистрироваться</button>
+
+  <div *ngIf="textError">
+    <p>{{ textError }}</p>
+  </div>
+</form>
+<p>Уже есть аккаунт? <a routerLink="/login">Войти</a></p> 

@@ -7,12 +7,23 @@ import { TestService, Test, Question } from '../../services/test.service';
   styleUrls: ['./management-create.component.css']
 })
 export class ManagementCreateComponent {
-  test: Test = { id: 0, title: '', questions: [] };
+  test: Test = {
+    id: 0,
+    title: '',
+    questions: [],
+    creatorId: '',
+    published: false
+  };
+
   is_exist: boolean = false;
   confirm_add: boolean = false;
   success_add: boolean = false;
   text_error: string = '';
   is_editing_locked: boolean = false;
+
+  json_input: string = '';
+  json_error: string = '';
+  json_add: boolean = false;
 
   constructor(
     private testService: TestService
@@ -95,5 +106,39 @@ export class ManagementCreateComponent {
     question.options.forEach((option: any, index: number) => {
       option.isCorrect = index === selectedIndex;
     });
+  }
+
+
+
+  loadFromJson() {
+    this.json_error = '';
+
+    try {
+      const obj = JSON.parse(this.json_input);
+
+      if (!obj.title || !Array.isArray(obj.questions)) {
+        this.json_error = "Неправильная структура JSON";
+        return;
+      }
+
+      this.test = {
+        id: 0,
+        title: obj.title,
+        creatorId: '',
+        published: obj.published ?? false,
+        questions: obj.questions.map((q: any) => ({
+          id: 0,
+          text: q.text,
+          options: q.options.map((o: any) => ({
+            id: 0,
+            text: o.text,
+            isCorrect: o.isCorrect
+          }))
+        }))
+      };
+
+    } catch (e) {
+      this.json_error = "Ошибка: невалидный JSON";
+    }
   }
 }

@@ -15,7 +15,7 @@ export class TestsListComponent {
   ) { }
 
   ngOnInit() {
-    this.testService.getAllTests().subscribe({
+    this.testService.getPublishedTests().subscribe({
       next: (data) => {
         this.tests = data;
       }

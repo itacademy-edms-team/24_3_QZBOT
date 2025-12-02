@@ -8,9 +8,24 @@ import { ActivatedRoute, Router } from '@angular/router';
   styleUrls: ['./management-edit.component.css']
 })
 export class ManagementEditComponent implements OnInit {
-  test: Test = { id: 0, title: '', questions: [] }
+  test: Test = {
+    id: 0,
+    title: '',
+    questions: [],
+    creatorId: '',
+    published: false
+  };
+
   test_title: string = "";
-  edited_test: Test = { id: 0, title: '', questions: [] }
+
+  edited_test: Test = {
+    id: 0,
+    title: '',
+    questions: [],
+    creatorId: '',
+    published: false
+  };
+
   text_error: string = "";
   confirm_edit: boolean = false;
   changes: string[] = [];
@@ -19,6 +34,7 @@ export class ManagementEditComponent implements OnInit {
 
   constructor(
     private route: ActivatedRoute,
+    private router: Router,
     private testService: TestService,
   ) { }
   
@@ -33,6 +49,12 @@ export class ManagementEditComponent implements OnInit {
       this.testService.getTestById(this.test.id).subscribe({
         next: (data) => {
           this.test = data;
+
+          if (data.creatorId !== this.testService.currentUserId) {
+            alert("Вы не можете редактировать чужой тест");
+            this.router.navigate(['/management']);
+          }
+
           this.edited_test = JSON.parse(JSON.stringify(this.test));
           this.test_title = data.title;
         }

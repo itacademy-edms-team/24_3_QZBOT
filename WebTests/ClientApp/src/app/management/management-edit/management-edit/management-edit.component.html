@@ -10,6 +10,15 @@
        [readonly]="is_editing_locked"
        placeholder="Название теста" />
 
+
+<label>
+  <input type="checkbox"
+         [(ngModel)]="edited_test.published"
+         [disabled]="is_editing_locked" />
+  Опубликовать тест
+</label>
+
+
 <div *ngFor="let question of edited_test.questions; let i = index">
   <h3>Вопрос {{ i + 1 }}</h3>
   <input
@@ -30,21 +39,33 @@
              [(ngModel)]="option.text"
              [readonly]="is_editing_locked"
              placeholder="Вариант {{ j + 1 }}" />
-      <button type="button" [disabled]="is_editing_locked" (click)="removeOption(question, j)">Удалить</button>
+
+      <button type="button"
+              [disabled]="is_editing_locked"
+              (click)="removeOption(question, j)">Удалить</button>
     </li>
   </ul>
 
-  <button type="button" [disabled]="is_editing_locked" (click)="addOption(question)">Добавить вариант</button>
-  <button type="button" [disabled]="is_editing_locked" (click)="removeQuestion(i)">Удалить вопрос</button>
+  <button type="button"
+          [disabled]="is_editing_locked"
+          (click)="addOption(question)">Добавить вариант</button>
+
+  <button type="button"
+          [disabled]="is_editing_locked"
+          (click)="removeQuestion(i)">Удалить вопрос</button>
   <br />
 </div>
 
 <br />
-<button type="button" [disabled]="is_editing_locked" (click)="addQuestion()">Добавить вопрос</button>
+<button type="button"
+        [disabled]="is_editing_locked"
+        (click)="addQuestion()">Добавить вопрос</button>
 
 <br />
 <div *ngIf="edited_test.questions.length > 2 && edited_test.title != ''"> 
-  <button type="button" [disabled]="is_editing_locked" (click)="btnSaveChanges()">Редактировать</button>
+  <button type="button"
+          [disabled]="is_editing_locked"
+          (click)="btnSaveChanges()">Редактировать</button>
 </div>
 
 <div *ngIf="confirm_edit">

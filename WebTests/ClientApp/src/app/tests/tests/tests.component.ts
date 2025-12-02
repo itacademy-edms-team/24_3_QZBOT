@@ -9,7 +9,14 @@ import { TestService, Test, Question, Option } from '../../services/test.service
 })
 export class TestComponent implements OnInit {
 
-  test: Test = { id: 0, title: '', questions: [] };
+  test: Test = {
+    id: 0,
+    title: '',
+    questions: [],
+    creatorId: '',
+    published: false
+  };
+
   errorMessage = '';
   currentQuestionIndex = 0;
   answers: { [id: number]: string } = {};

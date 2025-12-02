@@ -30,6 +30,18 @@ export class TestService {
 
 
 
+  getMyTests() {
+    return this.http.get<Test[]>(`${this.baseUrl}/my`);
+  }
+
+
+
+  getPublishedTests() {
+    return this.http.get<Test[]>(`${this.baseUrl}/published`);
+  }
+
+
+
   checkTestExists(name: string): Observable<boolean> {
     return this.http.get<boolean>(`${this.baseUrl}/exist/${name}`)
   }
@@ -49,6 +61,7 @@ export class TestService {
   addTest(title: string, questions: Question[]) {
     return this.http.post<boolean>(`${this.baseUrl}/add`, {
       title,
+      published: false,
       questions
     });
   }
@@ -56,7 +69,7 @@ export class TestService {
 
 
   editTest(id: number, test: Test) {
-    return this.http.post<boolean>(`${this.baseUrl}/edit/${id}`, test);
+    return this.http.post(`${this.baseUrl}/edit/${id}`, test);
   }
 
 
@@ -105,6 +118,13 @@ export class TestService {
       changes.push(`Удалено ${original.questions.length - updated.questions.length} вопрос(ов)`);
     }
 
+    if (original.published == true && updated.published == false) {
+      changes.push(`Тест скрыт`);
+    }
+    if (original.published == false && updated.published == true) {
+      changes.push(`Тест опубликован`);
+    }
+
     return changes;
   }
 
@@ -147,13 +167,26 @@ export class TestService {
 
     return "true";
   }
+
+
+  get currentUserId(): string {
+    const token = localStorage.getItem("token");
+    if (!token) return "";
+
+    const payload = JSON.parse(atob(token.split('.')[1]));
+    return payload["nameid"];
+  }
 }
+
+
 
 
 export interface Test {
   id: number;
   title: string;
   questions: Question[];
+  creatorId: string;
+  published: boolean;
 }
 
 export interface TestType {
