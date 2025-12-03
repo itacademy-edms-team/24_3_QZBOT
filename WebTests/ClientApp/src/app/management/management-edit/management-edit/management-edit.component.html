@@ -1,90 +1,141 @@
-<h2>Редактирование {{ test_title }}</h2>
+<div class="mx-auto max-w-4xl p-6">
 
-<p>{{ text_error }}</p>
+  <h2 class="text-3xl font-bold mb-6">Редактирование {{ test_title }}</h2>
 
-<label>Название: </label>
-<input
-       type="text"
-       name="test-title"
-       [(ngModel)]="edited_test.title"
-       [readonly]="is_editing_locked"
-       placeholder="Название теста" />
+  <!-- Название теста -->
+  <div class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
+    <div class="flex flex-col gap-4">
 
-
-<label>
-  <input type="checkbox"
-         [(ngModel)]="edited_test.published"
-         [disabled]="is_editing_locked" />
-  Опубликовать тест
-</label>
-
-
-<div *ngFor="let question of edited_test.questions; let i = index">
-  <h3>Вопрос {{ i + 1 }}</h3>
-  <input
-         type="text"
-         [(ngModel)]="question.text"
-         [readonly]="is_editing_locked"
-         placeholder="Текст вопроса" />
-
-  <ul>
-    <li *ngFor="let option of question.options; let j = index">
-      <input type="radio"
-             [name]="'correct_' + i"
-             [checked]="option.isCorrect"
-             (change)="selectCorrectOption(question, j)" />
-
-      <input
-             type="text"
-             [(ngModel)]="option.text"
+      <input type="text"
+             name="test-title"
+             [(ngModel)]="edited_test.title"
              [readonly]="is_editing_locked"
-             placeholder="Вариант {{ j + 1 }}" />
+             placeholder="Название теста"
+             class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition" />
 
+      <label class="flex items-center gap-2 text-gray-700 font-medium">
+        <input type="checkbox"
+               [(ngModel)]="edited_test.published"
+               [disabled]="is_editing_locked"
+               class="h-5 w-5" />
+        Опубликовать тест
+      </label>
+
+    </div>
+  </div>
+
+  <!-- Ошибка -->
+  <div *ngIf="text_error"
+       class="mb-6 p-4 rounded-lg border-l-4 border-red-600 bg-red-50 text-red-800 text-lg font-semibold shadow-sm">
+    ⚠️ {{ text_error }}
+  </div>
+
+  <!-- ВОПРОСЫ -->
+  <div class="space-y-8 shadow-md rounded-xl">
+
+    <div *ngFor="let question of edited_test.questions; let i = index"
+         class="bg-white border rounded-xl shadow-sm p-6">
+      <h3 class="text-2xl font-semibold text-gray-900 mb-4">
+        Вопрос {{ i + 1 }}
+      </h3>
+
+      <input type="text"
+             [(ngModel)]="question.text"
+             [readonly]="is_editing_locked"
+             placeholder="Текст вопроса"
+             class="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition" />
+
+      <!-- Варианты -->
+      <ul class="space-y-3">
+        <li *ngFor="let option of question.options; let j = index"
+            class="flex items-center gap-3">
+
+          <input type="radio"
+                 [name]="'correct_' + i"
+                 [checked]="option.isCorrect"
+                 [disabled]="is_editing_locked"
+                 (change)="selectCorrectOption(question, j)"
+                 class="h-5 w-5" />
+
+          <input type="text"
+                 [(ngModel)]="option.text"
+                 [readonly]="is_editing_locked"
+                 placeholder="Вариант {{ j + 1 }}"
+                 class="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300 transition" />
+
+          <button type="button"
+                  [disabled]="is_editing_locked"
+                  (click)="removeOption(question, j)"
+                  class="text-red-600 hover:text-red-800 font-medium">
+            Удалить
+          </button>
+
+        </li>
+      </ul>
+
+      <div class="flex gap-4 mt-4">
+
+        <button type="button"
+                [disabled]="is_editing_locked"
+                (click)="addOption(question)"
+                class="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600">
+          Добавить вариант
+        </button>
+
+        <button type="button"
+                [disabled]="is_editing_locked"
+                (click)="removeQuestion(i)"
+                class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+          Удалить вопрос
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Добавить вопрос -->
+  <div class="mt-8">
+    <button type="button"
+            [disabled]="is_editing_locked"
+            (click)="addQuestion()"
+            class="px-5 py-3 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 duration-300">
+      Добавить вопрос
+    </button>
+  </div>
+
+  <!-- Кнопка сохранить -->
+  <div *ngIf="edited_test.questions.length > 2 && edited_test.title != ''" class="mt-8">
+    <button type="button"
+            [disabled]="is_editing_locked"
+            (click)="btnSaveChanges()"
+            class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow">
+      Сохранить изменения
+    </button>
+  </div>
+
+  <!-- Подтверждение -->
+  <div *ngIf="confirm_edit" class="mt-6 p-4 border rounded-lg bg-yellow-50 shadow-sm">
+    <p class="font-semibold text-lg mb-2">Изменения:</p>
+    <ul class="list-disc ml-5 space-y-1">
+      <li *ngFor="let change of changes">{{ change }}</li>
+    </ul>
+
+    <div class="flex gap-3 mt-4">
       <button type="button"
-              [disabled]="is_editing_locked"
-              (click)="removeOption(question, j)">Удалить</button>
-    </li>
-  </ul>
+              (click)="btnConfirm()"
+              class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg">
+        Подтвердить
+      </button>
+      <button type="button"
+              (click)="btnCancel()"
+              class="px-4 py-2 bg-gray-400 hover:bg-gray-500 text-white rounded-lg">
+        Отменить
+      </button>
+    </div>
+  </div>
 
-  <button type="button"
-          [disabled]="is_editing_locked"
-          (click)="addOption(question)">Добавить вариант</button>
-
-  <button type="button"
-          [disabled]="is_editing_locked"
-          (click)="removeQuestion(i)">Удалить вопрос</button>
-  <br />
-</div>
-
-<br />
-<button type="button"
-        [disabled]="is_editing_locked"
-        (click)="addQuestion()">Добавить вопрос</button>
-
-<br />
-<div *ngIf="edited_test.questions.length > 2 && edited_test.title != ''"> 
-  <button type="button"
-          [disabled]="is_editing_locked"
-          (click)="btnSaveChanges()">Редактировать</button>
-</div>
-
-<div *ngIf="confirm_edit">
-  <br />
-  <p>Изменения: </p>
-  <ul>
-    <li *ngFor="let change of changes; let k = index">
-      <p>{{ change }}</p>
-    </li>
-  </ul>
-
-  <button type="button" (click)="btnConfirm()">Подтвердить редактирование</button>
-  <button type="button" (click)="btnCancel()">Отменить</button>
-</div>
-
-<ng-template #no_question>
-  <p>В данном тесте нет вопросов</p>
-</ng-template>
-
-<div *ngIf="success_edit">
-  <p>Тест успешно изменен!</p>
+  <!-- Успех -->
+  <div *ngIf="success_edit" class="mt-6 p-4 rounded-lg border-l-4 border-green-600 bg-green-50 text-green-800 text-lg shadow-sm">
+    ✔ Тест успешно изменен!
+  </div>
 </div>
