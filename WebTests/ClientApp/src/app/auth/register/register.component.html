@@ -1,76 +1,106 @@
-<h2>Регистрация</h2>
-<form (ngSubmit)="onSubmit(registerForm)" #registerForm="ngForm">
+<div class="flex items-center justify-center px-6 pb-4">
 
-  <div>
-    <label>Имя пользователя:</label>
-    <input [(ngModel)]="model.username"
-           type="text"
-           name="username"
-           required />
-  </div>
+  <div class="w-full max-w-md bg-white shadow-lg border border-gray-200 rounded-2xl p-8">
 
-  <div>
-    <label>Email:</label>
-    <input [(ngModel)]="model.email"
-           type="email"
-           name="email"
-           required
-           email
-           #email="ngModel" />
-    <div *ngIf="email.invalid && email.touched" class="error">
-      Email обязателен и должен быть корректным.
-    </div>
-  </div>
+    <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">
+      Регистрация
+    </h2>
 
-  <div>
-    <label>Номер телефона:</label>
-    <input [(ngModel)]="model.phoneNumber"
-           type="tel"
-           name="phoneNumber"
-           required />
-  </div>
+    <form (ngSubmit)="onSubmit(registerForm)" #registerForm="ngForm" class="space-y-6">
 
-  <div>
-    <label>Пароль:</label>
-    <input [(ngModel)]="model.password"
-           type="password"
-           name="password"
-           required
-           appPasswordValidator
-           #password="ngModel" />
-    <div *ngIf="password.errors?.['minLength'] && password.touched" class="error">
-      Пароль должен быть не менее 6 символов.
-    </div>
-    <div *ngIf="password.errors?.['missingUpperCase'] && password.touched" class="error">
-      Пароль должен содержать хотя бы одну заглавную букву.
-    </div>
-    <div *ngIf="password.errors?.['missingLowerCase'] && password.touched" class="error">
-      Пароль должен содержать хотя бы одну строчную букву.
-    </div>
-    <div *ngIf="password.errors?.['missingNumbers'] && password.touched" class="error">
-      Пароль должен содержать хотя бы одну цифру.
-    </div>
-    <div *ngIf="password.errors?.['missingSpecialChar'] && password.touched" class="error">
-      Пароль должен содержать хотя бы один специальный символ.
-    </div>
-  </div>
-  <div>
-    <label>Подтвердите пароль:</label>
-    <input [(ngModel)]="confirmPassword"
-           type="password"
-           name="confirmPassword"
-           required
-           #confirmPasswordInput="ngModel" />
-    <div *ngIf="model.password !== confirmPassword && confirmPassword && confirmPasswordInput.touched"
-         class="error">
-      Пароли не совпадают.
-    </div>
-  </div>
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Имя пользователя:</label>
 
-  <button type="submit" [disabled]="registerForm.invalid">Зарегистрироваться</button>
+        <input [(ngModel)]="model.username"
+               type="text"
+               name="username"
+               required
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+      </div>
 
-  <div *ngIf="textError">
-    <p>{{ textError }}</p>
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Email:</label>
+
+        <input [(ngModel)]="model.email"
+               type="email"
+               name="email"
+               required
+               email
+               #email="ngModel"
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+
+        <div *ngIf="email.invalid && email.touched"
+             class="text-red-600 text-sm mt-1">
+          Email обязателен и должен быть корректным.
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Номер телефона:</label>
+
+        <input [(ngModel)]="model.phoneNumber"
+               type="tel"
+               name="phoneNumber"
+               required
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Пароль:</label>
+
+        <input [(ngModel)]="model.password"
+               type="password"
+               name="password"
+               required
+               appPasswordValidator
+               #password="ngModel"
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+
+        <div *ngIf="password.touched" class="text-red-600 text-sm space-y-1 mt-1">
+          <div *ngIf="password.errors?.['minLength']">Пароль должен быть не менее 6 символов.</div>
+          <div *ngIf="password.errors?.['missingUpperCase']">Пароль должен содержать хотя бы одну заглавную букву.</div>
+          <div *ngIf="password.errors?.['missingLowerCase']">Пароль должен содержать хотя бы одну строчную букву.</div>
+          <div *ngif="password.errors?.['missingNumbers']">Пароль должен содержать хотя бы одну цифру.</div>
+          <div *ngIf="password.errors?.['missingSpecialChar']">Пароль должен содержать хотя бы один специальный символ.</div>
+        </div>
+      </div>
+
+
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Подтвердите пароль:</label>
+
+        <input [(ngModel)]="confirmPassword"
+               type="password"
+               name="confirmPassword"
+               required
+               #confirmPasswordInput="ngModel"
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+
+        <div *ngIf="model.password !== confirmPassword && confirmPassword && confirmPasswordInput.touched"
+             class="text-red-600 text-sm mt-1">
+          Пароли не совпадают.
+        </div>
+      </div>
+
+      <button type="submit"
+              [disabled]="registerForm.invalid"
+              class="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-300">
+        Зарегистрироваться
+      </button>
+
+      <div *ngIf="textError"
+           class="text-center text-red-600 font-medium mt-3">
+        {{ textError }}
+      </div>
+    </form>
+
+    <p class="text-center text-gray-700 mt-6">
+      Уже есть аккаунт?
+      <a routerLink="/login"
+         class="text-indigo-600 hover:underline">
+        Войти
+      </a>
+    </p>
+
   </div>
-</form>
-<p>Уже есть аккаунт? <a routerLink="/login">Войти</a></p> 
+</div>
