@@ -67,7 +67,7 @@ export class ManagementCreateComponent {
           this.confirm_add = false;
           this.success_add = true;
           this.text_error = "";
-          this.is_editing_locked = false;
+          this.is_editing_locked = true;
         }
       }
     });

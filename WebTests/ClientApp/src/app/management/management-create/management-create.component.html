@@ -1,94 +1,151 @@
-<h2>Создание теста</h2>
-<br />
+<div class="mx-auto max-w-4xl p-6">
 
-<input
-       type="text"
-       name="test-title"
-       [(ngModel)]="test.title"
-       [readonly]="is_editing_locked"
-       placeholder="Название теста" />
+  <h2 class="text-3xl font-bold mb-6">Создание теста</h2>
 
+  <!-- Поле названия + чекбокс публикации -->
+  <div class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
+    <div class="flex flex-col gap-4">
 
-<label>
-  <input type="checkbox"
-         [(ngModel)]="test.published"
-         [disabled]="is_editing_locked" />
-  Опубликовать тест
-</label>
-
-
-<p>{{ text_error }}</p>
-
-
-<div *ngFor="let question of test.questions; let i = index">
-  <h3>Вопрос {{ i + 1 }}</h3>
-  <input
-         type="text"
-         [(ngModel)]="question.text"
-         [readonly]="is_editing_locked"
-         placeholder="Текст вопроса" />
-
-  <ul>
-    <li *ngFor="let option of question.options; let j = index">
-      <input type="radio"
-             [name]="'correct_' + i"
-             [checked]="option.isCorrect"
-             [disabled]="is_editing_locked"
-             (change)="selectCorrectOption(question, j)"/>
-
-      <input
-             type="text"
-             [(ngModel)]="option.text"
+      <input type="text"
+             name="test-title"
+             [(ngModel)]="test.title"
              [readonly]="is_editing_locked"
-             placeholder="Вариант {{ j + 1 }}" />
+             placeholder="Название теста"
+             class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition" />
 
-      <button type="button" [disabled]="is_editing_locked" (click)="removeOption(question, j)">Удалить</button>
-    </li>
-  </ul>
+      <label class="flex items-center gap-2 text-gray-700 font-medium">
+        <input type="checkbox"
+               [(ngModel)]="test.published"
+               [disabled]="is_editing_locked"
+               class="h-5 w-5" />
+        Опубликовать тест
+      </label>
 
-  <button type="button"
-          [disabled]="is_editing_locked"
-          (click)="addOption(question)">Добавить вариант</button>
+    </div>
+  </div>
 
-  <button type="button"
-          [disabled]="is_editing_locked"
-          (click)="removeQuestion(i)">Удалить вопрос</button>
-  <br />
-</div>
-
-<br />
-<button type="button"
-        [disabled]="is_editing_locked"
-        (click)="addQuestion()">Добавить вопрос</button>
-
-<br />
-<div *ngIf="test.questions.length > 2 and test_title != ''">
-  <button type="button"
-          [disabled]="is_editing_locked"
-          (click)="btnAdd()">Добавить тест</button>
-</div>
-
-<div *ngIf="confirm_add">
-  <p>Подтвердите добавление теста {{ test.title }}</p>
-  <button type="button" (click)="btnConfirm()">Подтвердить</button>
-  <button type="button" (click)="btnCancel()">Отменить</button>
-</div>
-
-<div *ngIf="success_add">
-  <p>Тест успешно добавлен!</p>
-</div>
+  <!-- Ошибка -->
+  <div *ngIf="text_error"
+       class="mb-6 p-4 rounded-lg border-l-4 border-red-600 bg-red-50 text-red-800 text-lg font-semibold shadow-sm">
+    ⚠️ {{ text_error }}
+  </div>
 
 
-<!--<div *ngIf="json_add == false; else ">-->
-<button type="button"
-        (click)="json_add = true">
-  Добавить с помощью JSON
-  </button>
-<!--</div>-->
+  <!-- ВОПРОСЫ -->
+  <div class="space-y-8 shadow-md rounded-xl">
 
+    <div *ngFor="let question of test.questions; let i = index"
+         class="bg-white border rounded-xl shadow-sm p-6">
+      <h3 class="text-2xl font-semibold text-gray-900 mb-4">
+        Вопрос {{ i + 1 }}
+      </h3>
 
-<div *ngIf="json_add">
-  <textarea [(ngModel)]="json_input" placeholder='{
+      <input type="text"
+             [(ngModel)]="question.text"
+             [readonly]="is_editing_locked"
+             placeholder="Текст вопроса"
+             class="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition" />
+
+      <!-- Варианты -->
+      <ul class="space-y-3">
+        <li *ngFor="let option of question.options; let j = index"
+            class="flex items-center gap-3">
+
+          <input type="radio"
+                 [name]="'correct_' + i"
+                 [checked]="option.isCorrect"
+                 [disabled]="is_editing_locked"
+                 (change)="selectCorrectOption(question, j)"
+                 class="h-5 w-5" />
+
+          <input type="text"
+                 [(ngModel)]="option.text"
+                 [readonly]="is_editing_locked"
+                 placeholder="Вариант {{ j + 1 }}"
+                 class="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300 transition" />
+
+          <button type="button"
+                  [disabled]="is_editing_locked"
+                  (click)="removeOption(question, j)"
+                  class="text-red-600 hover:text-red-800 font-medium">
+            Удалить
+          </button>
+
+        </li>
+      </ul>
+
+      <div class="flex gap-4 mt-4">
+
+        <button type="button"
+                [disabled]="is_editing_locked"
+                (click)="addOption(question)"
+                class="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600">
+          Добавить вариант
+        </button>
+
+        <button type="button"
+                [disabled]="is_editing_locked"
+                (click)="removeQuestion(i)"
+                class="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600">
+          Удалить вопрос
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Добавить вопрос -->
+  <div class="mt-8">
+    <button type="button"
+            [disabled]="is_editing_locked"
+            (click)="addQuestion()"
+            class="px-5 py-3 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 duration-300">
+      Добавить вопрос
+    </button>
+  </div>
+
+  <!-- Добавить тест -->
+  <div *ngIf="test.questions.length > 2 && test.title != ''" class="mt-8">
+    <button type="button"
+            [disabled]="is_editing_locked"
+            (click)="btnAdd()"
+            class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow">
+      Добавить тест
+    </button>
+  </div>
+
+  <!-- Подтверждение -->
+  <div *ngIf="confirm_add" class="mt-6 bg-yellow-50 border border-yellow-300 p-6 rounded-lg">
+    <p class="text-gray-800 mb-4">Подтвердите добавление теста <b>{{ test.title }}</b></p>
+    <button type="button"
+            class="mr-4 px-5 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+            (click)="btnConfirm()">
+      Подтвердить
+    </button>
+    <button type="button"
+            class="px-5 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-500"
+            (click)="btnCancel()">
+      Отменить
+    </button>
+  </div>
+
+  <!-- Успех -->
+  <div *ngIf="success_add" class="mt-6 text-green-600 font-semibold">
+    Тест успешно добавлен!
+  </div>
+
+  <!-- JSON Добавление -->
+  <div class="mt-10">
+    <button type="button"
+            (click)="json_add = true"
+            class="px-5 py-3 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600">
+      Добавить с помощью JSON
+    </button>
+
+    <div *ngIf="json_add" class="mt-6">
+      <textarea [(ngModel)]="json_input"
+                class="w-full h-60 p-4 border rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
+                placeholder='{
     "title": "Название",
     "questions": [
         {
@@ -106,6 +163,15 @@
         }
     ]
 }'></textarea>
-  <button type="button" (click)="loadFromJson()">Импортировать JSON</button>
-  <p>{{ json_error }}</p>
+
+      <button type="button"
+              (click)="loadFromJson()"
+              class="mt-4 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+        Импортировать JSON
+      </button>
+
+      <p class="text-red-500 mt-3">{{ json_error }}</p>
+    </div>
+  </div>
+
 </div>

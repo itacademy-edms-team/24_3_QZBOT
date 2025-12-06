@@ -1,5 +1,41 @@
-<p>profile {{ username }} works!</p>
-<button *ngIf="authService.isAuthenticated" (click)="onLogout()">Выйти</button>
+<div class="pt-10 px-6">
 
-<br />
-<a [routerLink]="['/my-tests']">Ваши тесты</a>
+  <div class="max-w-xl mx-auto bg-white shadow-lg border border-gray-200 rounded-2xl p-8">
+
+    <h1 class="text-3xl font-bold text-gray-900 mb-6">
+      Профиль {{ username }}!
+    </h1>
+
+    <div class="space-y-4 text-gray-700 mb-8">
+      <p class="text-lg">
+        Добро пожаловать в личный кабинет!
+        Здесь вы можете управлять своими тестами и настройками аккаунта.
+      </p>
+    </div>
+
+
+    <div class="flex flex-col gap-4">
+
+      <!-- Ссылка на тесты -->
+      <a [routerLink]="['/my-tests']"
+         class="text-center py-3 rounded-xl border border-indigo-500 text-indigo-600 font-medium hover:bg-indigo-500 hover:text-white transition-colors duration-300">
+        Ваши тесты
+      </a>
+
+      <!-- Logout -->
+      <button *ngIf="authService.isAuthenticated"
+              (click)="onLogout()"
+              class="py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-medium transition-colors duration-300">
+        Выйти
+      </button>
+
+    </div>
+
+
+    <!--<button *ngIf="authService.isAuthenticated" (click)="onLogout()">Выйти</button>
+
+    <br />
+    <a [routerLink]="['/my-tests']">Ваши тесты</a>-->
+  </div>
+  
+</div>

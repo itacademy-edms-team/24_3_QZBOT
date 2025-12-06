@@ -1,25 +1,55 @@
-<h2>Авторизация</h2>
-<form (ngSubmit)="onSubmit(loginForm)" #loginForm="ngForm">
-  <div>
-    <label>Email:</label>
-    <input [(ngModel)]="model.email"
-           type="email"
-           name="email"
-           required
-           email
-           #email="ngModel" />
-    <div *ngIf="email.invalid && email.touched" class="error">
-      Email обязателен и должен быть корректным.
-    </div>
+<div class="flex items-center justify-center pt-10 px-6">
+
+  <div class="w-full max-w-md bg-white shadow-lg border border-gray-200 rounded-2xl p-8">
+
+    <h2 class="text-3xl font-bold text-gray-900 mb-6 text-center">
+      Авторизация
+    </h2>
+
+    <form (ngSubmit)="onSubmit(loginForm)" #loginForm="ngForm" class="space-y-6">
+
+      <div>
+        <label class="blockquote text-gray-700 font-medium mb-1">Email:</label>
+
+        <input [(ngModel)]="model.email"
+               type="email"
+               name="email"
+               required
+               email
+               #email="ngModel"
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+
+        <div *ngIf="email.invalid && email.touched"
+             class="text-red-600 text-sm mt-1">
+          Email обязателен и должен быть корректным.
+        </div>
+      </div>
+
+      <div>
+        <label class="block text-gray-700 font-medium mb-1">Пароль:</label>
+
+        <input [(ngModel)]="model.password"
+               type="password"
+               name="password"
+               required
+               #password="ngModel"
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+      </div>
+
+      <button type="submit"
+              [disabled]="loginForm.invalid"
+              class="w-full py-3 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors duration-300">Войти</button>
+    </form>
+
+
+    <p class="text-center text-gray-700 mt-6">
+      Нет аккаунта?
+      <a routerLink='/register'
+         class="text-indigo-600 hover:underline">
+        Зарегистрироваться
+      </a>
+    </p>
+
   </div>
-  <div>
-    <label>Пароль:</label>
-    <input [(ngModel)]="model.password"
-           type="password"
-           name="password"
-           required
-           #password="ngModel" />
-  </div>
-  <button type="submit" [disabled]="loginForm.invalid">Войти</button>
-</form>
-<p>Нет аккаунта? <a routerLink='/register'>Зарегистрироваться</a></p>
+</div>
+
