@@ -5,6 +5,7 @@ using WebTests.Models;
 using WebTests.DTOs;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using System.Threading.Tasks;
 
 namespace WebTests.Controllers
 {
@@ -60,6 +61,20 @@ namespace WebTests.Controllers
                     t.Title
                 })
                 .ToList();
+
+            return Ok(tests);
+        }
+
+        [Authorize]
+        [HttpGet("passed")]
+        public async Task<IActionResult> GetPassedTests()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var tests = await _context.UserTests
+                .Where(ut => ut.UserId == userId)
+                .Include(ut => ut.Test)
+                .ToListAsync();
 
             return Ok(tests);
         }
@@ -220,11 +235,9 @@ namespace WebTests.Controllers
             if (userId != test.CreatorId)
                 return Forbid();
 
-            // --- Обновляем базовые поля ---
             test.Title = updated.Title;
             test.Published = updated.Published;
 
-            // --- Полная замена списка вопросов ---
             _context.AnswerOptions.RemoveRange(test.Questions.SelectMany(q => q.Options));
             _context.Questions.RemoveRange(test.Questions);
 
@@ -238,6 +251,47 @@ namespace WebTests.Controllers
                 }).ToList()
             }).ToList();
 
+            await _context.SaveChangesAsync();
+
+            return Ok(true);
+        }
+
+        [Authorize]
+        [HttpPost("pass/{testId}")]
+        public async Task<IActionResult> PassTest(int testId, [FromBody] int score)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var testExists = await _context.Tests.AnyAsync(t => t.Id == testId);
+            if (!testExists)
+                return NotFound("Тест не найден");
+
+            var test = await _context.Tests
+                .Where(t => t.Id == testId)
+                .Include(q => q.Questions)
+                .FirstOrDefaultAsync();
+
+            var existing = await _context.UserTests
+                .FirstOrDefaultAsync(ut => ut.TestId == testId && ut.UserId == userId);
+
+            if (existing != null)
+                return BadRequest("Уже была попытка прохождения теста");
+
+            int totalQuestions = test.Questions.Count;
+            bool isPassed = score >= totalQuestions / 2.0;
+
+            var entity = new UserTest
+            {
+                UserId = userId,
+                TestId = testId,
+                Score = score,
+                IsPassed = isPassed
+            };
+
+            _context.UserTests.Add(entity);
             await _context.SaveChangesAsync();
 
             return Ok(true);
