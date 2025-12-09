@@ -12,6 +12,7 @@ namespace WebTests.Data
         public DbSet<Test> Tests { get; set; }
         public DbSet<Question> Questions { get; set; }
         public DbSet<AnswerOption> AnswerOptions { get; set; }
+        public DbSet<UserTest> UserTests { get; set; }  
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -28,6 +29,18 @@ namespace WebTests.Data
                 .WithMany()
                 .HasForeignKey(t => t.CreatorId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<UserTest>()
+                .HasOne(ut => ut.User)
+                .WithMany()
+                .HasForeignKey(ut => ut.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<UserTest>()
+                .HasOne(ut => ut.Test)
+                .WithMany()
+                .HasForeignKey(ut => ut.TestId)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }
