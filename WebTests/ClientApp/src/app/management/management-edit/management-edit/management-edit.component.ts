@@ -41,7 +41,7 @@ export class ManagementEditComponent implements OnInit {
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
-      const test_id = params.get('id') as unknown as number;
+      const test_id = Number(params.get('id'));
       if (test_id) {
         this.test.id = test_id;
       }

@@ -43,7 +43,7 @@ import { MyTestsComponent } from './tests/my-tests/my-tests.component';
     FormsModule,
     RouterModule.forRoot([
       { path: '', component: HomeComponent, pathMatch: 'full' },
-      { path: 'tests/:name', component: TestComponent },
+      { path: 'tests/:id', component: TestComponent },
       { path: 'tests', component: TestsListComponent },
 
       { path: 'management', component: ManagementComponent },

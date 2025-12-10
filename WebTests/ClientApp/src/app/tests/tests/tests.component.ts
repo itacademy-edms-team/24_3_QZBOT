@@ -38,10 +38,31 @@ export class TestComponent implements OnInit {
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
-      const testName = params.get('name');
-      if (testName) {
-        this.loadTests(testName);
-        this.test.title = testName;
+      const testId = Number(params.get('id'));
+      if (testId) {
+        this.testService.getTestById(testId).subscribe({
+          next: (data) => {
+            this.test = data;
+
+            if (data.questions.length > 0) {
+              this.currentQuestion = data.questions[0];
+            }
+
+            this.testService.isPassed(this.test.id).subscribe({
+              next: (record) => {
+                this.try = record
+
+                if (this.try !== null) {
+                  this.isPassedModalOpen = true;
+                  this.textModal = `Вы уже проходили этот тест ${this.try.passedAt}`
+                }
+
+                this.updateIsLast();
+                this.updateIsFirst();
+              }
+            });
+          }
+        })
       }
     });
   }
