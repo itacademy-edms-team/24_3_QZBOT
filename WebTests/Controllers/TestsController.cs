@@ -296,5 +296,22 @@ namespace WebTests.Controllers
 
             return Ok(true);
         }
+
+        [Authorize]
+        [HttpGet("isPassed/{testId}")]
+        public async Task<IActionResult> IsTestPassed(int testId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var record = await _context.UserTests
+                .Where(ut => ut.TestId == testId && ut.UserId == userId)
+                .Include(t => t.Test)
+                .FirstOrDefaultAsync();
+
+            return Ok(record);
+        }
     }
 }

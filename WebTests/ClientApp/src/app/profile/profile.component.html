@@ -31,11 +31,15 @@
 
     </div>
 
+    <h2>История</h2>
+    <div *ngIf="history">
+      <ul>
+        <li *ngFor="let try of history">
+          <p>{{ try.passedAt | date:'dd.MM.yyyy HH:mm:ss' }} - {{ try.test.title }} - {{ try.score }} - {{ try.isPassed }}</p>
+        </li>
+      </ul>
+    </div>
 
-    <!--<button *ngIf="authService.isAuthenticated" (click)="onLogout()">Выйти</button>
-
-    <br />
-    <a [routerLink]="['/my-tests']">Ваши тесты</a>-->
   </div>
   
 </div>
