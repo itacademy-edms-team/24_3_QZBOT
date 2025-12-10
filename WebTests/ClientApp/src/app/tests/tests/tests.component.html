@@ -38,9 +38,8 @@
     </button>
   </div>
 
-
-  <div *ngIf="isLast" class="mt-8">
-    <button (click)="finishTest()"
+  <div *ngIf="isLast" class="mt-8"> 
+    <button (click)="finishTest()" 
             class="px-6 py-3 bg-gray-900 text-white rounded-xl shadow hover:bg-gray-700
                    transition-colors duration-300">
       Завершить тест
@@ -102,6 +101,21 @@
     <button (click)="closeFinishModal()"
             class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
       Ок
+    </button>
+  </div>
+</div>
+
+
+<div *ngIf="isPassedModalOpen"
+     class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
+
+  <div class="bg-white p-6 rounded-xl shadow-xl w-80">
+
+    <p class="mb-4 text-lg text-center">{{ textModal }}</p>
+
+    <button (click)="closePassedModal()"
+            class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+      Назад
     </button>
   </div>
 </div>

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TestService, Test, Question, Option } from '../../services/test.service';
+import { TestService, Test, Question, Option, UserTest } from '../../services/test.service';
 
 @Component({
   selector: 'app-test',
@@ -29,12 +29,31 @@ export class TestComponent implements OnInit {
   isFinishModalOpen: boolean = false;
   isModalOpen: boolean = false;
   textModal: string = '';
+  isPassedModalOpen = false;
+
+  tryedTest: Test = {
+    id: 0,
+    title: '',
+    questions: [],
+    creatorId: '',
+    published: false
+  };
+
+  try: UserTest | null = {
+    id: 0,
+    userId: '',
+    test: this.tryedTest,
+    passedAt: new Date(0),
+    score: 0,
+    isPassed: false
+  }
 
   constructor(
     private testService: TestService,
     private route: ActivatedRoute,
     private router: Router,
   ) { }
+
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
@@ -154,6 +173,14 @@ export class TestComponent implements OnInit {
   finishTest() {
     this.isFinishModalOpen = true;
     this.textModal = "Тест завершен! Результат " + this.rightAnswers + "/" + this.test.questions.length;
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      return;
+    }
+
+    this.testService.passTest(this.test.id, this.rightAnswers).subscribe();
   }
 
   closeModal() {
@@ -162,6 +189,10 @@ export class TestComponent implements OnInit {
 
   closeFinishModal() {
     this.isFinishModalOpen = false;
+    this.router.navigate(['/tests'])
+  }
+
+  closePassedModal() {
     this.router.navigate(['/tests'])
   }
 }
