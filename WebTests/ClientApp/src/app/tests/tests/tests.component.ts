@@ -14,7 +14,10 @@ export class TestComponent implements OnInit {
     title: '',
     questions: [],
     creatorId: '',
-    published: false
+    published: false,
+    publishDate: new Date(0),
+    createdDate: new Date(0),
+    editDate: new Date(0)
   };
 
   errorMessage = '';
@@ -36,7 +39,10 @@ export class TestComponent implements OnInit {
     title: '',
     questions: [],
     creatorId: '',
-    published: false
+    published: false,
+    publishDate: new Date(0),
+    createdDate: new Date(0),
+    editDate: new Date(0)
   };
 
   try: UserTest | null = {

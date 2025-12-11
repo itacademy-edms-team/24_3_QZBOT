@@ -209,6 +209,9 @@ export interface Test {
   questions: Question[];
   creatorId: string;
   published: boolean;
+  createdDate: Date;
+  publishDate: Date;
+  editDate: Date;
 }
 
 export interface UserTest {

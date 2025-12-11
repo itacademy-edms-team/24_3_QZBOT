@@ -12,5 +12,8 @@ namespace WebTests.Models
         public string? CreatorId { get; set; }
         public IdentityUser? Creator { get; set; }
         public bool Published { get; set; } = false;
+        public DateTime CreatedDate { get; set; }
+        public DateTime? PublishDate { get; set; }
+        public DateTime EditTime { get; set; } = DateTime.UtcNow;
     }
 }

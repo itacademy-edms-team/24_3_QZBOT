@@ -14,7 +14,10 @@ export class ManagementCreateComponent {
     title: '',
     questions: [],
     creatorId: '',
-    published: false
+    published: false,
+    publishDate: new Date(0),
+    createdDate: new Date(0),
+    editDate: new Date(0)
   };
 
   // Флаги для отображения UI
@@ -167,7 +170,10 @@ export class ManagementCreateComponent {
             text: o.text,
             isCorrect: o.isCorrect
           }))
-        }))
+        })),
+        publishDate: new Date(0),
+        createdDate: new Date(0),
+        editDate: new Date(0)
       };
 
     } catch (e) {

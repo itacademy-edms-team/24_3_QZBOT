@@ -15,7 +15,10 @@ export class ManagementEditComponent implements OnInit {
     title: '',
     questions: [],
     creatorId: '',
-    published: false
+    published: false,
+    publishDate: new Date(0),
+    createdDate: new Date(0),
+    editDate: new Date(0)
   };
 
   // копия названия для отображения
@@ -27,7 +30,10 @@ export class ManagementEditComponent implements OnInit {
     title: '',
     questions: [],
     creatorId: '',
-    published: false
+    published: false,
+    publishDate: new Date(0),
+    createdDate: new Date(0),
+    editDate: new Date(0)
   };
 
   // сообщения и состояния UI

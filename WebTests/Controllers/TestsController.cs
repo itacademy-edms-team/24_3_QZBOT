@@ -6,6 +6,7 @@ using WebTests.DTOs;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
+using System.Transactions;
 
 namespace WebTests.Controllers
 {
@@ -39,12 +40,6 @@ namespace WebTests.Controllers
 
             var tests = _context.Tests
                 .Where(t => t.CreatorId == userId)
-                .Select(t => new
-                {
-                    t.Id,
-                    t.Title,
-                    t.Published
-                })
                 .ToList();
 
             return Ok(tests);
@@ -170,6 +165,17 @@ namespace WebTests.Controllers
                     return BadRequest("Questions пусты");
                 }
 
+                test.CreatedDate = DateTime.UtcNow;
+
+                if (!dto.Published)
+                {
+                    test.PublishDate = null;
+                }
+                else
+                {
+                    test.PublishDate = DateTime.UtcNow;
+                }
+                
                 foreach (var question in dto.Questions)
                 {
                     if (question.Options == null)
@@ -237,6 +243,20 @@ namespace WebTests.Controllers
 
             test.Title = updated.Title;
             test.Published = updated.Published;
+
+
+            bool wasPublished = test.Published;
+            bool nowPublished = updated.Published;
+
+            test.Published = nowPublished;
+
+            if (!wasPublished && nowPublished)
+            {
+                test.PublishDate = DateTime.UtcNow;
+            }
+
+            test.EditTime = DateTime.UtcNow;
+
 
             _context.AnswerOptions.RemoveRange(test.Questions.SelectMany(q => q.Options));
             _context.Questions.RemoveRange(test.Questions);
