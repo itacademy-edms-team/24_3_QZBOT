@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -8,7 +9,7 @@ import { Observable } from 'rxjs';
 export class TestService {
   private baseUrl = "https://localhost:44356/api/tests"
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private authService: AuthService) { }
 
 
 
@@ -35,6 +36,11 @@ export class TestService {
   }
 
 
+  getPassedTests() {
+    return this.http.get<UserTest[]>(`${this.baseUrl}/passed`);
+  }
+
+
 
   getPublishedTests() {
     return this.http.get<Test[]>(`${this.baseUrl}/published`);
@@ -54,6 +60,12 @@ export class TestService {
       questionId,
       selectedOptionIndex
     });
+  }
+
+
+
+  passTest(testId: number, score: number) {
+    return this.http.post(`${this.baseUrl}/pass/${testId}`, score);
   }
 
 
@@ -169,6 +181,16 @@ export class TestService {
   }
 
 
+
+  isPassed(testId: number): Observable<UserTest | null> {
+    if (this.authService.isAuthenticated) {
+      return this.http.get<UserTest | null>(`${this.baseUrl}/isPassed/${testId}`);
+    }
+    return of(null);
+  }
+
+
+
   get currentUserId(): string {
     const token = localStorage.getItem("token");
     if (!token) return "";
@@ -187,6 +209,18 @@ export interface Test {
   questions: Question[];
   creatorId: string;
   published: boolean;
+  createdDate: Date;
+  publishDate: Date;
+  editDate: Date;
+}
+
+export interface UserTest {
+  id: number;
+  userId: string;
+  test: Test;
+  passedAt: Date;
+  score: number;
+  isPassed: boolean;
 }
 
 export interface TestType {

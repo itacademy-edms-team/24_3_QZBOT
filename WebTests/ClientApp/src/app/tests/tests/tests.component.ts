@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TestService, Test, Question, Option } from '../../services/test.service';
+import { TestService, Test, Question, Option, UserTest } from '../../services/test.service';
 
 @Component({
   selector: 'app-test',
@@ -14,7 +14,10 @@ export class TestComponent implements OnInit {
     title: '',
     questions: [],
     creatorId: '',
-    published: false
+    published: false,
+    publishDate: new Date(0),
+    createdDate: new Date(0),
+    editDate: new Date(0)
   };
 
   errorMessage = '';
@@ -29,6 +32,27 @@ export class TestComponent implements OnInit {
   isFinishModalOpen: boolean = false;
   isModalOpen: boolean = false;
   textModal: string = '';
+  isPassedModalOpen = false;
+
+  tryedTest: Test = {
+    id: 0,
+    title: '',
+    questions: [],
+    creatorId: '',
+    published: false,
+    publishDate: new Date(0),
+    createdDate: new Date(0),
+    editDate: new Date(0)
+  };
+
+  try: UserTest | null = {
+    id: 0,
+    userId: '',
+    test: this.tryedTest,
+    passedAt: new Date(0),
+    score: 0,
+    isPassed: false
+  }
 
   constructor(
     private testService: TestService,
@@ -36,12 +60,34 @@ export class TestComponent implements OnInit {
     private router: Router,
   ) { }
 
+
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
-      const testName = params.get('name');
-      if (testName) {
-        this.loadTests(testName);
-        this.test.title = testName;
+      const testId = Number(params.get('id'));
+      if (testId) {
+        this.testService.getTestById(testId).subscribe({
+          next: (data) => {
+            this.test = data;
+
+            if (data.questions.length > 0) {
+              this.currentQuestion = data.questions[0];
+            }
+
+            this.testService.isPassed(this.test.id).subscribe({
+              next: (record) => {
+                this.try = record
+
+                if (this.try !== null) {
+                  this.isPassedModalOpen = true;
+                  this.textModal = `Вы уже проходили этот тест ${this.try.passedAt}`
+                }
+
+                this.updateIsLast();
+                this.updateIsFirst();
+              }
+            });
+          }
+        })
       }
     });
   }
@@ -133,6 +179,14 @@ export class TestComponent implements OnInit {
   finishTest() {
     this.isFinishModalOpen = true;
     this.textModal = "Тест завершен! Результат " + this.rightAnswers + "/" + this.test.questions.length;
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      return;
+    }
+
+    this.testService.passTest(this.test.id, this.rightAnswers).subscribe();
   }
 
   closeModal() {
@@ -141,6 +195,10 @@ export class TestComponent implements OnInit {
 
   closeFinishModal() {
     this.isFinishModalOpen = false;
+    this.router.navigate(['/tests'])
+  }
+
+  closePassedModal() {
     this.router.navigate(['/tests'])
   }
 }

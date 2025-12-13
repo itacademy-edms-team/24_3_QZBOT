@@ -31,11 +31,24 @@
 
     </div>
 
+    <h2>История прохождения тестов</h2>
+    <div *ngIf="history">
+      <ul>
+        <li *ngFor="let try of history">
+          <p>{{ try.test.title }} - {{ try.passedAt | date:'dd.MM.yyyy HH:mm:ss' }} - {{ try.score }} - {{ try.isPassed }}</p>
+        </li>
+      </ul>
+    </div>
 
-    <!--<button *ngIf="authService.isAuthenticated" (click)="onLogout()">Выйти</button>
+    <h2>Созданные тесты</h2>
+    <div *ngIf="created_tests">
+      <ul>
+        <li *ngFor="let test of created_tests">
+          <p>{{ test.title }} - {{ test.createdDate | date:'dd.MM.yyyy HH:mm:ss' }} - {{ test.published }}</p>
+        </li>
+      </ul>
+    </div>
 
-    <br />
-    <a [routerLink]="['/my-tests']">Ваши тесты</a>-->
   </div>
   
 </div>

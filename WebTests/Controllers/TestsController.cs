@@ -5,6 +5,8 @@ using WebTests.Models;
 using WebTests.DTOs;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using System.Threading.Tasks;
+using System.Transactions;
 
 namespace WebTests.Controllers
 {
@@ -38,12 +40,6 @@ namespace WebTests.Controllers
 
             var tests = _context.Tests
                 .Where(t => t.CreatorId == userId)
-                .Select(t => new
-                {
-                    t.Id,
-                    t.Title,
-                    t.Published
-                })
                 .ToList();
 
             return Ok(tests);
@@ -60,6 +56,20 @@ namespace WebTests.Controllers
                     t.Title
                 })
                 .ToList();
+
+            return Ok(tests);
+        }
+
+        [Authorize]
+        [HttpGet("passed")]
+        public async Task<IActionResult> GetPassedTests()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var tests = await _context.UserTests
+                .Where(ut => ut.UserId == userId)
+                .Include(ut => ut.Test)
+                .ToListAsync();
 
             return Ok(tests);
         }
@@ -155,6 +165,17 @@ namespace WebTests.Controllers
                     return BadRequest("Questions пусты");
                 }
 
+                test.CreatedDate = DateTime.UtcNow;
+
+                if (!dto.Published)
+                {
+                    test.PublishDate = null;
+                }
+                else
+                {
+                    test.PublishDate = DateTime.UtcNow;
+                }
+                
                 foreach (var question in dto.Questions)
                 {
                     if (question.Options == null)
@@ -220,11 +241,23 @@ namespace WebTests.Controllers
             if (userId != test.CreatorId)
                 return Forbid();
 
-            // --- Обновляем базовые поля ---
             test.Title = updated.Title;
             test.Published = updated.Published;
 
-            // --- Полная замена списка вопросов ---
+
+            bool wasPublished = test.Published;
+            bool nowPublished = updated.Published;
+
+            test.Published = nowPublished;
+
+            if (!wasPublished && nowPublished)
+            {
+                test.PublishDate = DateTime.UtcNow;
+            }
+
+            test.EditTime = DateTime.UtcNow;
+
+
             _context.AnswerOptions.RemoveRange(test.Questions.SelectMany(q => q.Options));
             _context.Questions.RemoveRange(test.Questions);
 
@@ -241,6 +274,64 @@ namespace WebTests.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(true);
+        }
+
+        [Authorize]
+        [HttpPost("pass/{testId}")]
+        public async Task<IActionResult> PassTest(int testId, [FromBody] int score)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var testExists = await _context.Tests.AnyAsync(t => t.Id == testId);
+            if (!testExists)
+                return NotFound("Тест не найден");
+
+            var test = await _context.Tests
+                .Where(t => t.Id == testId)
+                .Include(q => q.Questions)
+                .FirstOrDefaultAsync();
+
+            var existing = await _context.UserTests
+                .FirstOrDefaultAsync(ut => ut.TestId == testId && ut.UserId == userId);
+
+            if (existing != null)
+                return BadRequest("Уже была попытка прохождения теста");
+
+            int totalQuestions = test.Questions.Count;
+            bool isPassed = score >= totalQuestions / 2.0;
+
+            var entity = new UserTest
+            {
+                UserId = userId,
+                TestId = testId,
+                Score = score,
+                IsPassed = isPassed
+            };
+
+            _context.UserTests.Add(entity);
+            await _context.SaveChangesAsync();
+
+            return Ok(true);
+        }
+
+        [Authorize]
+        [HttpGet("isPassed/{testId}")]
+        public async Task<IActionResult> IsTestPassed(int testId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var record = await _context.UserTests
+                .Where(ut => ut.TestId == testId && ut.UserId == userId)
+                .Include(t => t.Test)
+                .FirstOrDefaultAsync();
+
+            return Ok(record);
         }
     }
 }

@@ -8,29 +8,40 @@ import { ActivatedRoute, Router } from '@angular/router';
   styleUrls: ['./management-edit.component.css']
 })
 export class ManagementEditComponent implements OnInit {
+
+  // Исходный тест, загруженный с сервера
   test: Test = {
     id: 0,
     title: '',
     questions: [],
     creatorId: '',
-    published: false
+    published: false,
+    publishDate: new Date(0),
+    createdDate: new Date(0),
+    editDate: new Date(0)
   };
 
+  // копия названия для отображения
   test_title: string = "";
 
+  // копия редактируемого теста
   edited_test: Test = {
     id: 0,
     title: '',
     questions: [],
     creatorId: '',
-    published: false
+    published: false,
+    publishDate: new Date(0),
+    createdDate: new Date(0),
+    editDate: new Date(0)
   };
 
+  // сообщения и состояния UI
   text_error: string = "";
-  confirm_edit: boolean = false;
-  changes: string[] = [];
-  is_editing_locked: boolean = false;
-  success_edit: boolean = false;
+  confirm_edit: boolean = false;             // показывать окно подтверждения
+  changes: string[] = [];                    // список изменений, вычисляется перед подтверждением 
+  is_editing_locked: boolean = false;        // блокировка UI до подтверждения
+  success_edit: boolean = false;             // флаг успешного сохранения
 
   constructor(
     private route: ActivatedRoute,
@@ -40,28 +51,35 @@ export class ManagementEditComponent implements OnInit {
   
 
   ngOnInit() {
+    // получение ID места из параметров маршрута
     this.route.paramMap.subscribe(params => {
-      const test_id = params.get('id') as unknown as number;
+      const test_id = Number(params.get('id'));
       if (test_id) {
         this.test.id = test_id;
       }
 
+      // загрузка теста по ID 
       this.testService.getTestById(this.test.id).subscribe({
         next: (data) => {
           this.test = data;
 
+          // проверка, что текущий пользователь - автор теста
           if (data.creatorId !== this.testService.currentUserId) {
             alert("Вы не можете редактировать чужой тест");
             this.router.navigate(['/management']);
           }
 
+          // создание копии объекта
           this.edited_test = JSON.parse(JSON.stringify(this.test));
+
+          // сохраняем название для заголовка UI
           this.test_title = data.title;
         }
       });
     });
   }
 
+  // добавление нового вопроса
   addQuestion() {
     this.edited_test.questions.push({
       id: 0,
@@ -70,10 +88,12 @@ export class ManagementEditComponent implements OnInit {
     })
   }
 
+  // удалить вопрос по индексу
   removeQuestion(index: number) {
     this.edited_test.questions.splice(index, 1);
   }
 
+  // добавление нового варианта ответа
   addOption(questions: Question) {
     questions.options.push({
       id: 0,
@@ -82,47 +102,64 @@ export class ManagementEditComponent implements OnInit {
     });
   }
 
+  // удаление варианта ответа
   removeOption(question: Question, index: number) {
     question.options.splice(index, 1);
   }
 
+  // пометка правильного варианта ответа
   selectCorrectOption(question: any, selectedIndex: number) {
+    // сбрасываем isCorrect у всех и ставим true только у выбранного
     question.options.forEach((option: any, index: number) => {
       option.isCorrect = index === selectedIndex;
     });
   }
 
+  // кнока "сохранить изменения"
   btnSaveChanges() {
-    if (this.testService.checkTest(this.edited_test) == "true") {
+    // перед сохранением проверяем корректность теста
+    const validation = this.testService.checkTest(this.edited_test);
+
+    if (validation == "true") {
+
+      // получем список изменений между исходным тестом и измененным
       this.changes = this.testService.getTestChanges(this.test, this.edited_test);
 
+      // если изменений нет - выводим сообщение
       if (this.changes.length == 0) {
         this.text_error = "Нет изменений";
         return;
       }
 
+      // если есть - блокируем редактирование и показываем окно подтверждения
       this.is_editing_locked = true;
       this.confirm_edit = true;
       this.text_error = "";
+
     } else {
-      this.text_error = this.testService.checkTest(this.edited_test);
+      // ошибка валидации теста - показывем пользователю
+      this.text_error = validation;
     }
   }
 
+  // отмена окна подтверждения
   btnCancel() {
     this.confirm_edit = false;
     this.is_editing_locked = false;
   }
 
+  // подтверждение и отправка изменений на сервер
   btnConfirm() {
     this.testService.editTest(this.test.id, this.edited_test).subscribe({
       next: (data) => {
         if (data) {
+          // успех
           this.success_edit = true;
           this.is_editing_locked = false;
           this.text_error = "";
         }
         else {
+          // ошибка сервера
           this.text_error = "Ошибка редактирования теста"
         }
       }

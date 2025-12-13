@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { Test, TestService, UserTest } from '../services/test.service';
 
 @Component({
   selector: 'app-profile',
@@ -9,11 +10,14 @@ import { AuthService } from '../services/auth.service';
 })
 export class ProfileComponent implements OnInit {
   username: string = '';
+  history: UserTest[] = [];
+  created_tests: Test[] = [];
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    public authService: AuthService
+    public authService: AuthService,
+    public testService: TestService
   ) { }
 
   ngOnInit() {
@@ -31,6 +35,18 @@ export class ProfileComponent implements OnInit {
         this.username = name || 'unknown';
       }
     });
+
+    this.testService.getPassedTests().subscribe({
+      next: (data) => {
+        this.history = data;
+      }
+    })
+
+    this.testService.getMyTests().subscribe({
+      next: (data) => {
+        this.created_tests = data;
+      }
+    })
   }
 
   onLogout() {

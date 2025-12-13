@@ -9,7 +9,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 })
 export class ManagementEditListComponent {
   tests: Test[] = [];
-  title!: string
 
   constructor(
     private testService: TestService,
