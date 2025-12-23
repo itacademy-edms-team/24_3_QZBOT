@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using WebTests.Data;
-using WebTests.Models;
-using WebTests.DTOs;
+using System.Security;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Authorization;
 using System.Threading.Tasks;
 using System.Transactions;
+using WebTests.Data;
+using WebTests.DTOs;
+using WebTests.Models;
 
 namespace WebTests.Controllers
 {
@@ -142,138 +143,80 @@ namespace WebTests.Controllers
 
         [Authorize]
         [HttpPost("add")]
-        public IActionResult AddTest([FromBody] TestDto dto)
+        public async Task<IActionResult> AddTest([FromBody] TestDto dto)
         {
-            try
-            {
-                var test = new Test();
+            if (dto == null)
+                return BadRequest("DTO is null");
 
-                test.Title = dto.Title;
+            if (string.IsNullOrWhiteSpace(dto.Title))
+                return BadRequest("Title is required");
 
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (dto.Questions == null || dto.Questions.Count == 0)
+                return BadRequest("Questions are required");
 
-                if (userId == null)
-                {
-                    return Unauthorized("Не удалось определить пользователя");
-                }
 
-                test.CreatorId = userId;
-                
+            if (!User.Identity!.IsAuthenticated)
+                return Unauthorized();
 
-                if (dto.Questions == null)
-                {
-                    return BadRequest("Questions пусты");
-                }
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-                test.CreatedDate = DateTime.UtcNow;
+            var test = TestFactory.FromDto.Create(dto);
 
-                if (!dto.Published)
-                {
-                    test.PublishDate = null;
-                }
-                else
-                {
-                    test.PublishDate = DateTime.UtcNow;
-                }
-                
-                foreach (var question in dto.Questions)
-                {
-                    if (question.Options == null)
-                    {
-                        continue;
-                    }
+            test.CreatorId = userId;
+            test.CreatedDate = DateTime.UtcNow;
 
-                    var quest = new Question()
-                    {
-                        Text = question.Text
-                    };
+            if (!dto.Published)
+                test.PublishDate = null;
+            else
+                test.PublishDate = DateTime.UtcNow;
 
-                    if (quest.Options == null)
-                    {
-                        quest.Options = new List<AnswerOption>();
-                    }
+            _context.Tests.Add(test);
+            await _context.SaveChangesAsync();
 
-                    foreach (var option in question.Options)
-                    {
-                        var opt = new AnswerOption()
-                        {
-                            Text = option.Text,
-                            IsCorrect = option.IsCorrect
-                        };
-
-                        quest.Options.Add(opt);
-                    }
-
-                    if (test.Questions == null)
-                    {
-                        test.Questions = new List<Question>();
-                    }
-
-                    test.Questions.Add(quest);
-                }
-
-                _context.Add(test);
-                _context.SaveChanges();
-
-                return Ok(true);
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Error: {ex.Message}");
-                throw;
-            }
+            return CreatedAtAction(nameof(GetTestById), new { id = test.Id }, test.Id);
         }
 
         [Authorize]
         [HttpPost("edit/{id}")]
         public async Task<IActionResult> EditTest(int id, [FromBody] TestDto updated)
         {
+            if (updated == null)
+                return BadRequest("DTO is null");
+
+            if (string.IsNullOrEmpty(updated.Title))
+                return BadRequest("Title is required");
+
+            if (updated.Questions == null || !updated.Questions.Any())
+                return BadRequest("Questions are required");
+
+            if (updated.Questions.Any(q => q.Options == null || !q.Options.Any()))
+                return BadRequest("Each question must have options");
+
+
             var test = await _context.Tests
                 .Include(t => t.Questions)
                     .ThenInclude(q => q.Options)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
             if (test == null)
-                return NotFound(false);
+                return NotFound();
+
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
 
             if (userId != test.CreatorId)
                 return Forbid();
 
-            test.Title = updated.Title;
-            test.Published = updated.Published;
 
+            TestFactory.FromDto.Update(test, updated);
 
-            bool wasPublished = test.Published;
-            bool nowPublished = updated.Published;
-
-            test.Published = nowPublished;
-
-            if (!wasPublished && nowPublished)
-            {
-                test.PublishDate = DateTime.UtcNow;
-            }
-
-            test.EditTime = DateTime.UtcNow;
-
-
-            _context.AnswerOptions.RemoveRange(test.Questions.SelectMany(q => q.Options));
-            _context.Questions.RemoveRange(test.Questions);
-
-            test.Questions = updated.Questions.Select(q => new Question
-            {
-                Text = q.Text,
-                Options = q.Options.Select(o => new AnswerOption
-                {
-                    Text = o.Text,
-                    IsCorrect = o.IsCorrect
-                }).ToList()
-            }).ToList();
 
             await _context.SaveChangesAsync();
 
-            return Ok(true);
+            return Ok();
         }
 
         [Authorize]
@@ -314,7 +257,7 @@ namespace WebTests.Controllers
             _context.UserTests.Add(entity);
             await _context.SaveChangesAsync();
 
-            return Ok(true);
+            return Ok();
         }
 
         [Authorize]
@@ -325,6 +268,12 @@ namespace WebTests.Controllers
 
             if (userId == null)
                 return Unauthorized();
+
+            var test = await _context.Tests
+                .FirstOrDefaultAsync(t => t.Id == testId);
+            
+            if (test == null)
+                return NotFound();
 
             var record = await _context.UserTests
                 .Where(ut => ut.TestId == testId && ut.UserId == userId)
