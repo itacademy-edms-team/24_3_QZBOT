@@ -17,7 +17,6 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
   username: string;
 }
 
@@ -26,18 +25,18 @@ export interface LoginResponse {
 })
 export class AuthService {
   private readonly apiUrl = 'https://localhost:44356/api/auth';
-  private currentUserSubject = new BehaviorSubject<any>(null);
+  private currentUserSubject = new BehaviorSubject<string | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
   redirectUrl: string | null = null;
 
   constructor(
     private http: HttpClient,
-    private router: Router  // <- Обязательно инжектим Router
+    private router: Router
   ) {
-    const token = localStorage.getItem('token');
-    if (token) {
-      this.currentUserSubject.next({ token });
+    const username = localStorage.getItem('username');
+    if (username) {
+      this.currentUserSubject.next(username);
     }
   }
 
@@ -46,42 +45,52 @@ export class AuthService {
   }
 
   login(model: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, model).pipe(
+    return this.http.post<LoginResponse>(
+      `${this.apiUrl}/login`,
+      model,
+      { withCredentials: true } // ⭐ ОБЯЗАТЕЛЬНО
+    ).pipe(
       map(response => {
-        if (response.token) {
-          localStorage.setItem('token', response.token);
-          // Сохраняем username в localStorage или в BehaviorSubject
-          localStorage.setItem('username', response.username);
+        // cookie уже сохранена браузером автоматически
 
-          this.currentUserSubject.next(response);
+        localStorage.setItem('username', response.username);
+        this.currentUserSubject.next(response.username);
 
-          // Перенаправляем на /profile/username
-          setTimeout(() => {
-            if (this.redirectUrl) {
-              this.router.navigate([this.redirectUrl!]);
-              this.redirectUrl = null;
-            } else {
-              this.router.navigate(['/profile', response.username]); // <- Навигация с username
-            }
-          }, 0);
+        // навигация ВСЕГДА при успехе
+        if (this.redirectUrl) {
+          this.router.navigate([this.redirectUrl]);
+          this.redirectUrl = null;
+        } else {
+          this.router.navigate(['/profile', response.username]);
         }
+
         return response;
       })
     );
   }
 
-  logout() {
-    localStorage.removeItem('token');
-    this.currentUserSubject.next(null);
-    this.router.navigate(['/login']);
+
+  logout(): void {
+    this.http.post(
+      `${this.apiUrl}/logout`,
+      {},
+      { withCredentials: true }
+    ).subscribe(() => {
+      localStorage.removeItem('username');
+      this.currentUserSubject.next(null);
+      this.router.navigate(['/login']);
+    });
   }
 
-  get token(): string | null {
-    return localStorage.getItem('token');
+  checkAuth(): Observable<LoginResponse> {
+    return this.http.get<LoginResponse>(
+      `${this.apiUrl}/me`,
+      { withCredentials: true }
+    );
   }
 
   get isAuthenticated(): boolean {
-    return !!this.token;
+    return !!this.currentUserSubject.value;
   }
 
   get currentUserUsername(): string | null {

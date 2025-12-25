@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
@@ -40,13 +41,41 @@ namespace WebTests.Controllers
         public async Task<IActionResult> Login([FromBody] LoginModel model)
         {
             var user = await _userManager.FindByEmailAsync(model.Email);
-            if (user != null && await _userManager.CheckPasswordAsync(user, model.Password))
-            {
-                var token = GenerateJwtToken(user);
-                return Ok(new { token, username = user.UserName });
-            }
 
-            return Unauthorized(new { message = "Invalid" });
+
+            if (user == null || !await _userManager.CheckPasswordAsync(user, model.Password))
+                return Unauthorized(new { message = "Invalid credentials" });
+
+            var token = GenerateJwtToken(user);
+
+            Response.Cookies.Append("access_token", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = DateTimeOffset.UtcNow.AddMinutes(Convert.ToDouble(_configuration["Jwt:DurationInMinutes"]))
+            });
+
+            return Ok(new { username = user.UserName });
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("access_token");
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("me")]
+        public IActionResult Me()
+        {
+            return Ok(new
+            {
+                id = User.FindFirstValue(ClaimTypes.NameIdentifier),
+                username = User.Identity!.Name
+            });
         }
 
         public string GenerateJwtToken(IdentityUser user)
