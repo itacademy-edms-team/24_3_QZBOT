@@ -17,7 +17,7 @@ export class NavMenuComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.currentUserUsername = this.authService.currentUserUsername || 'Пользователь';
+    this.currentUserUsername = this.authService.currentUserUsername || 'Ошибка';
   }
 
   collapse() {

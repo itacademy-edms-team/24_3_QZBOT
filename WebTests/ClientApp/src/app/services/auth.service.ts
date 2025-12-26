@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
 export interface RegisterRequest {
@@ -33,12 +33,7 @@ export class AuthService {
   constructor(
     private http: HttpClient,
     private router: Router
-  ) {
-    const username = localStorage.getItem('username');
-    if (username) {
-      this.currentUserSubject.next(username);
-    }
-  }
+  ) {}
 
   register(model: RegisterRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, model);
@@ -48,30 +43,38 @@ export class AuthService {
     return this.http.post<LoginResponse>(
       `${this.apiUrl}/login`,
       model,
-      { withCredentials: true } // ⭐ ОБЯЗАТЕЛЬНО
+      { withCredentials: true }
     ).pipe(
       map(response => {
-        // cookie уже сохранена браузером автоматически
-
-        localStorage.setItem('username', response.username);
         this.currentUserSubject.next(response.username);
-
-        // навигация ВСЕГДА при успехе
-        if (this.redirectUrl) {
-          this.router.navigate([this.redirectUrl]);
-          this.redirectUrl = null;
-        } else {
-          this.router.navigate(['/profile', response.username]);
-        }
+        localStorage.setItem('username', response.username);
+        this.router.navigate(['/profile', response.username]);
 
         return response;
       })
     );
   }
 
+  checkAuth(): Observable<boolean> {
+    return this.http.get<LoginResponse>(
+      `${this.apiUrl}/me`,
+      { withCredentials: true }
+    ).pipe(
+      tap(res => {
+        this.currentUserSubject.next(res.username);
+        localStorage.setItem('username', res.username);
+      }),
+      map(() => true),
+      catchError(() => {
+        this.currentUserSubject.next(null);
+        localStorage.removeItem('username');
+        return of(false);
+      })
+    )
+  }
 
-  logout(): void {
-    this.http.post(
+  logout() {
+    return this.http.post(
       `${this.apiUrl}/logout`,
       {},
       { withCredentials: true }
@@ -82,11 +85,8 @@ export class AuthService {
     });
   }
 
-  checkAuth(): Observable<LoginResponse> {
-    return this.http.get<LoginResponse>(
-      `${this.apiUrl}/me`,
-      { withCredentials: true }
-    );
+  get currentUser() {
+    return this.currentUserSubject.value;
   }
 
   get isAuthenticated(): boolean {

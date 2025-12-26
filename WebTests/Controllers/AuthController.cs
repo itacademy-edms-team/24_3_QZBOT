@@ -52,7 +52,8 @@ namespace WebTests.Controllers
             {
                 HttpOnly = true,
                 Secure = true,
-                SameSite = SameSiteMode.Strict,
+                SameSite = SameSiteMode.None,
+                Path = "/",
                 Expires = DateTimeOffset.UtcNow.AddMinutes(Convert.ToDouble(_configuration["Jwt:DurationInMinutes"]))
             });
 
@@ -68,7 +69,7 @@ namespace WebTests.Controllers
         }
 
         [Authorize]
-        [HttpPost("me")]
+        [HttpGet("me")]
         public IActionResult Me()
         {
             return Ok(new

@@ -20,36 +20,37 @@ export class TestService {
 
 
   getTestByName(name: string): Observable<Test> {
-    return this.http.get<Test>(`${this.baseUrl}/${name}`);
+    return this.http.get<Test>(`${this.baseUrl}/${name}`, { withCredentials: true });
   }
 
 
 
   getTestById(id: number): Observable<Test> {
-    return this.http.get<Test>(`${this.baseUrl}/id/${id}`)
+    return this.http.get<Test>(`${this.baseUrl}/id/${id}`, { withCredentials: true })
   }
 
 
 
   getMyTests() {
-    return this.http.get<Test[]>(`${this.baseUrl}/my`);
+    return this.http.get<Test[]>(`${this.baseUrl}/my`, { withCredentials: true });
   }
 
 
+
   getPassedTests() {
-    return this.http.get<UserTest[]>(`${this.baseUrl}/passed`);
+    return this.http.get<UserTest[]>(`${this.baseUrl}/passed`, { withCredentials: true });
   }
 
 
 
   getPublishedTests() {
-    return this.http.get<Test[]>(`${this.baseUrl}/published`);
+    return this.http.get<Test[]>(`${this.baseUrl}/published`, { withCredentials: true });
   }
 
 
 
   checkTestExists(name: string): Observable<boolean> {
-    return this.http.get<boolean>(`${this.baseUrl}/exist/${name}`)
+    return this.http.get<boolean>(`${this.baseUrl}/exist/${name}`, { withCredentials: true })
   }
 
 
@@ -59,13 +60,13 @@ export class TestService {
       title,
       questionId,
       selectedOptionIndex
-    });
+    }, { withCredentials: true });
   }
 
 
 
   passTest(testId: number, score: number) {
-    return this.http.post(`${this.baseUrl}/pass/${testId}`, score);
+    return this.http.post(`${this.baseUrl}/pass/${testId}`, score, { withCredentials: true });
   }
 
 
@@ -75,13 +76,13 @@ export class TestService {
       title,
       published: false,
       questions
-    });
+    }, { withCredentials: true });
   }
 
 
 
   editTest(id: number, test: Test) {
-    return this.http.post(`${this.baseUrl}/edit/${id}`, test);
+    return this.http.post(`${this.baseUrl}/edit/${id}`, test, { withCredentials: true });
   }
 
 
@@ -184,7 +185,7 @@ export class TestService {
 
   isPassed(testId: number): Observable<UserTest | null> {
     if (this.authService.isAuthenticated) {
-      return this.http.get<UserTest | null>(`${this.baseUrl}/isPassed/${testId}`);
+      return this.http.get<UserTest | null>(`${this.baseUrl}/isPassed/${testId}`, { withCredentials: true });
     }
     return of(null);
   }
