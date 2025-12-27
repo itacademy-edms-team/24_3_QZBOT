@@ -55,14 +55,6 @@
                appPasswordValidator
                #password="ngModel"
                class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
-
-        <div *ngIf="password.touched" class="text-red-600 text-sm space-y-1 mt-1">
-          <div *ngIf="password.errors?.['minLength']">Пароль должен быть не менее 6 символов.</div>
-          <div *ngIf="password.errors?.['missingUpperCase']">Пароль должен содержать хотя бы одну заглавную букву.</div>
-          <div *ngIf="password.errors?.['missingLowerCase']">Пароль должен содержать хотя бы одну строчную букву.</div>
-          <div *ngif="password.errors?.['missingNumbers']">Пароль должен содержать хотя бы одну цифру.</div>
-          <div *ngIf="password.errors?.['missingSpecialChar']">Пароль должен содержать хотя бы один специальный символ.</div>
-        </div>
       </div>
 
 

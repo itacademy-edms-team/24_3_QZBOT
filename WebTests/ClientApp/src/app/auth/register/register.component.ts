@@ -24,7 +24,6 @@ export class RegisterComponent {
   };
 
   confirmPassword: string = '';
-  textError: string = '';
   errors: string[] = [];
 
   constructor(
@@ -33,11 +32,6 @@ export class RegisterComponent {
   ) { }
 
   onSubmit(form: NgForm) {
-    if (this.model.password !== this.confirmPassword) {
-      this.textError = 'Пароли не совпадают';
-      return;
-    }
-
     if (form.valid) {
       const registerData = {
         username: this.model.username,
@@ -49,6 +43,18 @@ export class RegisterComponent {
       this.authService.register(registerData).subscribe({
         next: () => this.router.navigate(['/login']),
         error: (err) => {
+          this.errors = [];
+
+          if (err.error.code == "DuplicateUserName") {
+            this.errors.push("Это пользователя уже занято")
+            return;
+          }
+
+          if (err.error.code == "DuplicateEmail") {
+            this.errors.push("Эта почта уже занята")
+            return;
+          }
+
           for (var i = 0; i < err.error.length; i++) {
             if (err.error[i].code == "PasswordTooShort") {
               this.errors.push("Пароль должен содержать не менее 6 символов");
@@ -68,7 +74,6 @@ export class RegisterComponent {
       });
     } else {
       console.log("Форма содержит ошибки");
-      this.textError = 'Пожалуйста, заполните все обязательные поля.';
     }
   }
 }
