@@ -216,7 +216,7 @@ namespace WebTests.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok();
+            return Ok(true);
         }
 
         [Authorize]
@@ -257,7 +257,7 @@ namespace WebTests.Controllers
             _context.UserTests.Add(entity);
             await _context.SaveChangesAsync();
 
-            return Ok();
+            return Ok(true);
         }
 
         [Authorize]

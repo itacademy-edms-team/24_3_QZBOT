@@ -807,7 +807,7 @@ namespace Tests {
                 var result = await controller.PassTest(test.Id, 1);
 
                 // Assert
-                Assert.IsType<OkResult>(result);
+                Assert.IsType<OkObjectResult>(result);
             }
         }
         #endregion

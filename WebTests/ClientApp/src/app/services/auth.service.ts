@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { Router } from '@angular/router';
 
 export interface RegisterRequest {
@@ -17,7 +17,6 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  token: string;
   username: string;
 }
 
@@ -26,62 +25,72 @@ export interface LoginResponse {
 })
 export class AuthService {
   private readonly apiUrl = 'https://localhost:44356/api/auth';
-  private currentUserSubject = new BehaviorSubject<any>(null);
+  private currentUserSubject = new BehaviorSubject<string | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
   redirectUrl: string | null = null;
 
   constructor(
     private http: HttpClient,
-    private router: Router  // <- Обязательно инжектим Router
-  ) {
-    const token = localStorage.getItem('token');
-    if (token) {
-      this.currentUserSubject.next({ token });
-    }
-  }
+    private router: Router
+  ) {}
 
   register(model: RegisterRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, model);
   }
 
   login(model: LoginRequest): Observable<LoginResponse> {
-    return this.http.post<LoginResponse>(`${this.apiUrl}/login`, model).pipe(
+    return this.http.post<LoginResponse>(
+      `${this.apiUrl}/login`,
+      model,
+      { withCredentials: true }
+    ).pipe(
       map(response => {
-        if (response.token) {
-          localStorage.setItem('token', response.token);
-          // Сохраняем username в localStorage или в BehaviorSubject
-          localStorage.setItem('username', response.username);
+        this.currentUserSubject.next(response.username);
+        localStorage.setItem('username', response.username);
+        this.router.navigate(['/profile', response.username]);
 
-          this.currentUserSubject.next(response);
-
-          // Перенаправляем на /profile/username
-          setTimeout(() => {
-            if (this.redirectUrl) {
-              this.router.navigate([this.redirectUrl!]);
-              this.redirectUrl = null;
-            } else {
-              this.router.navigate(['/profile', response.username]); // <- Навигация с username
-            }
-          }, 0);
-        }
         return response;
       })
     );
   }
 
-  logout() {
-    localStorage.removeItem('token');
-    this.currentUserSubject.next(null);
-    this.router.navigate(['/login']);
+  checkAuth(): Observable<boolean> {
+    return this.http.get<LoginResponse>(
+      `${this.apiUrl}/me`,
+      { withCredentials: true }
+    ).pipe(
+      tap(res => {
+        this.currentUserSubject.next(res.username);
+        localStorage.setItem('username', res.username);
+      }),
+      map(() => true),
+      catchError(() => {
+        this.currentUserSubject.next(null);
+        localStorage.removeItem('username');
+        return of(false);
+      })
+    )
   }
 
-  get token(): string | null {
-    return localStorage.getItem('token');
+  logout() {
+    return this.http.post(
+      `${this.apiUrl}/logout`,
+      {},
+      { withCredentials: true }
+    ).subscribe(() => {
+      localStorage.removeItem('username');
+      this.currentUserSubject.next(null);
+      this.router.navigate(['/login']);
+    });
+  }
+
+  get currentUser() {
+    return this.currentUserSubject.value;
   }
 
   get isAuthenticated(): boolean {
-    return !!this.token;
+    return !!this.currentUserSubject.value;
   }
 
   get currentUserUsername(): string | null {
