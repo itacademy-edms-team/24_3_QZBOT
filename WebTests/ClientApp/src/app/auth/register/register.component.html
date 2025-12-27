@@ -15,7 +15,7 @@
                type="text"
                name="username"
                required
-               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
       </div>
 
       <div>
@@ -27,9 +27,9 @@
                required
                email
                #email="ngModel"
-               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
 
-        <div *ngIf="email.invalid && email.touched"
+        <div *ngIf="email.invalid && email.touched && email.value"
              class="text-red-600 text-sm mt-1">
           Email обязателен и должен быть корректным.
         </div>
@@ -42,7 +42,7 @@
                type="tel"
                name="phoneNumber"
                required
-               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
       </div>
 
       <div>
@@ -54,15 +54,7 @@
                required
                appPasswordValidator
                #password="ngModel"
-               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
-
-        <div *ngIf="password.touched" class="text-red-600 text-sm space-y-1 mt-1">
-          <div *ngIf="password.errors?.['minLength']">Пароль должен быть не менее 6 символов.</div>
-          <div *ngIf="password.errors?.['missingUpperCase']">Пароль должен содержать хотя бы одну заглавную букву.</div>
-          <div *ngIf="password.errors?.['missingLowerCase']">Пароль должен содержать хотя бы одну строчную букву.</div>
-          <div *ngif="password.errors?.['missingNumbers']">Пароль должен содержать хотя бы одну цифру.</div>
-          <div *ngIf="password.errors?.['missingSpecialChar']">Пароль должен содержать хотя бы один специальный символ.</div>
-        </div>
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
       </div>
 
 
@@ -74,7 +66,7 @@
                name="confirmPassword"
                required
                #confirmPasswordInput="ngModel"
-               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
 
         <div *ngIf="model.password !== confirmPassword && confirmPassword && confirmPasswordInput.touched"
              class="text-red-600 text-sm mt-1">
@@ -88,9 +80,12 @@
         Зарегистрироваться
       </button>
 
-      <div *ngIf="textError"
-           class="text-center text-red-600 font-medium mt-3">
-        {{ textError }}
+      <div *ngIf="errors?.length"
+           class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+        <ul *ngFor="let error of errors"
+            class="list-disc space-y-1 pl-5 text-sm font-medium text-red-700">
+          <li>{{ error }}</li>
+        </ul>
       </div>
     </form>
 
@@ -102,5 +97,25 @@
       </a>
     </p>
 
+  </div>
+</div>
+
+
+<div *ngIf="isSuccessModalOpen"
+     class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
+
+  <div class="bg-white p-6 rounded-xl shadow-xl w-80">
+    <h2 class="mb-2 text-lg font-semibold text-gray-900">
+      Регистрация успешна
+    </h2>
+
+    <p class="mb-4 text-lg text-sm">
+      Аккаунт успешно создан. Теперь вы можете войти.
+    </p>
+
+    <button (click)="closeModal()"
+            class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+      Перейти к авторизации
+    </button>
   </div>
 </div>

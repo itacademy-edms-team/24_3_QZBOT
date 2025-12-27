@@ -13,6 +13,7 @@ export class LoginComponent {
     email: '',
     password: ''
   };
+  error: boolean = false;
 
   constructor(private authService: AuthService, private router: Router) { }
 
@@ -20,7 +21,7 @@ export class LoginComponent {
     if (form.valid) {
       this.authService.login(this.model).subscribe({
         next: () => { },
-        error: (err) => console.error('Ошибка входа: ', err)
+        error: (err) => this.error = true
       });
     } else {
       console.log('Форма содержит ошибки');
