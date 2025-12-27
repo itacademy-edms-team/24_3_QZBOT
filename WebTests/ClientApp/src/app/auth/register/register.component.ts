@@ -26,6 +26,8 @@ export class RegisterComponent {
   confirmPassword: string = '';
   errors: string[] = [];
 
+  isSuccessModalOpen: boolean = false;
+
   constructor(
     private authService: AuthService,
     private router: Router
@@ -41,7 +43,9 @@ export class RegisterComponent {
       };
 
       this.authService.register(registerData).subscribe({
-        next: () => this.router.navigate(['/login']),
+        next: () => {
+          this.isSuccessModalOpen = true;
+        }, 
         error: (err) => {
           this.errors = [];
 
@@ -62,7 +66,7 @@ export class RegisterComponent {
               this.errors.push("Пароль должен содержать хотя бы один спецсимвол");
             } else if (err.error[i].code == "PasswordRequiresLower") {
               this.errors.push("Пароль должен содержать хотя бы одну букву нижнего регистра");
-            } else if (err.error[i].code == "PasswordRequiresLower") {
+            } else if (err.error[i].code == "PasswordRequiresUpper") {
               this.errors.push("Пароль должен содержать хотя бы одну букву верхнего регистра");
             } else if (err.error[i].code == "PasswordRequiresDigit") {
               this.errors.push("Пароль должен содержать хотя бы одну цифру")
@@ -75,5 +79,10 @@ export class RegisterComponent {
     } else {
       console.log("Форма содержит ошибки");
     }
+  }
+
+  closeModal() {
+    this.isSuccessModalOpen = false;
+    this.router.navigate(['/login'])
   }
 }

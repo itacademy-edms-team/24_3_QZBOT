@@ -99,3 +99,23 @@
 
   </div>
 </div>
+
+
+<div *ngIf="isSuccessModalOpen"
+     class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
+
+  <div class="bg-white p-6 rounded-xl shadow-xl w-80">
+    <h2 class="mb-2 text-lg font-semibold text-gray-900">
+      Регистрация успешна
+    </h2>
+
+    <p class="mb-4 text-lg text-sm">
+      Аккаунт успешно создан. Теперь вы можете войти.
+    </p>
+
+    <button (click)="closeModal()"
+            class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+      Перейти к авторизации
+    </button>
+  </div>
+</div>
