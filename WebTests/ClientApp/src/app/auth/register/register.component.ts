@@ -25,6 +25,7 @@ export class RegisterComponent {
 
   confirmPassword: string = '';
   textError: string = '';
+  errors: string[] = [];
 
   constructor(
     private authService: AuthService,
@@ -48,8 +49,21 @@ export class RegisterComponent {
       this.authService.register(registerData).subscribe({
         next: () => this.router.navigate(['/login']),
         error: (err) => {
+          for (var i = 0; i < err.error.length; i++) {
+            if (err.error[i].code == "PasswordTooShort") {
+              this.errors.push("Пароль должен содержать не менее 6 символов");
+            } else if (err.error[i].code == "PasswordRequiresNonAlphanumeric") {
+              this.errors.push("Пароль должен содержать хотя бы один спецсимвол");
+            } else if (err.error[i].code == "PasswordRequiresLower") {
+              this.errors.push("Пароль должен содержать хотя бы одну букву нижнего регистра");
+            } else if (err.error[i].code == "PasswordRequiresLower") {
+              this.errors.push("Пароль должен содержать хотя бы одну букву верхнего регистра");
+            } else if (err.error[i].code == "PasswordRequiresDigit") {
+              this.errors.push("Пароль должен содержать хотя бы одну цифру")
+            }
+          }
+
           console.error("Ошибка регистрации", err);
-          this.textError = 'Ошибка регистрации. Проверьте введенные данные.';
         }
       });
     } else {

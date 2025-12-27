@@ -15,7 +15,7 @@
                type="text"
                name="username"
                required
-               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
       </div>
 
       <div>
@@ -27,9 +27,9 @@
                required
                email
                #email="ngModel"
-               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
 
-        <div *ngIf="email.invalid && email.touched"
+        <div *ngIf="email.invalid && email.touched && email.value"
              class="text-red-600 text-sm mt-1">
           Email обязателен и должен быть корректным.
         </div>
@@ -42,7 +42,7 @@
                type="tel"
                name="phoneNumber"
                required
-               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
       </div>
 
       <div>
@@ -54,7 +54,7 @@
                required
                appPasswordValidator
                #password="ngModel"
-               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
 
         <div *ngIf="password.touched" class="text-red-600 text-sm space-y-1 mt-1">
           <div *ngIf="password.errors?.['minLength']">Пароль должен быть не менее 6 символов.</div>
@@ -74,7 +74,7 @@
                name="confirmPassword"
                required
                #confirmPasswordInput="ngModel"
-               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"/>
+               class="w-full border border-gray-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
 
         <div *ngIf="model.password !== confirmPassword && confirmPassword && confirmPasswordInput.touched"
              class="text-red-600 text-sm mt-1">
@@ -88,9 +88,12 @@
         Зарегистрироваться
       </button>
 
-      <div *ngIf="textError"
-           class="text-center text-red-600 font-medium mt-3">
-        {{ textError }}
+      <div *ngIf="errors?.length"
+           class="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3">
+        <ul *ngFor="let error of errors"
+            class="list-disc space-y-1 pl-5 text-sm font-medium text-red-700">
+          <li>{{ error }}</li>
+        </ul>
       </div>
     </form>
 
