@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { TestService, Test, Question, Option } from '../../../services/test.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { AuthService } from '../../../services/auth.service';
 
 @Component({
   selector: 'app-management-edit',
@@ -43,14 +44,22 @@ export class ManagementEditComponent implements OnInit {
   is_editing_locked: boolean = false;        // блокировка UI до подтверждения
   success_edit: boolean = false;             // флаг успешного сохранения
 
+  currentUserId: string | null = null;       // userId
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private testService: TestService,
+    private authService: AuthService,
   ) { }
-  
+
 
   ngOnInit() {
+    // получение userId
+    this.authService.currentUserId.subscribe(id => {
+      this.currentUserId = id;
+    })
+
     // получение ID места из параметров маршрута
     this.route.paramMap.subscribe(params => {
       const test_id = Number(params.get('id'));
@@ -64,7 +73,7 @@ export class ManagementEditComponent implements OnInit {
           this.test = data;
 
           // проверка, что текущий пользователь - автор теста
-          if (data.creatorId !== this.testService.currentUserId) {
+          if (data.creatorId !== this.currentUserId) {
             alert("Вы не можете редактировать чужой тест");
             this.router.navigate(['/management']);
           }

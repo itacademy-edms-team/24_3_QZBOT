@@ -20,6 +20,12 @@ export interface LoginResponse {
   username: string;
 }
 
+export interface MeResponse {
+  id: string;
+  username: string;
+}
+
+
 @Injectable({
   providedIn: 'root'
 })
@@ -27,13 +33,14 @@ export class AuthService {
   private readonly apiUrl = 'https://localhost:44356/api/auth';
   private currentUserSubject = new BehaviorSubject<string | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private currentUserIdCache: string | null = null;
 
   redirectUrl: string | null = null;
 
   constructor(
     private http: HttpClient,
     private router: Router
-  ) {}
+  ) { }
 
   register(model: RegisterRequest): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, model);
@@ -79,11 +86,13 @@ export class AuthService {
       {},
       { withCredentials: true }
     ).subscribe(() => {
+      this.currentUserIdCache = null;
       localStorage.removeItem('username');
       this.currentUserSubject.next(null);
       this.router.navigate(['/login']);
     });
   }
+
 
   get currentUser() {
     return this.currentUserSubject.value;
@@ -93,7 +102,24 @@ export class AuthService {
     return !!this.currentUserSubject.value;
   }
 
-  get currentUserUsername(): string | null {
+  get currentUserId(): Observable<string | null> {
+    if (this.currentUserIdCache) {
+      return of(this.currentUserIdCache)
+    }
+
+    return this.http.get<MeResponse>(
+      `${this.apiUrl}/me`,
+      { withCredentials: true }
+    ).pipe(
+      tap(res => {
+        this.currentUserIdCache = res.id;
+      }),
+      map(res => res.id),
+      catchError(() => of(null))
+    );
+  }
+
+  get currentUserUsername(): string | null { // разобраться с этим методом
     return localStorage.getItem('username');
   }
 }

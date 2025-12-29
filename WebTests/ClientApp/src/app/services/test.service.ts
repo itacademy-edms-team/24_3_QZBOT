@@ -192,13 +192,13 @@ export class TestService {
 
 
 
-  get currentUserId(): string {
-    const token = localStorage.getItem("token");
-    if (!token) return "";
+  //get currentUserId(): string {
+  //  const token = localStorage.getItem("token");
+  //  if (!token) return "";
 
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload["nameid"];
-  }
+  //  const payload = JSON.parse(atob(token.split('.')[1]));
+  //  return payload["nameid"];
+  //}
 }
 
 

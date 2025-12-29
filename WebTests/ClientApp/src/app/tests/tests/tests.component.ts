@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TestService, Test, Question, Option, UserTest } from '../../services/test.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-test',
@@ -56,6 +57,7 @@ export class TestComponent implements OnInit {
 
   constructor(
     private testService: TestService,
+    private authService: AuthService,
     private route: ActivatedRoute,
     private router: Router,
   ) { }
@@ -180,9 +182,13 @@ export class TestComponent implements OnInit {
     this.isFinishModalOpen = true;
     this.textModal = "Тест завершен! Результат " + this.rightAnswers + "/" + this.test.questions.length;
 
-    const token = localStorage.getItem("token");
+    //const token = localStorage.getItem("token");
 
-    if (!token) {
+    //if (!token) {
+    //  return;
+    //}
+
+    if (!this.authService.isAuthenticated) {
       return;
     }
 
