@@ -26,6 +26,22 @@ namespace WebTests.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterModel model)
         {
+            if (await _userManager.FindByNameAsync(model.Username) != null)
+            {
+                return BadRequest(new IdentityError
+                {
+                    Code = "DuplicateUserName"
+                });
+            }
+
+            if (await _userManager.FindByEmailAsync(model.Email) != null)
+            {
+                return BadRequest(new IdentityError
+                {
+                    Code = "DuplicateEmail"
+                });
+            }
+
             var user = new IdentityUser { UserName = model.Username, Email = model.Email };
             var result = await _userManager.CreateAsync(user, model.Password);
 

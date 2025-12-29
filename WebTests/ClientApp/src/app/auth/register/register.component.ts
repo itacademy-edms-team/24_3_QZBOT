@@ -24,7 +24,9 @@ export class RegisterComponent {
   };
 
   confirmPassword: string = '';
-  textError: string = '';
+  errors: string[] = [];
+
+  isSuccessModalOpen: boolean = false;
 
   constructor(
     private authService: AuthService,
@@ -32,11 +34,6 @@ export class RegisterComponent {
   ) { }
 
   onSubmit(form: NgForm) {
-    if (this.model.password !== this.confirmPassword) {
-      this.textError = 'Пароли не совпадают';
-      return;
-    }
-
     if (form.valid) {
       const registerData = {
         username: this.model.username,
@@ -46,15 +43,46 @@ export class RegisterComponent {
       };
 
       this.authService.register(registerData).subscribe({
-        next: () => this.router.navigate(['/login']),
+        next: () => {
+          this.isSuccessModalOpen = true;
+        }, 
         error: (err) => {
+          this.errors = [];
+
+          if (err.error.code == "DuplicateUserName") {
+            this.errors.push("Это пользователя уже занято")
+            return;
+          }
+
+          if (err.error.code == "DuplicateEmail") {
+            this.errors.push("Эта почта уже занята")
+            return;
+          }
+
+          for (var i = 0; i < err.error.length; i++) {
+            if (err.error[i].code == "PasswordTooShort") {
+              this.errors.push("Пароль должен содержать не менее 6 символов");
+            } else if (err.error[i].code == "PasswordRequiresNonAlphanumeric") {
+              this.errors.push("Пароль должен содержать хотя бы один спецсимвол");
+            } else if (err.error[i].code == "PasswordRequiresLower") {
+              this.errors.push("Пароль должен содержать хотя бы одну букву нижнего регистра");
+            } else if (err.error[i].code == "PasswordRequiresUpper") {
+              this.errors.push("Пароль должен содержать хотя бы одну букву верхнего регистра");
+            } else if (err.error[i].code == "PasswordRequiresDigit") {
+              this.errors.push("Пароль должен содержать хотя бы одну цифру")
+            }
+          }
+
           console.error("Ошибка регистрации", err);
-          this.textError = 'Ошибка регистрации. Проверьте введенные данные.';
         }
       });
     } else {
       console.log("Форма содержит ошибки");
-      this.textError = 'Пожалуйста, заполните все обязательные поля.';
     }
+  }
+
+  closeModal() {
+    this.isSuccessModalOpen = false;
+    this.router.navigate(['/login'])
   }
 }
