@@ -27,13 +27,15 @@ export class TestComponent implements OnInit {
   currentQuestion: any;
   isFirst: boolean = true;
   isLast: boolean = false;
-  isLocked: boolean = false;
+  isSubmited: boolean = false;
+  isSelected: boolean = false;
+  selectedOptionIndex: number = 0;
   rightAnswers: number = 0;
 
   isFinishModalOpen: boolean = false;
   isModalOpen: boolean = false;
   textModal: string = '';
-  isPassedModalOpen = false;
+  isPassedModalOpen: boolean = false;
 
   tryedTest: Test = {
     id: 0,
@@ -54,6 +56,7 @@ export class TestComponent implements OnInit {
     score: 0,
     isPassed: false
   }
+
 
   constructor(
     private testService: TestService,
@@ -95,41 +98,46 @@ export class TestComponent implements OnInit {
   }
 
 
-  selectedAnswers(questionId: number, option: string, title: string) {
-    const selectedIndex = this.currentQuestion.options.indexOf(option);
+  onOptionToggle(option: Option) {
+    const index = this.currentQuestion.options.indexOf(option);
+    this.selectedOptionIndex = index;
+    this.isSelected = true;
+  }
 
-    this.testService.checkAnswer(title, questionId, selectedIndex).subscribe({
+
+  submitAnswer(questionId: number, title: string) {
+    this.testService.checkAnswer(title, questionId, this.selectedOptionIndex).subscribe({
       next: (response) => {
         if (response) {
           this.isModalOpen = true;
           this.textModal = "Правильно";
-          this.isLocked = true;
           this.rightAnswers += 1;
         } else {
           this.isModalOpen = true;
           this.textModal = "Неправильно";
-          this.isLocked = true;
         }
-      },
-      error: (err) => console.error('Error: ', err)
-    });
+      }
+    })
+
+    this.isSubmited = true;
   }
 
-  nextQuestion() {
-    if (!this.isLocked) {
-      return;
-    }
 
+  nextQuestion() {
     const i = this.test.questions.indexOf(this.currentQuestion);
 
     if (i < this.test.questions.length - 1) {
       this.currentQuestion = this.test.questions[i + 1];
     }
 
-    this.isLocked = false;
     this.updateIsLast();
     this.updateIsFirst();
+
+    this.selectedOptionIndex = 0;
+    this.isSubmited = false;
+    this.isSelected = false;
   }
+
 
   //lastQuestion() {
   //  const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
@@ -158,6 +166,7 @@ export class TestComponent implements OnInit {
     });
   }
 
+
   updateIsLast() {
     const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
 
@@ -167,6 +176,7 @@ export class TestComponent implements OnInit {
       this.isLast = false;
     }
   }
+
 
   updateIsFirst() {
     const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
@@ -178,15 +188,10 @@ export class TestComponent implements OnInit {
     }
   }
 
+
   finishTest() {
     this.isFinishModalOpen = true;
     this.textModal = "Тест завершен! Результат " + this.rightAnswers + "/" + this.test.questions.length;
-
-    //const token = localStorage.getItem("token");
-
-    //if (!token) {
-    //  return;
-    //}
 
     if (!this.authService.isAuthenticated) {
       return;
@@ -195,14 +200,17 @@ export class TestComponent implements OnInit {
     this.testService.passTest(this.test.id, this.rightAnswers).subscribe();
   }
 
+
   closeModal() {
     this.isModalOpen = false;
   }
+
 
   closeFinishModal() {
     this.isFinishModalOpen = false;
     this.router.navigate(['/tests'])
   }
+
 
   closePassedModal() {
     this.router.navigate(['/tests'])

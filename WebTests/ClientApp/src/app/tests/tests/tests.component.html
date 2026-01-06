@@ -12,8 +12,8 @@
       <input type="radio"
              name="answer"
              [value]="option"
-             [disabled]="isLocked"
-             (change)="selectedAnswers(currentQuestion.id, option, test.title)"
+             [disabled]="isSubmited"
+             (change)="onOptionToggle(option)"
              class="w-5 h-5 text-blue-600 focus:ring-0" />
 
       <span class="text-lg">
@@ -28,9 +28,20 @@
     <button class="btn btn-danger" (click)="lastQuestion()">Предыдущий вопрос</button>
   </div>-->
 
+  <div *ngIf="!isSubmited" class="mt-8">
+    <button (click)="submitAnswer(currentQuestion.id, test.title)"
+            [disabled]="isSelected === false"
+            class="px-6 py-3 border border-blue-600 text-blue-700 rounded-xl shadow
+                   hover:bg-blue-600 hover:text-white transition-colors duration-300
+                   disabled:opacity-40 disabled:cursor-not-allowed">
+      Ответить
+    </button>
+
+  </div>
+
   <div *ngIf="!isLast" class="mt-8">
     <button (click)="nextQuestion()"
-            [disabled]="isLocked === false"
+            [disabled]="isSubmited === false"
             class="px-6 py-3 border border-blue-600 text-blue-700 rounded-xl shadow
                    hover:bg-blue-600 hover:text-white transition-colors duration-300
                    disabled:opacity-40 disabled:cursor-not-allowed">
@@ -40,7 +51,7 @@
 
   <div *ngIf="isLast" class="mt-8">
     <button (click)="finishTest()"
-            [disabled]="isLocked === false"
+            [disabled]="isSubmited === false"
             class="px-6 py-3 bg-gray-900 text-white rounded-xl shadow hover:bg-gray-700
                  transition-colors duration-300
                  disables:opacity-40 disabled:cursor-not-allowed">
