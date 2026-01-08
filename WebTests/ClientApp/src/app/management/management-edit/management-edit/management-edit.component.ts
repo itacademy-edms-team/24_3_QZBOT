@@ -117,12 +117,26 @@ export class ManagementEditComponent implements OnInit {
     question.options.splice(index, 1);
   }
 
-  // пометка правильного варианта ответа
-  selectCorrectOption(question: any, selectedIndex: number) {
-    // сбрасываем isCorrect у всех и ставим true только у выбранного
-    question.options.forEach((option: any, index: number) => {
-      option.isCorrect = index === selectedIndex;
-    });
+  // выбор правильного варианта
+  toggleCorrectOption(question: any, selectedIndex: number) {
+    if (question.isMultiple) {
+      question.options[selectedIndex].isCorrect = !question.options[selectedIndex].isCorrect
+    } else {
+      question.options.forEach((o: any, i: number) => {
+        o.isCorrect = i === selectedIndex;
+      })
+    }
+  }
+
+  // множественный выбор
+  onMultipleChange(question: any) {
+    if (!question.isMultiple) {
+      const firstCorrect = question.options.find((o: { isCorrect: any; }) => o.isCorrect);
+      question.options.forEach((o: { isCorrect: boolean; }) => o.isCorrect = false);
+      if (firstCorrect) {
+        firstCorrect.isCorrect = true;
+      }
+    }
   }
 
   // кнока "сохранить изменения"
