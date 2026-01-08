@@ -170,10 +170,7 @@ export class TestService {
         }
       }
 
-      if (count_of_true > 1) {
-        return "Для вопроса " + (i + 1) + " указано несколько правильных вариантов ответа";
-      }
-      else if (count_of_true == 0) {
+      if (count_of_true == 0) {
         return "Для вопроса " + (i + 1) + " не указан правильный вариант ответа";
       }
     }
