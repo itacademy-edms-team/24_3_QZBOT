@@ -4,24 +4,51 @@
     {{ currentQuestion.text }}
   </h3>
 
-  <div class="space-y-3">
-    <label *ngFor="let option of currentQuestion.options"
-           class="flex items-center gap-3 p-4 border border-gray-300 rounded-xl
-                  hover:border-blue-500 hover:bg-blue-50 transition cursor-pointer">
+  <div *ngIf="currentQuestion.isMultiple;else no_multiple">
+    <div class="space-y-3">
+      <label *ngFor="let option of currentQuestion.options"
+             class="flex items-center gap-3 p-4 border border-gray-300 rounded-xl
+                hover:border-blue-500 hover:bg-blue-50 transition cursor-pointer">
 
-      <input type="radio"
-             name="answer"
-             [value]="option"
-             [disabled]="isSubmited"
-             (change)="onOptionToggle(option)"
-             class="w-5 h-5 text-blue-600 focus:ring-0" />
+        <input type="checkbox"
+               name="answer"
+               [value]="option"
+               [disabled]="isSubmited"
+               (change)="onOptionToggle(option)"
+               class="w-5 h-5 text-blue-600 focus:ring-0" />
 
-      <span class="text-lg">
-        {{ option.text }}
-      </span>
+        <span class="text-lg">
+          {{ option.text }}
+        </span>
 
-    </label>
+      </label>
+    </div>
+
   </div>
+
+
+  <ng-template #no_multiple>
+
+    <div class="space-y-3">
+      <label *ngFor="let option of currentQuestion.options"
+             class="flex items-center gap-3 p-4 border border-gray-300 rounded-xl
+            hover:border-blue-500 hover:bg-blue-50 transition cursor-pointer">
+
+        <input type="radio"
+               name="answer"
+               [value]="option"
+               [disabled]="isSubmited"
+               (change)="onOptionToggle(option)"
+               class="w-5 h-5 text-blue-600 focus:ring-0" />
+
+        <span class="text-lg">
+          {{ option.text }}
+        </span>
+
+      </label>
+    </div>
+
+  </ng-template>
 
 
   <!--<div *ngIf="!isFirst">

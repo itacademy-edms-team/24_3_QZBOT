@@ -119,7 +119,7 @@ namespace WebTests.Controllers
         [HttpPost("check")]
         public IActionResult CheckAnswer([FromBody] AnswerCheckDto dto)
         {
-            if (dto == null || string.IsNullOrWhiteSpace(dto.Title))
+            if (dto == null || string.IsNullOrWhiteSpace(dto.Title) || dto.SelectedOptionIndexes == null || dto.SelectedOptionIndexes.Count == 0)
                 return BadRequest("Неверный запрос.");
 
             var question = _context.Questions
@@ -132,13 +132,17 @@ namespace WebTests.Controllers
             if (question == null)
                 return NotFound("Вопрос или тест не найден.");
 
-            if (dto.SelectedOptionIndex < 0 || dto.SelectedOptionIndex >= question.Options.Count)
+            var selectedIndexes = dto.SelectedOptionIndexes.Distinct().ToList();
+
+            if (selectedIndexes.Any(i => i < 0 || i >= question.Options.Count))
                 return BadRequest("Некорректный индекс варианта.");
 
-            var selectedOption = question.Options[dto.SelectedOptionIndex];
-            bool isCorrect = selectedOption.IsCorrect;
 
-            return Ok( isCorrect );
+            var result = selectedIndexes
+                .Select(i => question.Options[i].IsCorrect)
+                .ToList();
+
+            return Ok(result);
         }
 
         [Authorize]

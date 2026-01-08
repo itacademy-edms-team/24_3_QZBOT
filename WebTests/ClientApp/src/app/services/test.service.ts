@@ -55,11 +55,11 @@ export class TestService {
 
 
 
-  checkAnswer(title: string, questionId: number, selectedOptionIndex: number) {
-    return this.http.post<boolean>(`${this.baseUrl}/check`, {
+  checkAnswer(title: string, questionId: number, selectedOptionIndexes: number[]) {
+    return this.http.post<boolean[]>(`${this.baseUrl}/check`, {
       title,
       questionId,
-      selectedOptionIndex
+      selectedOptionIndexes
     }, { withCredentials: true });
   }
 
@@ -234,6 +234,7 @@ export interface Question {
   id: number;
   text: string;
   options: Option[];
+  isMultiple: boolean;
 }
 
 export interface Option {

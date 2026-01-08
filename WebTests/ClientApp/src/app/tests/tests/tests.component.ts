@@ -24,12 +24,12 @@ export class TestComponent implements OnInit {
   errorMessage = '';
   currentQuestionIndex = 0;
   answers: { [id: number]: string } = {};
-  currentQuestion: any;
+  currentQuestion!: Question;
   isFirst: boolean = true;
   isLast: boolean = false;
   isSubmited: boolean = false;
   isSelected: boolean = false;
-  selectedOptionIndex: number = 0;
+  selectedOptionIndexes: number[] = [];
   rightAnswers: number = 0;
 
   isFinishModalOpen: boolean = false;
@@ -100,21 +100,55 @@ export class TestComponent implements OnInit {
 
   onOptionToggle(option: Option) {
     const index = this.currentQuestion.options.indexOf(option);
-    this.selectedOptionIndex = index;
+
+    const correctCount = this.currentQuestion.options.filter((o: Option) => o.isCorrect).length;
+
+    const isMultiple = correctCount > 1;
+
+    if (isMultiple) {
+      const i = this.selectedOptionIndexes.indexOf(index);
+
+      if (i === -1) {
+        this.selectedOptionIndexes.push(index);
+      } else {
+        this.selectedOptionIndexes.splice(i, 1);
+      }
+    } else {
+      this.selectedOptionIndexes = [index];
+    }
+
     this.isSelected = true;
   }
 
 
   submitAnswer(questionId: number, title: string) {
-    this.testService.checkAnswer(title, questionId, this.selectedOptionIndex).subscribe({
+    this.testService.checkAnswer(title, questionId, this.selectedOptionIndexes).subscribe({
       next: (response) => {
-        if (response) {
+        const totalCorrect = this.currentQuestion.options.filter(o => o.isCorrect).length;
+        const isMultiple = totalCorrect > 1;
+
+        if (isMultiple) {
+          const selectedCount = response.length;
+          const correctSelected = response.filter(x => x).length;
+          const wrongSelected = selectedCount - correctSelected;
+
+          const totalCorrect = this.currentQuestion.options.filter(o => o.isCorrect).length;
+
+          const score = Math.max(0, (correctSelected - wrongSelected) / totalCorrect);
+          this.rightAnswers += score;
+
           this.isModalOpen = true;
-          this.textModal = "Правильно";
-          this.rightAnswers += 1;
+          this.textModal = "Правильно " + correctSelected;
+
         } else {
-          this.isModalOpen = true;
-          this.textModal = "Неправильно";
+          if (response[0] == true) {
+            this.isModalOpen = true;
+            this.textModal = "Правильно";
+            this.rightAnswers += 1;
+          } else {
+            this.isModalOpen = true;
+            this.textModal = "Неправильно";
+          }
         }
       }
     })
@@ -133,7 +167,7 @@ export class TestComponent implements OnInit {
     this.updateIsLast();
     this.updateIsFirst();
 
-    this.selectedOptionIndex = 0;
+    this.selectedOptionIndexes = [];
     this.isSubmited = false;
     this.isSelected = false;
   }
