@@ -107,7 +107,8 @@ export class ManagementCreateComponent {
     this.test.questions.push({
       id: 0,
       text: '',
-      options: []
+      options: [],
+      isMultiple: false
     });
   }
 

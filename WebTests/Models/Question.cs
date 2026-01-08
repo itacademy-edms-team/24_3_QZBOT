@@ -7,6 +7,7 @@ namespace WebTests.Models
     {
         public int Id { get; set; }
         public string Text { get; set; } = "None";
+        public bool IsMultiple { get; set; } = false;
         public List<AnswerOption> Options { get; set; }
 
         [JsonIgnore]

@@ -93,7 +93,8 @@ export class ManagementEditComponent implements OnInit {
     this.edited_test.questions.push({
       id: 0,
       text: '',
-      options: []
+      options: [],
+      isMultiple: false,
     })
   }
 
