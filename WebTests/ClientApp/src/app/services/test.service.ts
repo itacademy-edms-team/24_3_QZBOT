@@ -106,11 +106,19 @@ export class TestService {
         changes.push(`Изменён текст вопроса ${i + 1}: "${oldQuestion.text}" → "${newQuestion.text}"`);
       }
 
-      const oldCorrect = oldQuestion.options.findIndex(o => o.isCorrect);
-      const newCorrect = newQuestion.options.findIndex(o => o.isCorrect);
+      const oldCorrectIndexes = oldQuestion.options
+        .map((o, idx) => o.isCorrect ? idx : -1)
+        .filter(i => i !== -1);
 
-      if (oldCorrect !== newCorrect) {
-        changes.push(`Изменён правильный ответ в вопросе ${i + 1}`);
+      const newCorrectIndexes = newQuestion.options
+        .map((o, idx) => o.isCorrect ? idx : -1)
+        .filter(i => i !== -1);
+
+      const sameLength = oldCorrectIndexes.length === newCorrectIndexes.length;
+      const sameSet = sameLength && oldCorrectIndexes.every(i => newCorrectIndexes.includes(i));
+
+      if (!sameSet) {
+        changes.push(`Изменены правильные ответы в вопросе ${i + 1}`);
       }
 
       newQuestion.options.forEach((newOpt, j) => {
