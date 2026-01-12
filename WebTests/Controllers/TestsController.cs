@@ -352,15 +352,26 @@ namespace WebTests.Controllers
             if (existing != null)
                 return BadRequest("Уже была попытка прохождения теста");
 
+            
+
             int totalQuestions = test.Questions.Count;
-            bool isPassed = score >= totalQuestions / 2.0;
+            bool isPassed = (score / totalQuestions) * 100 >= test.MinSuccessPercent;
+
+
+            // здесь костыль со временем, чтобы не делать миграцию для возврата предыдущей модели.
+
+            // isFinished должен показывать закончил ли пользователь проходить тест, а сейчас
+            // он показывает прошел ли (ответил правильно),
+            // потому что о попытке прохождения говорит сама запись в UserTest
 
             var entity = new UserTest
             {
                 UserId = userId,
                 TestId = testId,
                 Score = score,
-                //IsPassed = isPassed
+                StartedAt = DateTime.UtcNow,
+                FinishedAt = DateTime.UtcNow,
+                IsFinished = isPassed
             };
 
             _context.UserTests.Add(entity);
