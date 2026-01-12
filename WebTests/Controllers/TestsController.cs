@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
 using WebTests.Data;
@@ -224,6 +225,110 @@ namespace WebTests.Controllers
         }
 
         [Authorize]
+        [HttpPost("start/{testId}")]
+        public async Task<IActionResult> StartTest(int testId) 
+        { 
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); 
+            
+            if (userId == null) 
+                return Unauthorized(); 
+            
+            var testExists = await _context.Tests.AnyAsync(t => t.Id == testId); 
+            
+            if (!testExists) 
+                return NotFound("Тест не найден"); 
+            
+            var test = await _context.Tests
+                .Where(t => t.Id == testId)
+                .Include(q => q.Questions)
+                .FirstOrDefaultAsync(); 
+
+            var attempt = await _context.UserTests
+                .Include(t => t.Answers)
+                .FirstOrDefaultAsync(ut => ut.TestId == testId && ut.UserId == userId && ut.IsFinished == false); 
+            
+            if (attempt == null) 
+            { 
+                attempt = new UserTest 
+                { 
+                    UserId = userId, 
+                    TestId = testId, 
+                    StartedAt = DateTime.UtcNow,
+                    IsFinished = false 
+                }; 
+                
+                _context.UserTests.Add(attempt); 
+                await _context.SaveChangesAsync(); 
+            } 
+            
+            return Ok(UserTestDto.MapToDto(attempt)); 
+        }
+
+        [Authorize]
+        [HttpPost("answer")]
+        public async Task<IActionResult> SubmitAnswer([FromBody] SubmitAnswerDto dto)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var userTest = await _context.UserTests
+                .Include(t => t.Answers)
+                .FirstOrDefaultAsync(t =>
+                    t.Id == dto.UserTestId &&
+                    t.UserId == userId &&
+                    t.IsFinished == false);
+
+            if (userTest == null)
+                return NotFound("Попытка не найдена или уже завершена");
+
+            var question = await _context.Questions
+                .Include(q => q.Options)
+                .FirstOrDefaultAsync(q =>
+                    q.Id == dto.QuestionId &&
+                    q.TestId == userTest.TestId);
+
+            if (question == null)
+                return BadRequest("Вопрос не принадлежит этому тесту");
+
+            if (userTest.Answers.Any(a => a.QuestionId == dto.QuestionId))
+                return BadRequest("На этот вопрос уже был дан ответ");
+
+            var validOptionIds = question.Options.Select(o => o.Id).ToHashSet();
+
+            if (dto.SelectedOptionIds.Any(id => !validOptionIds.Contains(id)))
+                return BadRequest("Один или несколько вариантов не принадлежат этому вопросу");
+
+            var correctIds = question.Options
+                .Where(o => o.IsCorrect)
+                .Select(o => o.Id)
+                .ToHashSet();
+
+            bool isCorrect =
+                dto.SelectedOptionIds.Count == correctIds.Count &&
+                dto.SelectedOptionIds.All(id => correctIds.Contains(id));
+
+            var answer = new UserTestAnswer
+            {
+                UserTestId = userTest.Id,
+                QuestionId = dto.QuestionId,
+                SelectedOptionsJson = JsonSerializer.Serialize(dto.SelectedOptionIds),
+                IsCorrect = isCorrect,
+                AnsweredAt = DateTime.UtcNow
+            };
+
+            _context.UserTestAnswers.Add(answer);
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                isCorrect,
+                answeredQuestions = userTest.Answers.Count + 1
+            });
+        }
+
+        [Authorize]
         [HttpPost("pass/{testId}")]
         public async Task<IActionResult> PassTest(int testId, [FromBody] int score)
         {
@@ -255,7 +360,7 @@ namespace WebTests.Controllers
                 UserId = userId,
                 TestId = testId,
                 Score = score,
-                IsPassed = isPassed
+                //IsPassed = isPassed
             };
 
             _context.UserTests.Add(entity);

@@ -1,5 +1,5 @@
 ﻿using System.Text.Json.Serialization;
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace WebTests.Models
 {
@@ -15,5 +15,6 @@ namespace WebTests.Models
         public DateTime CreatedDate { get; set; }
         public DateTime? PublishDate { get; set; }
         public DateTime EditTime { get; set; } = DateTime.UtcNow;
+        public int MinSuccessPercent { get; set; } = 70;
     }
 }

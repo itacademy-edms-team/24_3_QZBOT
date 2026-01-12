@@ -12,6 +12,7 @@ export class ManagementCreateComponent {
   test: Test = {
     id: 0,
     title: '',
+    types: [],
     questions: [],
     creatorId: '',
     published: false,
@@ -189,6 +190,7 @@ export class ManagementCreateComponent {
         id: 0,
         title: obj.title,
         creatorId: '',
+        types: [],
         published: obj.published ?? false,
         questions: obj.questions.map((q: any) => ({
           id: 0,

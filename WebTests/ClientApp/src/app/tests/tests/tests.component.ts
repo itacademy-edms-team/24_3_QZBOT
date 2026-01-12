@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TestService, Test, Question, Option, UserTest } from '../../services/test.service';
+import { TestService, TestType, Test, Question, Option, UserTest, UserTestDto, SubmitAnswerDto, SubmitAnswerResult } from '../../services/test.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -14,6 +14,7 @@ export class TestComponent implements OnInit {
     id: 0,
     title: '',
     questions: [],
+    types: [],
     creatorId: '',
     published: false,
     publishDate: new Date(0),
@@ -36,10 +37,12 @@ export class TestComponent implements OnInit {
   isModalOpen: boolean = false;
   textModal: string = '';
   isPassedModalOpen: boolean = false;
+  isUnauthModalOpen: boolean = false;
 
   tryedTest: Test = {
     id: 0,
     title: '',
+    types: [],
     questions: [],
     creatorId: '',
     published: false,
@@ -57,6 +60,14 @@ export class TestComponent implements OnInit {
     isPassed: false
   }
 
+  userTest!: UserTestDto;
+
+  mode = {
+    strict: false,
+    timeLimited: false,
+    shuffle: false,
+    authOnly: false,
+  }
 
   constructor(
     private testService: TestService,
@@ -78,6 +89,21 @@ export class TestComponent implements OnInit {
               this.currentQuestion = data.questions[0];
             }
 
+            data.types.forEach(type => {
+              if (type.name === "AuthOnly") {
+                this.mode.authOnly = true;
+              } else if (type.name === "Strict") {
+                this.mode.strict = true;
+              }
+            })
+
+            if (this.mode.authOnly) {
+              if (!this.authService.isAuthenticated) {
+                this.isUnauthModalOpen = true;
+                this.textModal = "Этот тест доступен только авторизованным пользователям!"
+              }
+            }
+
             this.testService.isPassed(this.test.id).subscribe({
               next: (record) => {
                 this.try = record
@@ -91,6 +117,25 @@ export class TestComponent implements OnInit {
                 this.updateIsFirst();
               }
             });
+
+            this.testService.startTest(this.test.id).subscribe(attempt => {
+              this.userTest = attempt;
+
+              const next = this.test.questions.find(q =>
+                !attempt.answeredQuestionIds.includes(q.id)
+              );
+
+              if (next) {
+                this.currentQuestion = next;
+              } else {
+                this.isFinishModalOpen = true;
+                this.textModal = 'Вы уже ответили на все вопросы';
+              }
+
+              this.updateIsLast();
+              this.updateIsFirst();
+            });
+
           }
         })
       }
@@ -121,40 +166,23 @@ export class TestComponent implements OnInit {
   }
 
 
-  submitAnswer(questionId: number, title: string) {
-    this.testService.checkAnswer(title, questionId, this.selectedOptionIndexes).subscribe({
-      next: (response) => {
-        const totalCorrect = this.currentQuestion.options.filter(o => o.isCorrect).length;
-        const isMultiple = totalCorrect > 1;
+  submitAnswer() {
+    const selectedOptionIds = this.selectedOptionIndexes.map(
+      i => this.currentQuestion.options[i].id
+    );
 
-        if (isMultiple) {
-          const selectedCount = response.length;
-          const correctSelected = response.filter(x => x).length;
-          const wrongSelected = selectedCount - correctSelected;
+    this.testService.submitAnswer({
+      userTestId: this.userTest.userTestId,
+      questionId: this.currentQuestion.id,
+      selectedOptions: selectedOptionIds
+    }).subscribe(result => {
 
-          const totalCorrect = this.currentQuestion.options.filter(o => o.isCorrect).length;
-
-          const score = Math.max(0, (correctSelected - wrongSelected) / totalCorrect);
-          this.rightAnswers += score;
-
-          this.isModalOpen = true;
-          this.textModal = "Правильно " + correctSelected;
-
-        } else {
-          if (response[0] == true) {
-            this.isModalOpen = true;
-            this.textModal = "Правильно";
-            this.rightAnswers += 1;
-          } else {
-            this.isModalOpen = true;
-            this.textModal = "Неправильно";
-          }
-        }
-      }
-    })
-
-    this.isSubmited = true;
+      this.isModalOpen = true;
+      this.textModal = result.isCorrect ? 'Правильно' : 'Неправильно';
+      this.isSubmited = true;
+    });
   }
+
 
 
   nextQuestion() {
@@ -234,6 +262,9 @@ export class TestComponent implements OnInit {
     this.testService.passTest(this.test.id, this.rightAnswers).subscribe();
   }
 
+  auth() {
+    this.router.navigate(['/login'])
+  }
 
   closeModal() {
     this.isModalOpen = false;

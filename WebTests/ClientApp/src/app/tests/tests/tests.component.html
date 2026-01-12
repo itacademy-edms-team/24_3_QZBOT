@@ -56,7 +56,7 @@
   </div>-->
 
   <div *ngIf="!isSubmited" class="mt-8">
-    <button (click)="submitAnswer(currentQuestion.id, test.title)"
+    <button (click)="submitAnswer()"
             [disabled]="isSelected === false"
             class="px-6 py-3 border border-blue-600 text-blue-700 rounded-xl shadow
                    hover:bg-blue-600 hover:text-white transition-colors duration-300
@@ -156,6 +156,26 @@
     <button (click)="closePassedModal()"
             class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
       Назад
+    </button>
+  </div>
+</div>
+
+
+<div *ngIf="isUnauthModalOpen"
+     class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
+
+  <div class="bg-white p-6 rounded-xl shadow-xl w-80">
+
+    <p class="mb-4 text-lg text-center">{{ textModal }}</p>
+
+    <button (click)="closePassedModal()"
+            class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+      Назад
+    </button>
+
+    <button (click)="auth()"
+            class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+      Авторизоваться
     </button>
   </div>
 </div>

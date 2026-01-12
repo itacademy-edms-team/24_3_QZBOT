@@ -6,13 +6,14 @@ namespace WebTests.Data
 {
     public class AppDbContext : IdentityDbContext
     {
-        public AppDbContext(DbContextOptions<AppDbContext> options) 
+        public AppDbContext(DbContextOptions<AppDbContext> options)
             : base(options) { }
 
         public DbSet<Test> Tests { get; set; }
         public DbSet<Question> Questions { get; set; }
         public DbSet<AnswerOption> AnswerOptions { get; set; }
-        public DbSet<UserTest> UserTests { get; set; }  
+        public DbSet<UserTest> UserTests { get; set; }
+        public DbSet<UserTestAnswer> UserTestAnswers { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -40,6 +41,12 @@ namespace WebTests.Data
                 .HasOne(ut => ut.Test)
                 .WithMany()
                 .HasForeignKey(ut => ut.TestId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<UserTestAnswer>()
+                .HasOne(a => a.UserTest)
+                .WithMany(t => t.Answers)
+                .HasForeignKey(a => a.UserTestId)
                 .OnDelete(DeleteBehavior.Cascade);
         }
     }
