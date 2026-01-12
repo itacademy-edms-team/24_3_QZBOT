@@ -117,25 +117,6 @@ export class TestComponent implements OnInit {
                 this.updateIsFirst();
               }
             });
-
-            this.testService.startTest(this.test.id).subscribe(attempt => {
-              this.userTest = attempt;
-
-              const next = this.test.questions.find(q =>
-                !attempt.answeredQuestionIds.includes(q.id)
-              );
-
-              if (next) {
-                this.currentQuestion = next;
-              } else {
-                this.isFinishModalOpen = true;
-                this.textModal = 'Вы уже ответили на все вопросы';
-              }
-
-              this.updateIsLast();
-              this.updateIsFirst();
-            });
-
           }
         })
       }
@@ -166,21 +147,39 @@ export class TestComponent implements OnInit {
   }
 
 
-  submitAnswer() {
-    const selectedOptionIds = this.selectedOptionIndexes.map(
-      i => this.currentQuestion.options[i].id
-    );
+  submitAnswer(questionId: number, title: string) {
+    this.testService.checkAnswer(title, questionId, this.selectedOptionIndexes).subscribe({
+      next: (response) => {
+        const totalCorrect = this.currentQuestion.options.filter(o => o.isCorrect).length;
+        const isMultiple = totalCorrect > 1;
 
-    this.testService.submitAnswer({
-      userTestId: this.userTest.userTestId,
-      questionId: this.currentQuestion.id,
-      selectedOptions: selectedOptionIds
-    }).subscribe(result => {
+        if (isMultiple) {
+          const selectedCount = response.length;
+          const correctSelected = response.filter(x => x).length;
+          const wrongSelected = selectedCount - correctSelected;
 
-      this.isModalOpen = true;
-      this.textModal = result.isCorrect ? 'Правильно' : 'Неправильно';
-      this.isSubmited = true;
-    });
+          const totalCorrect = this.currentQuestion.options.filter(o => o.isCorrect).length;
+
+          const score = Math.max(0, (correctSelected - wrongSelected) / totalCorrect);
+          this.rightAnswers += score;
+
+          this.isModalOpen = true;
+          this.textModal = "Правильно " + correctSelected;
+
+        } else {
+          if (response[0] == true) {
+            this.isModalOpen = true;
+            this.textModal = "Правильно";
+            this.rightAnswers += 1;
+          } else {
+            this.isModalOpen = true;
+            this.textModal = "Неправильно";
+          }
+        }
+      }
+    })
+
+    this.isSubmited = true;
   }
 
 

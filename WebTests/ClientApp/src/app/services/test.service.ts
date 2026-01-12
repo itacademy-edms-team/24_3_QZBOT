@@ -260,7 +260,7 @@ export interface UserTestDto {
 export interface SubmitAnswerDto {
   userTestId: number;
   questionId: number;
-  selectedOptions: number[]
+  selectedOptionIds: number[]
 }
 
 export interface SubmitAnswerResult {
