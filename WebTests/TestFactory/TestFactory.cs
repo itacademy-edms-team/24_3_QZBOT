@@ -20,7 +20,8 @@ namespace WebTests.TestFactory
 
                 var quest = new Question()
                 {
-                    Text = question.Text
+                    Text = question.Text,
+                    IsMultiple = question.isMultiple
                 };
 
                 if (quest.Options == null)
@@ -73,7 +74,8 @@ namespace WebTests.TestFactory
                     {
                         Text = o.Text,
                         IsCorrect = o.IsCorrect,
-                    }).ToList()
+                    }).ToList(),
+                    IsMultiple = q.isMultiple
                 };
 
                 test.Questions.Add(question);

@@ -75,6 +75,20 @@ export class ManagementCreateComponent {
         }
       }
     })
+
+    for (const q of this.test.questions) {
+      const correctCount = q.options.filter(o => o.isCorrect).length;
+
+      if (correctCount === 0) {
+        this.text_error = "В каждом вопросе должен быть правильный вариант";
+        return;
+      }
+
+      if (!q.isMultiple && correctCount > 1) {
+        this.text_error = "В одиночном вопросе может быть только один правильный вариант";
+        return;
+      }
+    }
   }
 
   // финальное подтверждение добавления теста
@@ -107,7 +121,8 @@ export class ManagementCreateComponent {
     this.test.questions.push({
       id: 0,
       text: '',
-      options: []
+      options: [],
+      isMultiple: false
     });
   }
 
@@ -134,14 +149,27 @@ export class ManagementCreateComponent {
     question.options.splice(index, 1);
   }
 
-  // выбор правильного варианта (только 1 true)
-  selectCorrectOption(question: any, selectedIndex: number) {
-    question.options.forEach((option: any, index: number) => {
-      option.isCorrect = index === selectedIndex;
-    });
+  // выбор правильного варианта
+  toggleCorrectOption(question: any, selectedIndex: number) {
+    if (question.isMultiple) {
+      question.options[selectedIndex].isCorrect = !question.options[selectedIndex].isCorrect
+    } else {
+      question.options.forEach((o: any, i: number) => {
+        o.isCorrect = i === selectedIndex;
+      })
+    }
   }
 
-
+  // множественный выбор
+  onMultipleChange(question: any) {
+    if (!question.isMultiple) {
+      const firstCorrect = question.options.find((o: { isCorrect: any; }) => o.isCorrect);
+      question.options.forEach((o: { isCorrect: boolean; }) => o.isCorrect = false);
+      if (firstCorrect) {
+        firstCorrect.isCorrect = true;
+      }
+    }
+  }
 
   // JSON импорт теста
   loadFromJson() {

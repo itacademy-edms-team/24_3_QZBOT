@@ -39,6 +39,15 @@
         Вопрос {{ i + 1 }}
       </h3>
 
+      <label class="flex items-center gap-2 mb-4 text-gray-700">
+        <input type="checkbox"
+               [(ngModel)]="question.isMultiple"
+               [disabled]="is_editing_locked"
+               (change)="onMultipleChange(question)"
+               class="h-5 w-5" />
+        Множественный выбор
+      </label>
+
       <input type="text"
              [(ngModel)]="question.text"
              [readonly]="is_editing_locked"
@@ -50,11 +59,11 @@
         <li *ngFor="let option of question.options; let j = index"
             class="flex items-center gap-3">
 
-          <input type="radio"
+          <input [type]="question.isMultiple ? 'checkbox' : 'radio'"
                  [name]="'correct_' + i"
                  [checked]="option.isCorrect"
                  [disabled]="is_editing_locked"
-                 (change)="selectCorrectOption(question, j)"
+                 (change)="toggleCorrectOption(question, j)"
                  class="h-5 w-5" />
 
           <input type="text"

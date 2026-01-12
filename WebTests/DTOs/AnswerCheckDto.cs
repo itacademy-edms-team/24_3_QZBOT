@@ -4,6 +4,6 @@
     {
         public string Title { get; set; }
         public int QuestionId { get; set; }
-        public int SelectedOptionIndex { get; set; }
+        public List<int> SelectedOptionIndexes { get; set; } = new List<int>();
     }
 }

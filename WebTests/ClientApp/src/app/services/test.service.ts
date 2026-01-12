@@ -55,11 +55,11 @@ export class TestService {
 
 
 
-  checkAnswer(title: string, questionId: number, selectedOptionIndex: number) {
-    return this.http.post<boolean>(`${this.baseUrl}/check`, {
+  checkAnswer(title: string, questionId: number, selectedOptionIndexes: number[]) {
+    return this.http.post<boolean[]>(`${this.baseUrl}/check`, {
       title,
       questionId,
-      selectedOptionIndex
+      selectedOptionIndexes
     }, { withCredentials: true });
   }
 
@@ -106,11 +106,19 @@ export class TestService {
         changes.push(`Изменён текст вопроса ${i + 1}: "${oldQuestion.text}" → "${newQuestion.text}"`);
       }
 
-      const oldCorrect = oldQuestion.options.findIndex(o => o.isCorrect);
-      const newCorrect = newQuestion.options.findIndex(o => o.isCorrect);
+      const oldCorrectIndexes = oldQuestion.options
+        .map((o, idx) => o.isCorrect ? idx : -1)
+        .filter(i => i !== -1);
 
-      if (oldCorrect !== newCorrect) {
-        changes.push(`Изменён правильный ответ в вопросе ${i + 1}`);
+      const newCorrectIndexes = newQuestion.options
+        .map((o, idx) => o.isCorrect ? idx : -1)
+        .filter(i => i !== -1);
+
+      const sameLength = oldCorrectIndexes.length === newCorrectIndexes.length;
+      const sameSet = sameLength && oldCorrectIndexes.every(i => newCorrectIndexes.includes(i));
+
+      if (!sameSet) {
+        changes.push(`Изменены правильные ответы в вопросе ${i + 1}`);
       }
 
       newQuestion.options.forEach((newOpt, j) => {
@@ -170,10 +178,7 @@ export class TestService {
         }
       }
 
-      if (count_of_true > 1) {
-        return "Для вопроса " + (i + 1) + " указано несколько правильных вариантов ответа";
-      }
-      else if (count_of_true == 0) {
+      if (count_of_true == 0) {
         return "Для вопроса " + (i + 1) + " не указан правильный вариант ответа";
       }
     }
@@ -192,13 +197,13 @@ export class TestService {
 
 
 
-  get currentUserId(): string {
-    const token = localStorage.getItem("token");
-    if (!token) return "";
+  //get currentUserId(): string {
+  //  const token = localStorage.getItem("token");
+  //  if (!token) return "";
 
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload["nameid"];
-  }
+  //  const payload = JSON.parse(atob(token.split('.')[1]));
+  //  return payload["nameid"];
+  //}
 }
 
 
@@ -234,6 +239,7 @@ export interface Question {
   id: number;
   text: string;
   options: Option[];
+  isMultiple: boolean;
 }
 
 export interface Option {
