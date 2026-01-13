@@ -87,10 +87,6 @@ export class TestComponent implements OnInit {
           next: (data) => {
             this.test = data;
 
-            if (data.questions.length > 0) {
-              this.currentQuestion = data.questions[0];
-            }
-
             data.types.forEach(type => {
               if (type.name === "AuthOnly") {
                 this.mode.authOnly = true;
@@ -100,6 +96,8 @@ export class TestComponent implements OnInit {
                 this.mode.allowBack = true;
               } else if (type.name === "ShowAfterEach") {
                 this.mode.showAfterEach = true;
+              } else if (type.name === "Shuffle") {
+                this.mode.shuffle = true;
               }
             })
 
@@ -108,6 +106,15 @@ export class TestComponent implements OnInit {
                 this.isUnauthModalOpen = true;
                 this.textModal = "Этот тест доступен только авторизованным пользователям!"
               }
+            }
+
+            if (this.mode.shuffle) {
+              this.shuffle(this.test.questions);
+            }
+
+
+            if (this.test.questions.length > 0) {
+              this.currentQuestion = this.test.questions[0];
             }
 
             this.testService.isPassed(this.test.id).subscribe({
@@ -284,5 +291,12 @@ export class TestComponent implements OnInit {
 
   closePassedModal() {
     this.router.navigate(['/tests'])
+  }
+
+  shuffle(array: any[]) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]]
+    }
   }
 }
