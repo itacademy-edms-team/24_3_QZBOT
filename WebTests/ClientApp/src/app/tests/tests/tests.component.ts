@@ -67,6 +67,8 @@ export class TestComponent implements OnInit {
     timeLimited: false,
     shuffle: false,
     authOnly: false,
+    allowBack: false,
+    showAfterEach: false,
   }
 
   constructor(
@@ -94,6 +96,10 @@ export class TestComponent implements OnInit {
                 this.mode.authOnly = true;
               } else if (type.name === "Strict") {
                 this.mode.strict = true;
+              } else if (type.name === "AllowBack") {
+                this.mode.allowBack = true;
+              } else if (type.name === "ShowAfterEach") {
+                this.mode.showAfterEach = true;
               }
             })
 
@@ -200,15 +206,15 @@ export class TestComponent implements OnInit {
   }
 
 
-  //lastQuestion() {
-  //  const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
-  //  if (currentQuestionIndex > 0) {
-  //    this.currentQuestion = this.test.questions[currentQuestionIndex - 1];
-  //  }
+  lastQuestion() {
+    const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
+    if (currentQuestionIndex > 0) {
+      this.currentQuestion = this.test.questions[currentQuestionIndex - 1];
+    }
 
-  //  this.updateIsLast();
-  //  this.updateIsFirst();
-  //}  
+    this.updateIsLast();
+    this.updateIsFirst();
+  }  
 
 
   loadTests(name: string) {
