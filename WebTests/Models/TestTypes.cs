@@ -9,6 +9,7 @@ namespace WebTests.Models
         public string Description { get; set; }
 
         [JsonIgnore]
+        //public ICollection<TestTestType> Tests { get; set; }
         public List<Test> Tests { get; set; }
     }
 }

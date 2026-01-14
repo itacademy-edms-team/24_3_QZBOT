@@ -118,6 +118,7 @@ namespace WebTests.Controllers
                 Title = test.Title,
                 Published = test.Published,
                 CreatorId = test.CreatorId,
+                MinimumSuccessPercent = test.MinSuccessPercent,
                 Types = test.Types.Select(t => t.Name).ToList(),
                 Questions = test.Questions.Select(q => new QuestionDto
                 {
@@ -383,8 +384,8 @@ namespace WebTests.Controllers
             var existing = await _context.UserTests
                 .FirstOrDefaultAsync(ut => ut.TestId == testId && ut.UserId == userId);
 
-            if (existing != null)
-                return BadRequest("Уже была попытка прохождения теста");
+            //if (existing != null)
+            //    return BadRequest("Уже была попытка прохождения теста");
 
             
 

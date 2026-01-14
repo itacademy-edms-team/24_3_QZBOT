@@ -89,15 +89,17 @@ export class TestService {
     );
   }
 
-
-
-  addTest(title: string, questions: Question[]) {
-    return this.http.post<boolean>(`${this.baseUrl}/add`, {
-      title,
-      published: false,
-      questions
-    }, { withCredentials: true });
+  addTest(test: Test) {
+    return this.http.post<boolean>(`${this.baseUrl}/add`, test, { withCredentials: true });
   }
+
+  //addTest(title: string, questions: Question[]) {
+  //  return this.http.post<boolean>(`${this.baseUrl}/add`, {
+  //    title,
+  //    published: false,
+  //    questions
+  //  }, { withCredentials: true });
+  //}
 
 
 
@@ -124,6 +126,10 @@ export class TestService {
 
       if (oldQuestion.text !== newQuestion.text) {
         changes.push(`Изменён текст вопроса ${i + 1}: "${oldQuestion.text}" → "${newQuestion.text}"`);
+      }
+
+      if (oldQuestion.isMultiple != newQuestion.isMultiple) {
+        changes.push(`Изменен множественный выбор в вопросе ${i + 1}`)
       }
 
       const oldCorrectIndexes = oldQuestion.options
@@ -154,6 +160,31 @@ export class TestService {
         }
       });
     });
+
+    if (original.minimumSuccessPercent > updated.minimumSuccessPercent) {
+      changes.push(`Понижен минимальный процент правильных ответов`)
+    } else if (original.minimumSuccessPercent < updated.minimumSuccessPercent) {
+      changes.push(`Повышен минимальный процент правильных ответов`)
+    }
+
+    const addedTypes = updated.types.filter(type => !original.types.includes(type));
+    const removedTypes = original.types.filter(type => !updated.types.includes(type));
+
+    addedTypes.forEach(type => {
+      changes.push(`Добавлена модификация ${type}`);
+    });
+
+    removedTypes.forEach(type => {
+      changes.push(`Удалена модификация ${type}`);
+    });
+
+    //updated.types.forEach((type, i) => {
+    //  if (!original.types.includes(type)) {
+    //    changes.push(`Добавлена модификация ${type}`)
+    //  } else {
+    //    changes.push(`Удалена модификация ${type}`)
+    //  }
+    //})
 
     if (original.questions.length > updated.questions.length) {
       changes.push(`Удалено ${original.questions.length - updated.questions.length} вопрос(ов)`);
@@ -232,22 +263,26 @@ export class TestService {
 export interface Test {
   id: number;
   title: string;
-  types: TestType[],
+  //types: TestType[],
+  types: string[],
   questions: Question[];
   creatorId: string;
   published: boolean;
   createdDate: Date;
   publishDate: Date;
   editDate: Date;
+  minimumSuccessPercent: number;
 }
+
 
 export interface UserTest {
   id: number;
   userId: string;
   test: Test;
-  passedAt: Date;
+  startedAt: Date;
+  finishedAt: Date;
   score: number;
-  isPassed: boolean;
+  isFinished: boolean;
 }
 
 export interface UserTestDto {
@@ -271,7 +306,7 @@ export interface SubmitAnswerResult {
 export interface TestType {
   id: number;
   name: string;
-  desription: string;
+  description: string;
 }
 
 export interface Question {
