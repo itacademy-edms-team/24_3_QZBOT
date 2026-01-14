@@ -12,12 +12,19 @@ namespace WebTests.TestFactory
             test.Title = dto.Title;
             test.CreatedDate = DateTime.UtcNow;
 
+            if (dto.Published)
+                test.Published = true;
+            else
+                test.Published = false;
+
 
             var types = context.TestTypes
                 .Where(t => dto.Types.Contains(t.Name))
                 .ToList();
 
             test.Types = types;
+
+            test.MinSuccessPercent = dto.MinimumSuccessPercent;
 
 
             foreach (var question in dto.Questions)
@@ -81,6 +88,8 @@ namespace WebTests.TestFactory
                 .ToList();
 
             test.Types = types;
+
+            test.MinSuccessPercent = dto.MinimumSuccessPercent;
 
 
             test.Questions.Clear();
