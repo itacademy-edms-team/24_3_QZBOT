@@ -35,7 +35,7 @@
     <div *ngIf="history">
       <ul>
         <li *ngFor="let try of history">
-          <p>{{ try.test.title }} - {{ try.passedAt | date:'dd.MM.yyyy HH:mm:ss' }} - {{ try.score }} - {{ try.isPassed }}</p>
+          <p>{{ try.test.title }} - {{ try.finishedAt | date:'dd.MM.yyyy HH:mm:ss' }} - {{ try.score }} - {{ try.isFinished }}</p>
         </li>
       </ul>
     </div>
