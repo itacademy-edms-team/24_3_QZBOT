@@ -24,6 +24,24 @@
     </div>
   </div>
 
+  <!-- Типы теста -->
+  <div class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
+    <div class="flex flex-col gap-4">
+
+      <div *ngFor="let t of types" class="flex items-center gap-2 mb-2">
+        <label class="flex items-center gap-2 text-gray-700 font-medium">
+          <input type="checkbox"
+                 [checked]="test.types.includes(t.name)"
+                 [disabled]="is_editing_locked"
+                 (change)="toggleType(t.name)"
+                 class="h-5 w-5"/>
+          - {{ t.description }}
+        </label>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Ошибка -->
   <div *ngIf="text_error"
        class="mb-6 p-4 rounded-lg border-l-4 border-red-600 bg-red-50 text-red-800 text-lg font-semibold shadow-sm">
@@ -111,6 +129,20 @@
             class="px-5 py-3 bg-green-500 text-white rounded-lg shadow hover:bg-green-600 duration-300">
       Добавить вопрос
     </button>
+  </div>
+
+  <div *ngIf="test.questions.length > 2 && test.title != ''"
+       class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
+    <label>
+      Минимальный процент ответов для успешного прохождения: 
+    </label>
+    <input type="number"
+           min="10"
+           max="100"
+           [(ngModel)]="test.minimumSuccessPercent"
+           [readonly]="is_editing_locked"
+           placeholder="Минимальный процент"
+           class="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300 transition" />
   </div>
 
   <!-- Добавить тест -->

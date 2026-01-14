@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { TestService, Test, Question } from '../../services/test.service';
+import { TestService, Test, Question, TestType } from '../../services/test.service';
 
 @Component({
   selector: 'app-management-create',
@@ -18,8 +18,17 @@ export class ManagementCreateComponent {
     published: false,
     publishDate: new Date(0),
     createdDate: new Date(0),
-    editDate: new Date(0)
+    editDate: new Date(0),
+    minimumSuccessPercent: 70,
   };
+
+  types: TestType[] = [
+    { id: 11, name: "Shuffle", description: "вопросы в случайном порядке" },
+    { id: 12, name: "AuthOnly", description: "доступ только авторизованным" },
+    { id: 13, name: "AllowBack", description: "возможность перемещения назад" },
+    { id: 15, name: "ShowAfterEach", description: "показывать ответ сразу" },
+    { id: 16, name: "ManyTimes", description: "возможно проходить несколько раз"}
+  ];
 
   // Флаги для отображения UI
   is_exist: boolean = false;            // существует ли тест с таким названием
@@ -38,6 +47,9 @@ export class ManagementCreateComponent {
   ) { }
 
 
+  ngOnInit() {
+    // в будущем сделать получение типов из БД
+  }
 
   // Добавление теста — первичная проверка данных
   btnAdd() {
@@ -47,6 +59,9 @@ export class ManagementCreateComponent {
     if (this.test.title.length == 0) {
       this.text_error = "Пустое поле названия";
       return;
+    }
+    if (this.test.minimumSuccessPercent > 100 || this.test.minimumSuccessPercent < 10) {
+      this.text_error = "Недопустимое значение минимального процента ответов";
     }
 
     // проверяем у API, существует ли тест с таким названием
@@ -95,7 +110,7 @@ export class ManagementCreateComponent {
   // финальное подтверждение добавления теста
   btnConfirm() {
     // успешное добавление, изменяем состояние UI
-    this.testService.addTest(this.test.title, this.test.questions).subscribe({
+    this.testService.addTest(this.test).subscribe({
       next: (data) => {
         if (data) {
           this.confirm_add = false;
@@ -105,6 +120,17 @@ export class ManagementCreateComponent {
         }
       }
     });
+
+    //this.testService.addTest(this.test.title, this.test.questions).subscribe({
+    //  next: (data) => {
+    //    if (data) {
+    //      this.confirm_add = false;
+    //      this.success_add = true;
+    //      this.text_error = "";
+    //      this.is_editing_locked = true;
+    //    }
+    //  }
+    //});
   }
 
   // отмена подтверждения - возвращаем возможность редактировать
@@ -150,6 +176,16 @@ export class ManagementCreateComponent {
     question.options.splice(index, 1);
   }
 
+  // указание типа теста
+  toggleType(typeName: string) {
+    const idx = this.test.types.indexOf(typeName);
+    if (idx >= 0) {
+      this.test.types.splice(idx, 1);
+    } else {
+      this.test.types.push(typeName);
+    }
+  }
+
   // выбор правильного варианта
   toggleCorrectOption(question: any, selectedIndex: number) {
     if (question.isMultiple) {
@@ -177,7 +213,7 @@ export class ManagementCreateComponent {
     this.json_error = '';
 
     try {
-      const obj = JSON.parse(this.json_input);
+      const obj = JSON.parse(this.json_input); // в будущем расширить JSON
 
       // проверяем минимально корректную структуру 
       if (!obj.title || !Array.isArray(obj.questions)) {
@@ -203,7 +239,8 @@ export class ManagementCreateComponent {
         })),
         publishDate: new Date(0),
         createdDate: new Date(0),
-        editDate: new Date(0)
+        editDate: new Date(0),
+        minimumSuccessPercent: 70
       };
 
     } catch (e) {
