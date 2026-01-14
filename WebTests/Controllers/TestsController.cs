@@ -83,7 +83,7 @@ namespace WebTests.Controllers
                 .Where(t => t.Title == title)
                 .Include(t => t.Types)
                 .Include(t => t.Questions)
-                .ThenInclude(q => q.Options)
+                    .ThenInclude(q => q.Options)
                 .FirstOrDefault();
 
             return Ok(questions);
@@ -96,7 +96,7 @@ namespace WebTests.Controllers
                 .Where(t => t.Id == id)
                 .Include(t => t.Types)
                 .Include(t => t.Questions)
-                .ThenInclude(q => q.Options)
+                    .ThenInclude(q => q.Options)
                 .FirstOrDefault();
 
             return Ok(questions);
@@ -165,7 +165,7 @@ namespace WebTests.Controllers
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var test = TestFactory.FromDto.Create(dto);
+            var test = TestFactory.FromDto.Create(dto, _context);
 
             test.CreatorId = userId;
             test.CreatedDate = DateTime.UtcNow;
@@ -201,6 +201,7 @@ namespace WebTests.Controllers
             var test = await _context.Tests
                 .Include(t => t.Questions)
                     .ThenInclude(q => q.Options)
+                .Include(t => t.Types)
                 .FirstOrDefaultAsync(t => t.Id == id);
 
             if (test == null)
@@ -216,7 +217,7 @@ namespace WebTests.Controllers
                 return Forbid();
 
 
-            TestFactory.FromDto.Update(test, updated);
+            TestFactory.FromDto.Update(test, updated, _context);
 
 
             await _context.SaveChangesAsync();

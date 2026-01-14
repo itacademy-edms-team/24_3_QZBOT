@@ -220,21 +220,6 @@ namespace WebTests.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("TestTestTypes", b =>
-                {
-                    b.Property<int>("TestsId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TypesId")
-                        .HasColumnType("int");
-
-                    b.HasKey("TestsId", "TypesId");
-
-                    b.HasIndex("TypesId");
-
-                    b.ToTable("TestTestTypes");
-                });
-
             modelBuilder.Entity("WebTests.Models.AnswerOption", b =>
                 {
                     b.Property<int>("Id")
@@ -320,6 +305,21 @@ namespace WebTests.Migrations
                     b.HasIndex("CreatorId");
 
                     b.ToTable("Tests");
+                });
+
+            modelBuilder.Entity("WebTests.Models.TestTestType", b =>
+                {
+                    b.Property<int>("TestId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TestTypeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TestId", "TestTypeId");
+
+                    b.HasIndex("TestTypeId");
+
+                    b.ToTable("TestTestType");
                 });
 
             modelBuilder.Entity("WebTests.Models.TestTypes", b =>
@@ -461,21 +461,6 @@ namespace WebTests.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("TestTestTypes", b =>
-                {
-                    b.HasOne("WebTests.Models.Test", null)
-                        .WithMany()
-                        .HasForeignKey("TestsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("WebTests.Models.TestTypes", null)
-                        .WithMany()
-                        .HasForeignKey("TypesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("WebTests.Models.AnswerOption", b =>
                 {
                     b.HasOne("WebTests.Models.Question", "Question")
@@ -506,6 +491,25 @@ namespace WebTests.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Creator");
+                });
+
+            modelBuilder.Entity("WebTests.Models.TestTestType", b =>
+                {
+                    b.HasOne("WebTests.Models.Test", "Test")
+                        .WithMany("TestTypes")
+                        .HasForeignKey("TestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebTests.Models.TestTypes", "TestType")
+                        .WithMany("Tests")
+                        .HasForeignKey("TestTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Test");
+
+                    b.Navigation("TestType");
                 });
 
             modelBuilder.Entity("WebTests.Models.UserTest", b =>
@@ -546,6 +550,13 @@ namespace WebTests.Migrations
             modelBuilder.Entity("WebTests.Models.Test", b =>
                 {
                     b.Navigation("Questions");
+
+                    b.Navigation("TestTypes");
+                });
+
+            modelBuilder.Entity("WebTests.Models.TestTypes", b =>
+                {
+                    b.Navigation("Tests");
                 });
 
             modelBuilder.Entity("WebTests.Models.UserTest", b =>

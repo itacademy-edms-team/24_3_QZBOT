@@ -14,6 +14,7 @@ namespace WebTests.Data
         public DbSet<AnswerOption> AnswerOptions { get; set; }
         public DbSet<UserTest> UserTests { get; set; }
         public DbSet<UserTestAnswer> UserTestAnswers { get; set; }
+        public DbSet<TestTypes> TestTypes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
