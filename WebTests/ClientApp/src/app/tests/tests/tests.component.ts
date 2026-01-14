@@ -19,7 +19,8 @@ export class TestComponent implements OnInit {
     published: false,
     publishDate: new Date(0),
     createdDate: new Date(0),
-    editDate: new Date(0)
+    editDate: new Date(0),
+    minimumSuccessPercent: 70
   };
 
   errorMessage = '';
@@ -48,16 +49,18 @@ export class TestComponent implements OnInit {
     published: false,
     publishDate: new Date(0),
     createdDate: new Date(0),
-    editDate: new Date(0)
+    editDate: new Date(0),
+    minimumSuccessPercent: 70
   };
 
   try: UserTest | null = {
     id: 0,
     userId: '',
     test: this.tryedTest,
-    passedAt: new Date(0),
+    startedAt: new Date(0),
+    finishedAt: new Date(0),
     score: 0,
-    isPassed: false
+    isFinished: false
   }
 
   userTest!: UserTestDto;
@@ -69,6 +72,7 @@ export class TestComponent implements OnInit {
     authOnly: false,
     allowBack: false,
     showAfterEach: false,
+    manyTimes: false
   }
 
   constructor(
@@ -88,18 +92,21 @@ export class TestComponent implements OnInit {
             this.test = data;
 
             data.types.forEach(type => {
-              if (type.name === "AuthOnly") {
+              if (type === "AuthOnly") {
                 this.mode.authOnly = true;
-              } else if (type.name === "Strict") {
+              } else if (type === "Strict") {
                 this.mode.strict = true;
-              } else if (type.name === "AllowBack") {
+              } else if (type === "AllowBack") {
                 this.mode.allowBack = true;
-              } else if (type.name === "ShowAfterEach") {
+              } else if (type === "ShowAfterEach") {
                 this.mode.showAfterEach = true;
-              } else if (type.name === "Shuffle") {
+              } else if (type === "Shuffle") {
                 this.mode.shuffle = true;
+              } else if (type === "ManyTimes") {
+                this.mode.manyTimes = true;
               }
             })
+
 
             if (this.mode.authOnly) {
               if (!this.authService.isAuthenticated) {
@@ -121,9 +128,9 @@ export class TestComponent implements OnInit {
               next: (record) => {
                 this.try = record
 
-                if (this.try !== null) {
+                if (this.try !== null && !this.mode.manyTimes) {
                   this.isPassedModalOpen = true;
-                  this.textModal = `Вы уже проходили этот тест ${this.try.passedAt}`
+                  this.textModal = `Вы уже проходили этот тест ${this.try.finishedAt}`
                 }
 
                 this.updateIsLast();
