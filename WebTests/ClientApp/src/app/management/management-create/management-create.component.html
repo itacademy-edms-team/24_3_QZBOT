@@ -34,18 +34,12 @@
                  [checked]="test.types.includes(t.name)"
                  [disabled]="is_editing_locked"
                  (change)="toggleType(t.name)"
-                 class="h-5 w-5"/>
+                 class="h-5 w-5" />
           - {{ t.description }}
         </label>
       </div>
 
     </div>
-  </div>
-
-  <!-- Ошибка -->
-  <div *ngIf="text_error"
-       class="mb-6 p-4 rounded-lg border-l-4 border-red-600 bg-red-50 text-red-800 text-lg font-semibold shadow-sm">
-    ⚠️ {{ text_error }}
   </div>
 
 
@@ -134,7 +128,7 @@
   <div *ngIf="test.questions.length > 2 && test.title != ''"
        class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
     <label>
-      Минимальный процент ответов для успешного прохождения: 
+      Минимальный процент ответов для успешного прохождения:
     </label>
     <input type="number"
            min="10"
@@ -153,6 +147,12 @@
             class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow">
       Добавить тест
     </button>
+  </div>
+
+  <!-- Ошибка -->
+  <div *ngIf="text_error"
+       class="mb-6 p-4 rounded-lg border-l-4 border-red-600 bg-red-50 text-red-800 text-lg font-semibold shadow-sm">
+    ⚠️ {{ text_error }}
   </div>
 
   <!-- Подтверждение -->

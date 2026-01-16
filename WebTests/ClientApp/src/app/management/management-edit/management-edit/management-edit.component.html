@@ -42,12 +42,6 @@
     </div>
   </div>
 
-  <!-- Ошибка -->
-  <div *ngIf="text_error"
-       class="mb-6 p-4 rounded-lg border-l-4 border-red-600 bg-red-50 text-red-800 text-lg font-semibold shadow-sm">
-    ⚠️ {{ text_error }}
-  </div>
-
   <!-- ВОПРОСЫ -->
   <div class="space-y-8 shadow-md rounded-xl">
 
@@ -152,6 +146,12 @@
             class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow">
       Сохранить изменения
     </button>
+  </div>
+
+  <!-- Ошибка -->
+  <div *ngIf="text_error"
+       class="mb-6 p-4 rounded-lg border-l-4 border-red-600 bg-red-50 text-red-800 text-lg font-semibold shadow-sm">
+    ⚠️ {{ text_error }}
   </div>
 
   <!-- Подтверждение -->
