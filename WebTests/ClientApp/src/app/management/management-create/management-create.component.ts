@@ -226,7 +226,7 @@ export class ManagementCreateComponent {
         id: 0,
         title: obj.title,
         creatorId: '',
-        types: [],
+        types: obj.types.map((t: any) => { return t }),
         published: obj.published ?? false,
         questions: obj.questions.map((q: any) => ({
           id: 0,
