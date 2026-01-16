@@ -107,7 +107,7 @@ namespace WebTests.Controllers
         {
             var test = _context.Tests
                 .Where(t => t.Id == id)
-                .Include(t =>t.Types)
+                .Include(t => t.Types)
                 .Include(t => t.Questions)
                     .ThenInclude(q => q.Options)
                 .FirstOrDefault(t => t.Id == id);
