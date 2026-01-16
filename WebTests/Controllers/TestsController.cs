@@ -52,10 +52,20 @@ namespace WebTests.Controllers
         {
             var tests = _context.Tests
                 .Where(t => t.Published == true)
+                .Include(t => t.Types)
                 .Select(t => new
                 {
                     t.Id,
-                    t.Title
+                    t.Title,
+                    t.Questions,
+                    Types = t.Types.Select(tt => tt.Name).ToList(),
+                    t.CreatorId,
+                    t.Creator,
+                    t.Published,
+                    t.CreatedDate,
+                    t.PublishDate,
+                    t.EditTime,
+                    t.MinSuccessPercent
                 })
                 .ToList();
 
@@ -111,6 +121,9 @@ namespace WebTests.Controllers
                 .Include(t => t.Questions)
                     .ThenInclude(q => q.Options)
                 .FirstOrDefault(t => t.Id == id);
+
+            if (test == null)
+                return NotFound();
 
             var dto = new TestReadDto
             {
