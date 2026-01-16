@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { TestService, Test, Question, Option } from '../../../services/test.service';
+import { TestService, Test, Question, Option, TestType } from '../../../services/test.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 
@@ -15,11 +15,13 @@ export class ManagementEditComponent implements OnInit {
     id: 0,
     title: '',
     questions: [],
+    types: [],
     creatorId: '',
     published: false,
     publishDate: new Date(0),
     createdDate: new Date(0),
-    editDate: new Date(0)
+    editDate: new Date(0),
+    minimumSuccessPercent: 70
   };
 
   // копия названия для отображения
@@ -30,11 +32,13 @@ export class ManagementEditComponent implements OnInit {
     id: 0,
     title: '',
     questions: [],
+    types: [],
     creatorId: '',
     published: false,
     publishDate: new Date(0),
     createdDate: new Date(0),
-    editDate: new Date(0)
+    editDate: new Date(0),
+    minimumSuccessPercent: 70
   };
 
   // сообщения и состояния UI
@@ -45,6 +49,14 @@ export class ManagementEditComponent implements OnInit {
   success_edit: boolean = false;             // флаг успешного сохранения
 
   currentUserId: string | null = null;       // userId
+
+  types: TestType[] = [
+    { id: 11, name: "Shuffle", description: "вопросы в случайном порядке" },
+    { id: 12, name: "AuthOnly", description: "доступ только авторизованным" },
+    { id: 13, name: "AllowBack", description: "возможность перемещения назад" },
+    { id: 15, name: "ShowAfterEach", description: "показывать ответ сразу" },
+    { id: 16, name: "ManyTimes", description: "возможно проходить несколько раз" }
+  ];
 
   constructor(
     private route: ActivatedRoute,
@@ -115,6 +127,16 @@ export class ManagementEditComponent implements OnInit {
   // удаление варианта ответа
   removeOption(question: Question, index: number) {
     question.options.splice(index, 1);
+  }
+
+  // указание типа теста
+  toggleType(typeName: string) {
+    const idx = this.test.types.indexOf(typeName);
+    if (idx >= 0) {
+      this.edited_test.types.splice(idx, 1);
+    } else {
+      this.edited_test.types.push(typeName);
+    }
   }
 
   // выбор правильного варианта

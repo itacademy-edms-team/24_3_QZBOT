@@ -14,8 +14,11 @@ namespace WebTests.Models
         public int TestId { get; set; }
         public Test Test { get; set; }
 
-        public DateTime PassedAt { get; set; } = DateTime.UtcNow;
+        public DateTime StartedAt { get; set; }
+        public DateTime? FinishedAt { get; set; }
         public int Score { get; set; }
-        public bool IsPassed { get; set; }
+        public bool IsFinished { get; set; } = false;
+        public bool IsPassed { get; set; } = false;
+        public ICollection<UserTestAnswer> Answers { get; set; }
     }
 }

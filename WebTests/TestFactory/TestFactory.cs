@@ -1,14 +1,30 @@
-﻿using WebTests.DTOs;
+﻿using WebTests.Data;
+using WebTests.DTOs;
 using WebTests.Models;
 
 namespace WebTests.TestFactory
 {
     public static class FromDto
     {
-        public static Test Create(TestDto dto)
+        public static Test Create(TestDto dto, AppDbContext context)
         {
             var test = new Test();
             test.Title = dto.Title;
+            test.CreatedDate = DateTime.UtcNow;
+
+            if (dto.Published)
+                test.Published = true;
+            else
+                test.Published = false;
+
+
+            var types = context.TestTypes
+                .Where(t => dto.Types.Contains(t.Name))
+                .ToList();
+
+            test.Types = types;
+
+            test.MinSuccessPercent = dto.MinimumSuccessPercent;
 
 
             foreach (var question in dto.Questions)
@@ -51,7 +67,7 @@ namespace WebTests.TestFactory
             return test;
         }
 
-        public static void Update(Test test, TestDto dto)
+        public static void Update(Test test, TestDto dto, AppDbContext context)
         {
             test.Title = dto.Title;
 
@@ -62,6 +78,19 @@ namespace WebTests.TestFactory
                 test.PublishDate = DateTime.UtcNow;
 
             test.EditTime = DateTime.UtcNow;
+
+
+
+            test.Types.Clear();
+
+            var types = context.TestTypes
+                .Where(t => dto.Types.Contains(t.Name))
+                .ToList();
+
+            test.Types = types;
+
+            test.MinSuccessPercent = dto.MinimumSuccessPercent;
+
 
             test.Questions.Clear();
 

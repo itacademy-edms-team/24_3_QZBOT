@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebTests.Data;
 
@@ -11,9 +12,10 @@ using WebTests.Data;
 namespace WebTests.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260112104608_UserTestAnswer2")]
+    partial class UserTestAnswer2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -355,9 +357,6 @@ namespace WebTests.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<bool>("IsFinished")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsPassed")
                         .HasColumnType("bit");
 
                     b.Property<int>("Score")

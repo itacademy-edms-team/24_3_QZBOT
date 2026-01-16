@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TestService, Test, Question, Option, UserTest } from '../../services/test.service';
+import { TestService, TestType, Test, Question, Option, UserTest, UserTestDto, SubmitAnswerDto, SubmitAnswerResult } from '../../services/test.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -14,11 +14,13 @@ export class TestComponent implements OnInit {
     id: 0,
     title: '',
     questions: [],
+    types: [],
     creatorId: '',
     published: false,
     publishDate: new Date(0),
     createdDate: new Date(0),
-    editDate: new Date(0)
+    editDate: new Date(0),
+    minimumSuccessPercent: 70
   };
 
   errorMessage = '';
@@ -36,27 +38,42 @@ export class TestComponent implements OnInit {
   isModalOpen: boolean = false;
   textModal: string = '';
   isPassedModalOpen: boolean = false;
+  isUnauthModalOpen: boolean = false;
 
   tryedTest: Test = {
     id: 0,
     title: '',
+    types: [],
     questions: [],
     creatorId: '',
     published: false,
     publishDate: new Date(0),
     createdDate: new Date(0),
-    editDate: new Date(0)
+    editDate: new Date(0),
+    minimumSuccessPercent: 70
   };
 
   try: UserTest | null = {
     id: 0,
     userId: '',
     test: this.tryedTest,
-    passedAt: new Date(0),
+    startedAt: new Date(0),
+    finishedAt: new Date(0),
     score: 0,
-    isPassed: false
+    isFinished: false
   }
 
+  userTest!: UserTestDto;
+
+  mode = {
+    strict: false,
+    timeLimited: false,
+    shuffle: false,
+    authOnly: false,
+    allowBack: false,
+    showAfterEach: false,
+    manyTimes: false
+  }
 
   constructor(
     private testService: TestService,
@@ -74,17 +91,46 @@ export class TestComponent implements OnInit {
           next: (data) => {
             this.test = data;
 
-            if (data.questions.length > 0) {
-              this.currentQuestion = data.questions[0];
+            data.types.forEach(type => {
+              if (type === "AuthOnly") {
+                this.mode.authOnly = true;
+              } else if (type === "Strict") {
+                this.mode.strict = true;
+              } else if (type === "AllowBack") {
+                this.mode.allowBack = true;
+              } else if (type === "ShowAfterEach") {
+                this.mode.showAfterEach = true;
+              } else if (type === "Shuffle") {
+                this.mode.shuffle = true;
+              } else if (type === "ManyTimes") {
+                this.mode.manyTimes = true;
+              }
+            })
+
+
+            if (this.mode.authOnly) {
+              if (!this.authService.isAuthenticated) {
+                this.isUnauthModalOpen = true;
+                this.textModal = "Этот тест доступен только авторизованным пользователям!"
+              }
+            }
+
+            if (this.mode.shuffle) {
+              this.shuffle(this.test.questions);
+            }
+
+
+            if (this.test.questions.length > 0) {
+              this.currentQuestion = this.test.questions[0];
             }
 
             this.testService.isPassed(this.test.id).subscribe({
               next: (record) => {
                 this.try = record
 
-                if (this.try !== null) {
+                if (this.try !== null && !this.mode.manyTimes) {
                   this.isPassedModalOpen = true;
-                  this.textModal = `Вы уже проходили этот тест ${this.try.passedAt}`
+                  this.textModal = `Вы уже проходили этот тест ${this.try.finishedAt}`
                 }
 
                 this.updateIsLast();
@@ -157,6 +203,7 @@ export class TestComponent implements OnInit {
   }
 
 
+
   nextQuestion() {
     const i = this.test.questions.indexOf(this.currentQuestion);
 
@@ -173,15 +220,15 @@ export class TestComponent implements OnInit {
   }
 
 
-  //lastQuestion() {
-  //  const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
-  //  if (currentQuestionIndex > 0) {
-  //    this.currentQuestion = this.test.questions[currentQuestionIndex - 1];
-  //  }
+  lastQuestion() {
+    const currentQuestionIndex = this.test.questions.indexOf(this.currentQuestion);
+    if (currentQuestionIndex > 0) {
+      this.currentQuestion = this.test.questions[currentQuestionIndex - 1];
+    }
 
-  //  this.updateIsLast();
-  //  this.updateIsFirst();
-  //}  
+    this.updateIsLast();
+    this.updateIsFirst();
+  }  
 
 
   loadTests(name: string) {
@@ -234,6 +281,9 @@ export class TestComponent implements OnInit {
     this.testService.passTest(this.test.id, this.rightAnswers).subscribe();
   }
 
+  auth() {
+    this.router.navigate(['/login'])
+  }
 
   closeModal() {
     this.isModalOpen = false;
@@ -248,5 +298,12 @@ export class TestComponent implements OnInit {
 
   closePassedModal() {
     this.router.navigate(['/tests'])
+  }
+
+  shuffle(array: any[]) {
+    for (let i = array.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [array[i], array[j]] = [array[j], array[i]]
+    }
   }
 }

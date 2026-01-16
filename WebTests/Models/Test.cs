@@ -1,5 +1,5 @@
 ﻿using System.Text.Json.Serialization;
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 
 namespace WebTests.Models
 {
@@ -9,11 +9,13 @@ namespace WebTests.Models
         public string Title { get; set; } = "None";
         public List<Question> Questions { get; set; } = new List<Question>();
         public List<TestTypes>? Types { get; set; }
+        //public ICollection<TestTestType> TestTypes { get; set; } = new List<TestTestType>();
         public string? CreatorId { get; set; }
         public IdentityUser? Creator { get; set; }
         public bool Published { get; set; } = false;
         public DateTime CreatedDate { get; set; }
         public DateTime? PublishDate { get; set; }
         public DateTime EditTime { get; set; } = DateTime.UtcNow;
+        public int MinSuccessPercent { get; set; } = 70;
     }
 }
