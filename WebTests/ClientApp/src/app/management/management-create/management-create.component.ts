@@ -85,7 +85,7 @@ export class ManagementCreateComponent {
 
         } else {
           // ошибка - тест с таким названием уже существует
-          this.text_error == "Такое название уже занято";
+          this.text_error = "Такое название уже занято";
           this.confirm_add = false;
           this.success_add = false;
         }
