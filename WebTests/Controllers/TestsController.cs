@@ -390,7 +390,7 @@ namespace WebTests.Controllers
             
 
             int totalQuestions = test.Questions.Count;
-            bool isPassed = (score / totalQuestions) * 100 >= test.MinSuccessPercent;
+            bool isPassed = ((float)score / totalQuestions) * 100 >= test.MinSuccessPercent;
 
 
             // здесь костыль со временем, чтобы не делать миграцию для возврата предыдущей модели.
