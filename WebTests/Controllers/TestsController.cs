@@ -89,28 +89,39 @@ namespace WebTests.Controllers
         [HttpGet("{title}")]
         public IActionResult GetTestByTitle(string title)
         {
-            var questions = _context.Tests
+            var test = _context.Tests
                 .Where(t => t.Title == title)
                 .Include(t => t.Types)
                 .Include(t => t.Questions)
                     .ThenInclude(q => q.Options)
                 .FirstOrDefault();
 
-            return Ok(questions);
+            if (test == null)
+                return NotFound();
+
+            var dto = new TestReadDto
+            {
+                Id = test.Id,
+                Title = test.Title,
+                Published = test.Published,
+                CreatorId = test.CreatorId,
+                MinimumSuccessPercent = test.MinSuccessPercent,
+                Types = test.Types.Select(t => t.Name).ToList(),
+                Questions = test.Questions.Select(q => new QuestionDto
+                {
+                    Id = q.Id,
+                    Text = q.Text,
+                    isMultiple = q.IsMultiple,
+                    Options = q.Options.Select(o => new AnswerOptionDto
+                    {
+                        Text = o.Text,
+                        IsCorrect = o.IsCorrect
+                    }).ToList()
+                }).ToList()
+            };
+
+            return Ok(dto);
         }
-
-        //[HttpGet("id/{id}")]
-        //public IActionResult GetTestById(int id)
-        //{
-        //    var questions = _context.Tests
-        //        .Where(t => t.Id == id)
-        //        .Include(t => t.Types)
-        //        .Include(t => t.Questions)
-        //            .ThenInclude(q => q.Options)
-        //        .FirstOrDefault();
-
-        //    return Ok(questions);
-        //}
 
         [HttpGet("id/{id}")]
         public IActionResult GetTestById(int id)
