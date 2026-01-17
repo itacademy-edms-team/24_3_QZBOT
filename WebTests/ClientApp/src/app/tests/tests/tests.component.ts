@@ -228,23 +228,6 @@ export class TestComponent implements OnInit {
 
     this.updateIsLast();
     this.updateIsFirst();
-  }  
-
-
-  loadTests(name: string) {
-    this.testService.getTestByName(name).subscribe({
-      next: (data) => {
-        this.test = data;
-
-        if (data.questions.length > 0) {
-          this.currentQuestion = data.questions[0];
-        }
-
-        this.updateIsLast();
-        this.updateIsFirst();
-      },
-      error: (err) => console.error(err),
-    });
   }
 
 
