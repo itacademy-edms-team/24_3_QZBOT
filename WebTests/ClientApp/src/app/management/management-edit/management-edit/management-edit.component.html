@@ -1,4 +1,4 @@
-<div class="mx-auto max-w-4xl p-6">
+<div *ngIf="test.title != '';else no_test" class="mx-auto max-w-4xl p-6">
 
   <h2 class="text-3xl font-bold mb-6">Редактирование {{ test_title }}</h2>
 
@@ -180,3 +180,7 @@
     ✔ Тест успешно изменен!
   </div>
 </div>
+
+<ng-template #no_test>
+  <h3 class="text-center text-xl text-gray-500 py-10">Тест не найден</h3>
+</ng-template>
