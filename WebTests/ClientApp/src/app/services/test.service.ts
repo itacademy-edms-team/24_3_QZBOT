@@ -89,17 +89,11 @@ export class TestService {
     );
   }
 
+
+
   addTest(test: Test) {
     return this.http.post<boolean>(`${this.baseUrl}/add`, test, { withCredentials: true });
   }
-
-  //addTest(title: string, questions: Question[]) {
-  //  return this.http.post<boolean>(`${this.baseUrl}/add`, {
-  //    title,
-  //    published: false,
-  //    questions
-  //  }, { withCredentials: true });
-  //}
 
 
 
@@ -178,13 +172,6 @@ export class TestService {
       changes.push(`Удалена модификация ${type}`);
     });
 
-    //updated.types.forEach((type, i) => {
-    //  if (!original.types.includes(type)) {
-    //    changes.push(`Добавлена модификация ${type}`)
-    //  } else {
-    //    changes.push(`Удалена модификация ${type}`)
-    //  }
-    //})
 
     if (original.questions.length > updated.questions.length) {
       changes.push(`Удалено ${original.questions.length - updated.questions.length} вопрос(ов)`);
@@ -199,7 +186,6 @@ export class TestService {
 
     return changes;
   }
-
 
 
 
@@ -245,16 +231,6 @@ export class TestService {
     }
     return of(null);
   }
-
-
-
-  //get currentUserId(): string {
-  //  const token = localStorage.getItem("token");
-  //  if (!token) return "";
-
-  //  const payload = JSON.parse(atob(token.split('.')[1]));
-  //  return payload["nameid"];
-  //}
 }
 
 
@@ -263,7 +239,6 @@ export class TestService {
 export interface Test {
   id: number;
   title: string;
-  //types: TestType[],
   types: string[],
   questions: Question[];
   creatorId: string;
