@@ -66,7 +66,7 @@ export class TestService {
 
 
   passTest(testId: number, score: number) {
-    return this.http.post(`${this.baseUrl}/pass/${testId}`, score, { withCredentials: true });
+    return this.http.post<boolean>(`${this.baseUrl}/pass/${testId}`, score, { withCredentials: true });
   }
 
 

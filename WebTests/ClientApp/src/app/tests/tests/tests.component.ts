@@ -139,22 +139,18 @@ export class TestComponent implements OnInit {
                 this.updateIsFirst();
               }
             });
+
+            this.authService.currentUserId.subscribe({
+              next: (data) => {
+                if (data === this.test.creatorId) {
+                  this.isCreator = true;
+                }
+              }
+            })
           }
         })
-
-        this.checkIsUserCreator();
       }
     });
-  }
-
-  checkIsUserCreator(): void {
-    this.authService.currentUserId.subscribe({
-      next: (data) => {
-        if (data === this.test.creatorId) {
-          this.isCreator = true;
-        }
-      }
-    })
   }
 
 
@@ -268,18 +264,17 @@ export class TestComponent implements OnInit {
 
 
   finishTest() {
-    this.isFinishModalOpen = true;
-    this.textModal = "Тест завершен! Результат " + this.rightAnswers + "/" + this.test.questions.length;
-
-    if (!this.authService.isAuthenticated) {
-      return;
-    }
-
-    if (this.isCreator) {
-      return;
-    }
-
-    this.testService.passTest(this.test.id, this.rightAnswers).subscribe();
+    this.testService.passTest(this.test.id, this.rightAnswers).subscribe({
+      next: (isPassed) => {
+        if (isPassed) {
+          this.isFinishModalOpen = true;
+          this.textModal = "Результат " + this.rightAnswers + "/" + this.test.questions.length + ". Тест успешно пройден."
+        } else {
+          this.isFinishModalOpen = true;
+          this.textModal = "Результат " + this.rightAnswers + "/" + this.test.questions.length + ". Тест не пройден."
+        }
+      }
+    });
   }
 
   auth() {
