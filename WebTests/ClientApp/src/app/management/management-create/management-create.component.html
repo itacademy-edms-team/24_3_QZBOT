@@ -211,7 +211,11 @@
         Импортировать JSON
       </button>
 
-      <p class="text-red-500 mt-3">{{ json_error }}</p>
+      <div *ngIf="json_error.length > 0">
+        <div *ngFor="let err of json_error; let i = index">
+          <p class="text-red-500 mt-3">{{ i + 1 }}. {{ err }}</p>
+        </div>
+      </div>
     </div>
   </div>
 
