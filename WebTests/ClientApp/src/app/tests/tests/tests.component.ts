@@ -40,6 +40,7 @@ export class TestComponent implements OnInit {
   textModal: string = '';
   isPassedModalOpen: boolean = false;
   isUnauthModalOpen: boolean = false;
+  isUnauth: boolean = false;
 
   tryedTest: Test = {
     id: 0,
@@ -112,8 +113,7 @@ export class TestComponent implements OnInit {
 
             if (this.mode.authOnly) {
               if (!this.authService.isAuthenticated) {
-                this.isUnauthModalOpen = true;
-                this.textModal = "Этот тест доступен только авторизованным пользователям!"
+                this.isUnauth = true;
               }
             }
 

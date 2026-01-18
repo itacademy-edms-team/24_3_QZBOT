@@ -1,116 +1,106 @@
-<div *ngIf="currentQuestion;else no_questions" class="max-w-3xl mx-auto px-6 py-8">
+<div *ngIf="!isUnauth;else no_questions">
+  <div *ngIf="currentQuestion;else no_questions" class="max-w-3xl mx-auto px-6 py-8">
 
-  <h3 class="text-2xl font-bold mb-6">
-    {{ currentQuestion.text }}
-  </h3>
+    <h3 class="text-2xl font-bold mb-6">
+      {{ currentQuestion.text }}
+    </h3>
 
-  <div *ngIf="currentQuestion.isMultiple;else no_multiple">
-    <div class="space-y-3">
-      <label *ngFor="let option of currentQuestion.options"
-             class="flex items-center gap-3 p-4 border border-gray-300 rounded-xl
-                hover:border-blue-500 hover:bg-blue-50 transition cursor-pointer">
+    <div *ngIf="currentQuestion.isMultiple;else no_multiple">
+      <div class="space-y-3">
+        <label *ngFor="let option of currentQuestion.options"
+               class="flex items-center gap-3 p-4 border border-gray-300 rounded-xl
+                  hover:border-blue-500 hover:bg-blue-50 transition cursor-pointer">
 
-        <input type="checkbox"
-               name="answer"
-               [value]="option"
-               [disabled]="isSubmited"
-               (change)="onOptionToggle(option)"
-               class="w-5 h-5 text-blue-600 focus:ring-0" />
+          <input type="checkbox"
+                 name="answer"
+                 [value]="option"
+                 [disabled]="isSubmited"
+                 (change)="onOptionToggle(option)"
+                 class="w-5 h-5 text-blue-600 focus:ring-0" />
 
-        <span class="text-lg">
-          {{ option.text }}
-        </span>
+          <span class="text-lg">
+            {{ option.text }}
+          </span>
 
-      </label>
+        </label>
+      </div>
+
+    </div>
+
+
+    <ng-template #no_multiple>
+
+      <div class="space-y-3">
+        <label *ngFor="let option of currentQuestion.options"
+               class="flex items-center gap-3 p-4 border border-gray-300 rounded-xl
+              hover:border-blue-500 hover:bg-blue-50 transition cursor-pointer">
+
+          <input type="radio"
+                 name="answer"
+                 [value]="option"
+                 [disabled]="isSubmited"
+                 (change)="onOptionToggle(option)"
+                 class="w-5 h-5 text-blue-600 focus:ring-0" />
+
+          <span class="text-lg">
+            {{ option.text }}
+          </span>
+
+        </label>
+      </div>
+
+    </ng-template>
+
+
+
+    <div *ngIf="!isSubmited" class="mt-8">
+      <button (click)="submitAnswer(currentQuestion.id, test.title)"
+              [disabled]="isSelected === false"
+              class="px-6 py-3 border border-blue-600 text-blue-700 rounded-xl shadow
+                     hover:bg-blue-600 hover:text-white transition-colors duration-300
+                     disabled:opacity-40 disabled:cursor-not-allowed">
+        Ответить
+      </button>
+
+    </div>
+
+
+    <div *ngIf="!isFirst && this.mode.allowBack" class="mt-8">
+      <button (click)="lastQuestion()"
+              class="px-6 py-3 border border-blue-600 text-blue-700 rounded-xl shadow
+                   hover:bg-blue-600 hover:text-white transition-colors duration-300
+                   disabled:opacity-40 disabled:cursor-not-allowed">
+        Назад
+      </button>
+    </div>
+
+    <div *ngIf="!isLast" class="mt-8">
+      <button (click)="nextQuestion()"
+              [disabled]="isSubmited === false"
+              class="px-6 py-3 border border-blue-600 text-blue-700 rounded-xl shadow
+                     hover:bg-blue-600 hover:text-white transition-colors duration-300
+                     disabled:opacity-40 disabled:cursor-not-allowed">
+        Далее
+      </button>
+    </div>
+
+    <div *ngIf="isLast" class="mt-8">
+      <button (click)="finishTest()"
+              [disabled]="isSubmited === false"
+              class="px-6 py-3 bg-gray-900 text-white rounded-xl shadow hover:bg-gray-700
+                   transition-colors duration-300
+                   disables:opacity-40 disabled:cursor-not-allowed">
+        Завершить тест
+      </button>
     </div>
 
   </div>
-
-
-  <ng-template #no_multiple>
-
-    <div class="space-y-3">
-      <label *ngFor="let option of currentQuestion.options"
-             class="flex items-center gap-3 p-4 border border-gray-300 rounded-xl
-            hover:border-blue-500 hover:bg-blue-50 transition cursor-pointer">
-
-        <input type="radio"
-               name="answer"
-               [value]="option"
-               [disabled]="isSubmited"
-               (change)="onOptionToggle(option)"
-               class="w-5 h-5 text-blue-600 focus:ring-0" />
-
-        <span class="text-lg">
-          {{ option.text }}
-        </span>
-
-      </label>
-    </div>
-
-  </ng-template>
-
-
-
-  <div *ngIf="!isSubmited" class="mt-8">
-    <button (click)="submitAnswer(currentQuestion.id, test.title)"
-            [disabled]="isSelected === false"
-            class="px-6 py-3 border border-blue-600 text-blue-700 rounded-xl shadow
-                   hover:bg-blue-600 hover:text-white transition-colors duration-300
-                   disabled:opacity-40 disabled:cursor-not-allowed">
-      Ответить
-    </button>
-
-  </div>
-
-
-  <div *ngIf="!isFirst && this.mode.allowBack" class="mt-8">
-    <button (click)="lastQuestion()"
-            class="px-6 py-3 border border-blue-600 text-blue-700 rounded-xl shadow
-                 hover:bg-blue-600 hover:text-white transition-colors duration-300
-                 disabled:opacity-40 disabled:cursor-not-allowed">
-      Назад
-    </button>
-  </div>
-
-  <div *ngIf="!isLast" class="mt-8">
-    <button (click)="nextQuestion()"
-            [disabled]="isSubmited === false"
-            class="px-6 py-3 border border-blue-600 text-blue-700 rounded-xl shadow
-                   hover:bg-blue-600 hover:text-white transition-colors duration-300
-                   disabled:opacity-40 disabled:cursor-not-allowed">
-      Далее
-    </button>
-  </div>
-
-  <div *ngIf="isLast" class="mt-8">
-    <button (click)="finishTest()"
-            [disabled]="isSubmited === false"
-            class="px-6 py-3 bg-gray-900 text-white rounded-xl shadow hover:bg-gray-700
-                 transition-colors duration-300
-                 disables:opacity-40 disabled:cursor-not-allowed">
-      Завершить тест
-    </button>
-  </div>
-
 </div>
-
 
 <ng-template #no_questions>
   <h3 class="text-center text-xl text-gray-500 py-10">Тест не найден</h3>
 </ng-template>
 
-
-
-<!--[class.show]="isModalOpen"
-     [style.display]="isModalOpen ? 'block' : 'none'"
-     class="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50"-->
-<!--<div class="bg-white p-6 rounded-xl shadow-xl w-80">
-  <div class="modal-content p-3">
-    <p>{{ textModal }}</p>
-    <button type="button" (click)="closeModal()">Ок</button>
-  </div>
-</div>-->
 
 <div *ngIf="this.mode.showAfterEach && isModalOpen"
      class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-40 z-50">
@@ -125,17 +115,6 @@
     </button>
   </div>
 </div>
-
-
-
-<!--<div class="modal fade" [class.show]="isFinishModalOpen" [style.display]="isFinishModalOpen ? 'block' : 'none'">
-  <div class="modal-dialog">
-    <div class="modal-content p-3">
-      <p>{{ textModal }}</p>
-      <button type="button" (click)="closeFinishModal()">Ок</button>
-    </div>
-  </div>
-</div>-->
 
 
 <div *ngIf="isFinishModalOpen"
@@ -163,26 +142,6 @@
     <button (click)="closePassedModal()"
             class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
       Назад
-    </button>
-  </div>
-</div>
-
-
-<div *ngIf="isUnauthModalOpen"
-     class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
-
-  <div class="bg-white p-6 rounded-xl shadow-xl w-80">
-
-    <p class="mb-4 text-lg text-center">{{ textModal }}</p>
-
-    <button (click)="closePassedModal()"
-            class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-      Назад
-    </button>
-
-    <button (click)="auth()"
-            class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
-      Авторизоваться
     </button>
   </div>
 </div>
