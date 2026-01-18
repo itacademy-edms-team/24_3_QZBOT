@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TestService, TestType, Test, Question, Option, UserTest, UserTestDto, SubmitAnswerDto, SubmitAnswerResult } from '../../services/test.service';
 import { AuthService } from '../../services/auth.service';
+import { Observable, map } from 'rxjs';
 
 @Component({
   selector: 'app-test',
@@ -64,6 +65,7 @@ export class TestComponent implements OnInit {
   }
 
   userTest!: UserTestDto;
+  isCreator: boolean = false;
 
   mode = {
     strict: false,
@@ -139,8 +141,20 @@ export class TestComponent implements OnInit {
             });
           }
         })
+
+        this.checkIsUserCreator();
       }
     });
+  }
+
+  checkIsUserCreator(): void {
+    this.authService.currentUserId.subscribe({
+      next: (data) => {
+        if (data === this.test.creatorId) {
+          this.isCreator = true;
+        }
+      }
+    })
   }
 
 
@@ -258,6 +272,10 @@ export class TestComponent implements OnInit {
     this.textModal = "Тест завершен! Результат " + this.rightAnswers + "/" + this.test.questions.length;
 
     if (!this.authService.isAuthenticated) {
+      return;
+    }
+
+    if (this.isCreator) {
       return;
     }
 
