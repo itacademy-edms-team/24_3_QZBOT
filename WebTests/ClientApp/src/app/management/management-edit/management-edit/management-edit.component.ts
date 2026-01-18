@@ -174,9 +174,11 @@ export class ManagementEditComponent implements OnInit {
       this.testService.checkTestExists(this.edited_test.title).subscribe({
         next: (data) => {
           if (data) {
-            this.text_error = "Такое название теста уже занято"
-            return;
-          } else {
+            if (!(this.test.title === this.edited_test.title)) {
+              this.text_error = "Такое название теста уже занято"
+              return;
+            }
+
             // если изменений нет - выводим сообщение
             if (this.changes.length == 0) {
               this.text_error = "Нет изменений";
