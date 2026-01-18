@@ -387,14 +387,10 @@ namespace WebTests.Controllers
             });
         }
 
-        [Authorize]
         [HttpPost("pass/{testId}")]
         public async Task<IActionResult> PassTest(int testId, [FromBody] int score)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (userId == null)
-                return Unauthorized();
 
             var testExists = await _context.Tests.AnyAsync(t => t.Id == testId);
             if (!testExists)
@@ -408,13 +404,15 @@ namespace WebTests.Controllers
             var existing = await _context.UserTests
                 .FirstOrDefaultAsync(ut => ut.TestId == testId && ut.UserId == userId);
 
-            //if (existing != null)
-            //    return BadRequest("Уже была попытка прохождения теста");
-
-            
 
             int totalQuestions = test.Questions.Count;
             bool isPassed = ((float)score / totalQuestions) * 100 >= test.MinSuccessPercent;
+
+            if (userId == null)
+                return Ok(isPassed);
+
+            if (userId == test.CreatorId)
+                return Ok(isPassed);
 
 
             // здесь костыль со временем, чтобы не делать миграцию для возврата предыдущей модели.
@@ -436,7 +434,7 @@ namespace WebTests.Controllers
             _context.UserTests.Add(entity);
             await _context.SaveChangesAsync();
 
-            return Ok(true);
+            return Ok(entity.IsFinished); // возвращает пройден тест или нет
         }
 
         [Authorize]
