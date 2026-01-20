@@ -1,4 +1,4 @@
-<div class="mx-auto max-w-4xl p-6">
+<div *ngIf="test.title != '';else no_test" class="mx-auto max-w-4xl p-6">
 
   <h2 class="text-3xl font-bold mb-6">Редактирование {{ test_title }}</h2>
 
@@ -40,12 +40,6 @@
       </div>
 
     </div>
-  </div>
-
-  <!-- Ошибка -->
-  <div *ngIf="text_error"
-       class="mb-6 p-4 rounded-lg border-l-4 border-red-600 bg-red-50 text-red-800 text-lg font-semibold shadow-sm">
-    ⚠️ {{ text_error }}
   </div>
 
   <!-- ВОПРОСЫ -->
@@ -154,6 +148,17 @@
     </button>
   </div>
 
+  <!-- Ссылка на прохождение теста -->
+  <div *ngIf="edited_test.questions.length > 2 && edited_test.title != ''" class="mt-8">
+    <a [routerLink]="['/tests', edited_test.id]">Пройти демо</a>
+  </div>
+
+  <!-- Ошибка -->
+  <div *ngIf="text_error"
+       class="mb-6 p-4 rounded-lg border-l-4 border-red-600 bg-red-50 text-red-800 text-lg font-semibold shadow-sm">
+    ⚠️ {{ text_error }}
+  </div>
+
   <!-- Подтверждение -->
   <div *ngIf="confirm_edit" class="mt-6 p-4 border rounded-lg bg-yellow-50 shadow-sm">
     <p class="font-semibold text-lg mb-2">Изменения:</p>
@@ -180,3 +185,7 @@
     ✔ Тест успешно изменен!
   </div>
 </div>
+
+<ng-template #no_test>
+  <h3 class="text-center text-xl text-gray-500 py-10">Тест не найден</h3>
+</ng-template>

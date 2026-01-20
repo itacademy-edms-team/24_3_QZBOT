@@ -52,10 +52,20 @@ namespace WebTests.Controllers
         {
             var tests = _context.Tests
                 .Where(t => t.Published == true)
+                .Include(t => t.Types)
                 .Select(t => new
                 {
                     t.Id,
-                    t.Title
+                    t.Title,
+                    t.Questions,
+                    Types = t.Types.Select(tt => tt.Name).ToList(),
+                    t.CreatorId,
+                    t.Creator,
+                    t.Published,
+                    t.CreatedDate,
+                    t.PublishDate,
+                    t.EditTime,
+                    t.MinSuccessPercent
                 })
                 .ToList();
 
@@ -79,28 +89,39 @@ namespace WebTests.Controllers
         [HttpGet("{title}")]
         public IActionResult GetTestByTitle(string title)
         {
-            var questions = _context.Tests
+            var test = _context.Tests
                 .Where(t => t.Title == title)
                 .Include(t => t.Types)
                 .Include(t => t.Questions)
                     .ThenInclude(q => q.Options)
                 .FirstOrDefault();
 
-            return Ok(questions);
+            if (test == null)
+                return NotFound();
+
+            var dto = new TestReadDto
+            {
+                Id = test.Id,
+                Title = test.Title,
+                Published = test.Published,
+                CreatorId = test.CreatorId,
+                MinimumSuccessPercent = test.MinSuccessPercent,
+                Types = test.Types.Select(t => t.Name).ToList(),
+                Questions = test.Questions.Select(q => new QuestionDto
+                {
+                    Id = q.Id,
+                    Text = q.Text,
+                    isMultiple = q.IsMultiple,
+                    Options = q.Options.Select(o => new AnswerOptionDto
+                    {
+                        Text = o.Text,
+                        IsCorrect = o.IsCorrect
+                    }).ToList()
+                }).ToList()
+            };
+
+            return Ok(dto);
         }
-
-        //[HttpGet("id/{id}")]
-        //public IActionResult GetTestById(int id)
-        //{
-        //    var questions = _context.Tests
-        //        .Where(t => t.Id == id)
-        //        .Include(t => t.Types)
-        //        .Include(t => t.Questions)
-        //            .ThenInclude(q => q.Options)
-        //        .FirstOrDefault();
-
-        //    return Ok(questions);
-        //}
 
         [HttpGet("id/{id}")]
         public IActionResult GetTestById(int id)
@@ -111,6 +132,9 @@ namespace WebTests.Controllers
                 .Include(t => t.Questions)
                     .ThenInclude(q => q.Options)
                 .FirstOrDefault(t => t.Id == id);
+
+            if (test == null)
+                return NotFound();
 
             var dto = new TestReadDto
             {
@@ -363,14 +387,10 @@ namespace WebTests.Controllers
             });
         }
 
-        [Authorize]
         [HttpPost("pass/{testId}")]
         public async Task<IActionResult> PassTest(int testId, [FromBody] int score)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-            if (userId == null)
-                return Unauthorized();
 
             var testExists = await _context.Tests.AnyAsync(t => t.Id == testId);
             if (!testExists)
@@ -384,13 +404,15 @@ namespace WebTests.Controllers
             var existing = await _context.UserTests
                 .FirstOrDefaultAsync(ut => ut.TestId == testId && ut.UserId == userId);
 
-            //if (existing != null)
-            //    return BadRequest("Уже была попытка прохождения теста");
-
-            
 
             int totalQuestions = test.Questions.Count;
             bool isPassed = ((float)score / totalQuestions) * 100 >= test.MinSuccessPercent;
+
+            if (userId == null)
+                return Ok(isPassed);
+
+            if (userId == test.CreatorId)
+                return Ok(isPassed);
 
 
             // здесь костыль со временем, чтобы не делать миграцию для возврата предыдущей модели.
@@ -412,7 +434,7 @@ namespace WebTests.Controllers
             _context.UserTests.Add(entity);
             await _context.SaveChangesAsync();
 
-            return Ok(true);
+            return Ok(entity.IsFinished); // возвращает пройден тест или нет
         }
 
         [Authorize]

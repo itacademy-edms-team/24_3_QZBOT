@@ -80,7 +80,14 @@ namespace WebTests.Controllers
         [HttpPost("logout")]
         public IActionResult Logout()
         {
-            Response.Cookies.Delete("access_token");
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None
+            };
+
+            Response.Cookies.Delete("access_token", cookieOptions);
             return Ok();
         }
 

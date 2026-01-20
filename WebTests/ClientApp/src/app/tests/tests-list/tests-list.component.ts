@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { TestComponent } from '../tests/tests.component';
 import { TestService, Test, Question, Option } from '../../services/test.service';
+import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-tests-list',
@@ -12,13 +13,26 @@ export class TestsListComponent {
 
   constructor(
     private testService: TestService,
+    private authService: AuthService,
   ) { }
 
   ngOnInit() {
-    this.testService.getPublishedTests().subscribe({
-      next: (data) => {
-        this.tests = data;
-      }
-    })
+    if (this.authService.isAuthenticated) {
+      this.testService.getPublishedTests().subscribe({
+        next: (data) => {
+          this.tests = data;
+        }
+      })
+    } else {
+      this.testService.getPublishedTests().subscribe({
+        next: (data) => {
+          data.forEach((test) => {
+            if (!test.types.includes("AuthOnly")) {
+              this.tests.push(test);
+            }
+          })
+        }
+      })
+    }
   }
 }
