@@ -81,6 +81,7 @@ namespace WebTests.Controllers
             var tests = await _context.UserTests
                 .Where(ut => ut.UserId == userId)
                 .Include(ut => ut.Test)
+                    .ThenInclude(q => q.Questions)
                 .ToListAsync();
 
             return Ok(tests);
