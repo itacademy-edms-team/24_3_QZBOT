@@ -171,16 +171,27 @@ export class ManagementEditComponent implements OnInit {
       // получем список изменений между исходным тестом и измененным
       this.changes = this.testService.getTestChanges(this.test, this.edited_test);
 
-      // если изменений нет - выводим сообщение
-      if (this.changes.length == 0) {
-        this.text_error = "Нет изменений";
-        return;
-      }
+      this.testService.checkTestExists(this.edited_test.title).subscribe({
+        next: (data) => {
+          if (data) {
+            if (!(this.test.title === this.edited_test.title)) {
+              this.text_error = "Такое название теста уже занято"
+              return;
+            }
 
-      // если есть - блокируем редактирование и показываем окно подтверждения
-      this.is_editing_locked = true;
-      this.confirm_edit = true;
-      this.text_error = "";
+            // если изменений нет - выводим сообщение
+            if (this.changes.length == 0) {
+              this.text_error = "Нет изменений";
+              return;
+            }
+
+            // если есть - блокируем редактирование и показываем окно подтверждения
+            this.is_editing_locked = true;
+            this.confirm_edit = true;
+            this.text_error = "";
+          }
+        }
+      })
 
     } else {
       // ошибка валидации теста - показывем пользователю

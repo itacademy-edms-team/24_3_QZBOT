@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { TestService, TestType, Test, Question, Option, UserTest, UserTestDto, SubmitAnswerDto, SubmitAnswerResult } from '../../services/test.service';
 import { AuthService } from '../../services/auth.service';
+import { Observable, map } from 'rxjs';
 
 @Component({
   selector: 'app-test',
@@ -39,6 +40,7 @@ export class TestComponent implements OnInit {
   textModal: string = '';
   isPassedModalOpen: boolean = false;
   isUnauthModalOpen: boolean = false;
+  isUnauth: boolean = false;
 
   tryedTest: Test = {
     id: 0,
@@ -64,6 +66,7 @@ export class TestComponent implements OnInit {
   }
 
   userTest!: UserTestDto;
+  isCreator: boolean = false;
 
   mode = {
     strict: false,
@@ -110,8 +113,7 @@ export class TestComponent implements OnInit {
 
             if (this.mode.authOnly) {
               if (!this.authService.isAuthenticated) {
-                this.isUnauthModalOpen = true;
-                this.textModal = "Этот тест доступен только авторизованным пользователям!"
+                this.isUnauth = true;
               }
             }
 
@@ -137,6 +139,14 @@ export class TestComponent implements OnInit {
                 this.updateIsFirst();
               }
             });
+
+            this.authService.currentUserId.subscribe({
+              next: (data) => {
+                if (data === this.test.creatorId) {
+                  this.isCreator = true;
+                }
+              }
+            })
           }
         })
       }
@@ -228,23 +238,6 @@ export class TestComponent implements OnInit {
 
     this.updateIsLast();
     this.updateIsFirst();
-  }  
-
-
-  loadTests(name: string) {
-    this.testService.getTestByName(name).subscribe({
-      next: (data) => {
-        this.test = data;
-
-        if (data.questions.length > 0) {
-          this.currentQuestion = data.questions[0];
-        }
-
-        this.updateIsLast();
-        this.updateIsFirst();
-      },
-      error: (err) => console.error(err),
-    });
   }
 
 
@@ -271,14 +264,17 @@ export class TestComponent implements OnInit {
 
 
   finishTest() {
-    this.isFinishModalOpen = true;
-    this.textModal = "Тест завершен! Результат " + this.rightAnswers + "/" + this.test.questions.length;
-
-    if (!this.authService.isAuthenticated) {
-      return;
-    }
-
-    this.testService.passTest(this.test.id, this.rightAnswers).subscribe();
+    this.testService.passTest(this.test.id, this.rightAnswers).subscribe({
+      next: (isPassed) => {
+        if (isPassed) {
+          this.isFinishModalOpen = true;
+          this.textModal = "Результат " + this.rightAnswers + "/" + this.test.questions.length + ". Тест успешно пройден."
+        } else {
+          this.isFinishModalOpen = true;
+          this.textModal = "Результат " + this.rightAnswers + "/" + this.test.questions.length + ". Тест не пройден."
+        }
+      }
+    });
   }
 
   auth() {

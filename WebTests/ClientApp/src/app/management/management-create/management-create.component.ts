@@ -39,7 +39,7 @@ export class ManagementCreateComponent {
 
   // Поля и флаги для JSON-импорта
   json_input: string = '';
-  json_error: string = '';
+  json_error: string[] = [];
   json_add: boolean = false;
 
   constructor(
@@ -62,6 +62,7 @@ export class ManagementCreateComponent {
     }
     if (this.test.minimumSuccessPercent > 100 || this.test.minimumSuccessPercent < 10) {
       this.text_error = "Недопустимое значение минимального процента ответов";
+      return;
     }
 
     // проверяем у API, существует ли тест с таким названием
@@ -120,17 +121,6 @@ export class ManagementCreateComponent {
         }
       }
     });
-
-    //this.testService.addTest(this.test.title, this.test.questions).subscribe({
-    //  next: (data) => {
-    //    if (data) {
-    //      this.confirm_add = false;
-    //      this.success_add = true;
-    //      this.text_error = "";
-    //      this.is_editing_locked = true;
-    //    }
-    //  }
-    //});
   }
 
   // отмена подтверждения - возвращаем возможность редактировать
@@ -210,15 +200,28 @@ export class ManagementCreateComponent {
 
   // JSON импорт теста
   loadFromJson() {
-    this.json_error = '';
+    this.json_error = [];
 
     try {
-      const obj = JSON.parse(this.json_input); // в будущем расширить JSON
+      const obj = JSON.parse(this.json_input);
 
       // проверяем минимально корректную структуру 
       if (!obj.title || !Array.isArray(obj.questions)) {
-        this.json_error = "Неправильная структура JSON";
+        this.json_error.push("Неправильная структура JSON");
         return;
+      }
+
+      if (obj.minSuccessPercent > 100 || obj.minSuccessPercent < 0) {
+        this.json_error.push("Неправильное значение процента правильных ответов");
+      }
+
+      if (obj.types.length > 0) { // В БУДУЩЕМ ЗАМЕНИТЬ РУЧНУЮ ПРОВЕРКУ ТИПОВ (МОДИФИКАЦИЙ)
+        obj.types.forEach((type: string) => {
+          if (type !== "Shuffle" && type !== "AuthOnly" && type !== "AllowBack" && type !== "ShowAfterEach" && type !== "ManyTimes") {
+            this.json_error.push("Неизвестная модификация");
+            return;
+          }
+        })
       }
 
       // преобразуем JSON в типизированный объект Test
@@ -226,7 +229,7 @@ export class ManagementCreateComponent {
         id: 0,
         title: obj.title,
         creatorId: '',
-        types: [],
+        types: obj.types ?? [],
         published: obj.published ?? false,
         questions: obj.questions.map((q: any) => ({
           id: 0,
@@ -237,15 +240,14 @@ export class ManagementCreateComponent {
             isCorrect: o.isCorrect
           }))
         })),
+        minimumSuccessPercent: obj.minSuccessPercent,
         publishDate: new Date(0),
         createdDate: new Date(0),
-        editDate: new Date(0),
-        minimumSuccessPercent: 70
+        editDate: new Date(0)
       };
-
     } catch (e) {
       // JSON синтаксически неверный
-      this.json_error = "Ошибка: невалидный JSON";
+      this.json_error.push("Ошибка: невалидный JSON");
     }
   }
 }
