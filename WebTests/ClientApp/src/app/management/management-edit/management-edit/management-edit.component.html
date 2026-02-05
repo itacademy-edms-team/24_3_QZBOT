@@ -1,4 +1,4 @@
-<div *ngIf="test.title != '';else no_test" class="mx-auto max-w-4xl p-6">
+<div *ngIf="test.title != '';else no_test" class="mx-auto max-w-4xl p-6 pt-24">
 
   <h2 class="text-3xl font-bold mb-6">Редактирование {{ test_title }}</h2>
 
@@ -150,7 +150,8 @@
 
   <!-- Ссылка на прохождение теста -->
   <div *ngIf="edited_test.questions.length > 2 && edited_test.title != ''" class="mt-8">
-    <a [routerLink]="['/tests', edited_test.id]">Пройти демо</a>
+    <a [routerLink]="['/tests', edited_test.id]"
+       class="px-6 py-3 bg-white border-green-600 text-black rounded-lg hover:bg-green-700 hover:text-white transition">Пройти демо</a>
   </div>
 
   <!-- Ошибка -->
