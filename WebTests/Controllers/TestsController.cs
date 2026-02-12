@@ -9,6 +9,8 @@ using System.Transactions;
 using WebTests.Data;
 using WebTests.DTOs;
 using WebTests.Models;
+using static System.Formats.Asn1.AsnWriter;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace WebTests.Controllers
 {
@@ -152,6 +154,7 @@ namespace WebTests.Controllers
                     isMultiple = q.IsMultiple,
                     Options = q.Options.Select(o => new AnswerOptionDto
                     {
+                        Id = o.Id,
                         Text = o.Text,
                         IsCorrect = o.IsCorrect
                     }).ToList()
@@ -169,7 +172,7 @@ namespace WebTests.Controllers
             if (test == null)
             {
                 return Ok(false);
-            } 
+            }
             else
             {
                 return Ok(true);
@@ -285,43 +288,37 @@ namespace WebTests.Controllers
         }
 
         [Authorize]
-        [HttpPost("start/{testId}")]
-        public async Task<IActionResult> StartTest(int testId) 
-        { 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); 
-            
-            if (userId == null) 
-                return Unauthorized(); 
-            
-            var testExists = await _context.Tests.AnyAsync(t => t.Id == testId); 
-            
-            if (!testExists) 
-                return NotFound("Тест не найден"); 
-            
-            var test = await _context.Tests
-                .Where(t => t.Id == testId)
-                .Include(q => q.Questions)
-                .FirstOrDefaultAsync(); 
+        [HttpPost("{testId}/start")]
+        public async Task<IActionResult> StartTest(int testId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var attempt = await _context.UserTests
+            var userTest = await _context.UserTests
                 .Include(t => t.Answers)
-                .FirstOrDefaultAsync(ut => ut.TestId == testId && ut.UserId == userId && ut.IsFinished == false); 
-            
-            if (attempt == null) 
-            { 
-                attempt = new UserTest 
-                { 
-                    UserId = userId, 
-                    TestId = testId, 
-                    StartedAt = DateTime.UtcNow,
-                    IsFinished = false 
-                }; 
-                
-                _context.UserTests.Add(attempt); 
-                await _context.SaveChangesAsync(); 
-            } 
-            
-            return Ok(UserTestDto.MapToDto(attempt)); 
+                .FirstOrDefaultAsync(t => t.TestId == testId && t.UserId == userId && !t.IsFinished);
+
+            if (userTest == null)
+            {
+                userTest = new UserTest
+                {
+                    UserId = userId,
+                    TestId = testId,
+                    StartedAt = DateTime.UtcNow
+                };
+
+                _context.UserTests.Add(userTest);
+                await _context.SaveChangesAsync();
+            }
+
+            return Ok(new UserTestDto
+            {
+                UserTestId = userTest.Id,
+                Answers = userTest.Answers.Select(a => new UserAnswerDto
+                {
+                    QuestionId = a.QuestionId,
+                    SelectedOptionIds = JsonSerializer.Deserialize<List<int>>(a.SelectedOptionsJson)
+                }).ToList()
+            });
         }
 
         [Authorize]
@@ -352,9 +349,6 @@ namespace WebTests.Controllers
             if (question == null)
                 return BadRequest("Вопрос не принадлежит этому тесту");
 
-            if (userTest.Answers.Any(a => a.QuestionId == dto.QuestionId))
-                return BadRequest("На этот вопрос уже был дан ответ");
-
             var validOptionIds = question.Options.Select(o => o.Id).ToHashSet();
 
             if (dto.SelectedOptionIds.Any(id => !validOptionIds.Contains(id)))
@@ -369,22 +363,32 @@ namespace WebTests.Controllers
                 dto.SelectedOptionIds.Count == correctIds.Count &&
                 dto.SelectedOptionIds.All(id => correctIds.Contains(id));
 
-            var answer = new UserTestAnswer
-            {
-                UserTestId = userTest.Id,
-                QuestionId = dto.QuestionId,
-                SelectedOptionsJson = JsonSerializer.Serialize(dto.SelectedOptionIds),
-                IsCorrect = isCorrect,
-                AnsweredAt = DateTime.UtcNow
-            };
+            var existing = userTest.Answers
+                .FirstOrDefault(a => a.QuestionId == dto.QuestionId);
 
-            _context.UserTestAnswers.Add(answer);
+            if (existing == null)
+            {
+                userTest.Answers.Add(new UserTestAnswer
+                {
+                    QuestionId = dto.QuestionId,
+                    SelectedOptionsJson = JsonSerializer.Serialize(dto.SelectedOptionIds),
+                    IsCorrect = isCorrect,
+                    AnsweredAt = DateTime.UtcNow
+                });
+            }
+            else
+            {
+                existing.SelectedOptionsJson = JsonSerializer.Serialize(dto.SelectedOptionIds);
+                existing.IsCorrect = isCorrect;
+                existing.AnsweredAt = DateTime.UtcNow;
+            }
+
             await _context.SaveChangesAsync();
 
             return Ok(new
             {
-                isCorrect,
-                answeredQuestions = userTest.Answers.Count + 1
+                isCorrect = new List<bool> { isCorrect },
+                answeredQuestions = userTest.Answers.Count
             });
         }
 
@@ -436,6 +440,27 @@ namespace WebTests.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(entity.IsFinished); // возвращает пройден тест или нет
+        }
+
+        [Authorize]
+        [HttpGet("{testId}/attempt")]
+        public async Task<IActionResult> GetAttempt(int testId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var test = await _context.Tests
+                .FirstOrDefaultAsync(t => t.Id == testId);
+
+            if (test == null)
+                return NotFound();
+
+            var attempt = _context.UserTests
+                .FirstOrDefaultAsync(x => x.UserId == userId && x.TestId == testId && !x.IsFinished);
+
+            return Ok(attempt);
         }
 
         [Authorize]
