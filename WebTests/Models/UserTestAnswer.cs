@@ -7,7 +7,7 @@
         public UserTest UserTest { get; set; }
         public int QuestionId { get; set; }
         public string SelectedOptionsJson { get; set; }
-        public bool? IsCorrect { get; set; }
+        public bool? IsCorrect { get; set; }                    
         public DateTime AnsweredAt { get; set; } = DateTime.UtcNow;
     }
 }
