@@ -32,7 +32,7 @@ export class TestComponent implements OnInit {
   isLast: boolean = false;
   isSubmited: boolean = false;
   isSelected: boolean = false;
-  selectedOptionIndexes: number[] = [];
+  selectedOptionIds: number[] = [];
   rightAnswers: number = 0;
 
   isFinishModalOpen: boolean = false;
@@ -66,6 +66,8 @@ export class TestComponent implements OnInit {
   }
 
   userTest!: UserTestDto;
+  userTestId: number = 0;
+  savedAnswers: { [questionId: number]: number[] } = {};
   isCreator: boolean = false;
 
   mode = {
@@ -94,57 +96,74 @@ export class TestComponent implements OnInit {
           next: (data) => {
             this.test = data;
 
-            data.types.forEach(type => {
-              if (type === "AuthOnly") {
-                this.mode.authOnly = true;
-              } else if (type === "Strict") {
-                this.mode.strict = true;
-              } else if (type === "AllowBack") {
-                this.mode.allowBack = true;
-              } else if (type === "ShowAfterEach") {
-                this.mode.showAfterEach = true;
-              } else if (type === "Shuffle") {
-                this.mode.shuffle = true;
-              } else if (type === "ManyTimes") {
-                this.mode.manyTimes = true;
-              }
-            })
+            this.testService.startTest(testId).subscribe({
+              next: (res) => {
+                this.userTestId = res.userTestId;
+                this.savedAnswers = {};
+
+                res.answers.forEach(a => {
+                  this.savedAnswers[a.questionId] = a.selectedOptionIds;
+                });
+
+                const firstUnansweredIndex = this.test.questions.findIndex(q => !this.savedAnswers[q.id])
+
+                this.currentQuestion = firstUnansweredIndex === -1
+                  ? this.test.questions[0]
+                  : this.test.questions[firstUnansweredIndex];
+
+                data.types.forEach(type => {
+                  if (type === "AuthOnly") {
+                    this.mode.authOnly = true;
+                  } else if (type === "Strict") {
+                    this.mode.strict = true;
+                  } else if (type === "AllowBack") {
+                    this.mode.allowBack = true;
+                  } else if (type === "ShowAfterEach") {
+                    this.mode.showAfterEach = true;
+                  } else if (type === "Shuffle") {
+                    this.mode.shuffle = true;
+                  } else if (type === "ManyTimes") {
+                    this.mode.manyTimes = true;
+                  }
+                })
 
 
-            if (this.mode.authOnly) {
-              if (!this.authService.isAuthenticated) {
-                this.isUnauth = true;
-              }
-            }
-
-            if (this.mode.shuffle) {
-              this.shuffle(this.test.questions);
-            }
-
-
-            if (this.test.questions.length > 0) {
-              this.currentQuestion = this.test.questions[0];
-            }
-
-            this.testService.isPassed(this.test.id).subscribe({
-              next: (record) => {
-                this.try = record
-
-                if (this.try !== null && !this.mode.manyTimes) {
-                  this.isPassedModalOpen = true;
-                  this.textModal = `Вы уже проходили этот тест ${this.try.finishedAt}`
+                if (this.mode.authOnly) {
+                  if (!this.authService.isAuthenticated) {
+                    this.isUnauth = true;
+                  }
                 }
 
-                this.updateIsLast();
-                this.updateIsFirst();
-              }
-            });
-
-            this.authService.currentUserId.subscribe({
-              next: (data) => {
-                if (data === this.test.creatorId) {
-                  this.isCreator = true;
+                if (this.mode.shuffle) {
+                  this.shuffle(this.test.questions);
                 }
+
+
+                this.testService.isPassed(this.test.id).subscribe({
+                  next: (record) => {
+                    this.try = record
+
+                    if (this.try !== null && !this.mode.manyTimes) {
+                      this.isPassedModalOpen = true;
+                      this.textModal = `Вы уже проходили этот тест ${this.try.finishedAt}`
+                    }
+
+                    this.updateIsLast();
+                    this.updateIsFirst();
+                    this.restoreSelection();
+                  }
+                });
+
+                this.authService.currentUserId.subscribe({
+                  next: (data) => {
+                    if (data === this.test.creatorId) {
+                      this.isCreator = true;
+                    }
+                  }
+                })
+              },
+              error: (err) => {
+                this.userTest.userTestId = 0;
               }
             })
           }
@@ -155,22 +174,18 @@ export class TestComponent implements OnInit {
 
 
   onOptionToggle(option: Option) {
-    const index = this.currentQuestion.options.indexOf(option);
-
-    const correctCount = this.currentQuestion.options.filter((o: Option) => o.isCorrect).length;
-
-    const isMultiple = correctCount > 1;
+    const isMultiple = this.currentQuestion.isMultiple;
 
     if (isMultiple) {
-      const i = this.selectedOptionIndexes.indexOf(index);
+      const i = this.selectedOptionIds.indexOf(option.id);
 
       if (i === -1) {
-        this.selectedOptionIndexes.push(index);
+        this.selectedOptionIds.push(option.id);
       } else {
-        this.selectedOptionIndexes.splice(i, 1);
+        this.selectedOptionIds.splice(i, 1);
       }
     } else {
-      this.selectedOptionIndexes = [index];
+      this.selectedOptionIds = [option.id];
     }
 
     this.isSelected = true;
@@ -178,14 +193,19 @@ export class TestComponent implements OnInit {
 
 
   submitAnswer(questionId: number, title: string) {
-    this.testService.checkAnswer(title, questionId, this.selectedOptionIndexes).subscribe({
+    this.testService.submitAnswer({
+      userTestId: this.userTestId,
+      questionId,
+      selectedOptionIds: this.selectedOptionIds
+    }).subscribe({
       next: (response) => {
+
         const totalCorrect = this.currentQuestion.options.filter(o => o.isCorrect).length;
         const isMultiple = totalCorrect > 1;
 
         if (isMultiple) {
-          const selectedCount = response.length;
-          const correctSelected = response.filter(x => x).length;
+          const selectedCount = response.isCorrect.length;
+          const correctSelected = response.isCorrect.filter(x => x).length;
           const wrongSelected = selectedCount - correctSelected;
 
           const totalCorrect = this.currentQuestion.options.filter(o => o.isCorrect).length;
@@ -195,9 +215,8 @@ export class TestComponent implements OnInit {
 
           this.isModalOpen = true;
           this.textModal = "Правильно " + correctSelected;
-
         } else {
-          if (response[0] == true) {
+          if (response.isCorrect[0] == true) {
             this.isModalOpen = true;
             this.textModal = "Правильно";
             this.rightAnswers += 1;
@@ -223,8 +242,9 @@ export class TestComponent implements OnInit {
 
     this.updateIsLast();
     this.updateIsFirst();
+    this.restoreSelection();
 
-    this.selectedOptionIndexes = [];
+    this.selectedOptionIds = [];
     this.isSubmited = false;
     this.isSelected = false;
   }
@@ -238,6 +258,7 @@ export class TestComponent implements OnInit {
 
     this.updateIsLast();
     this.updateIsFirst();
+    this.restoreSelection();
   }
 
 
@@ -275,6 +296,22 @@ export class TestComponent implements OnInit {
         }
       }
     });
+  }
+
+  restoreSelection() {
+    const saved = this.savedAnswers[this.currentQuestion.id];
+
+    if (!saved) return;
+
+    this.selectedOptionIds = [];
+
+    this.currentQuestion.options.forEach((o, index) => {
+      if (saved.includes(o.id)) {
+        this.selectedOptionIds.push(index);
+      }
+    })
+
+    this.isSubmited = true;
   }
 
   auth() {
