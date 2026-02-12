@@ -73,7 +73,7 @@ export class TestService {
 
   startTest(testId: number) {
     return this.http.post<UserTestDto>(
-      `${this.baseUrl}/start/${testId}`,
+      `${this.baseUrl}/${testId}/start`,
       {},
       { withCredentials: true }
     );
@@ -262,9 +262,14 @@ export interface UserTest {
 
 export interface UserTestDto {
   userTestId: number;
-  startedAt: string;
+  startedAt: Date;
   isFinished: boolean;
-  answeredQuestionIds: number[];
+  answers: UserAnswerDto[];
+}
+
+export interface UserAnswerDto {
+  questionId: number;
+  selectedOptionIds: number[]
 }
 
 export interface SubmitAnswerDto {
@@ -274,9 +279,16 @@ export interface SubmitAnswerDto {
 }
 
 export interface SubmitAnswerResult {
-  isCorrect: boolean;
+  isCorrect: boolean[];
   answeredQuestions: number;
 }
+
+export interface StartTestResponseDto {
+  userTestId: number;
+  answeredQuestionIds: number[];
+  nextQuestion: Question | null;
+}
+
 
 export interface TestType {
   id: number;
