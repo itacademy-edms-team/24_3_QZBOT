@@ -9,7 +9,6 @@ namespace WebTests.Models
         public string Title { get; set; } = "None";
         public List<Question> Questions { get; set; } = new List<Question>();
         public List<TestTypes>? Types { get; set; }
-        //public ICollection<TestTestType> TestTypes { get; set; } = new List<TestTestType>();
         public string? CreatorId { get; set; }
         public IdentityUser? Creator { get; set; }
         public bool Published { get; set; } = false;
