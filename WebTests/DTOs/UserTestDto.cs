@@ -7,6 +7,7 @@ namespace WebTests.DTOs
         public int UserTestId { get; set; }
         public DateTime StartedAt { get; set; }
         public bool IsFinished { get; set; }
+        public List<UserAnswerDto> Answers { get; set; }
 
         public List<int> AnsweredQuestionIds { get; set; }
 
