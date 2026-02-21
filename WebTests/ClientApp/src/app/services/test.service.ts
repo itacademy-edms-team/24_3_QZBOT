@@ -90,6 +90,14 @@ export class TestService {
   }
 
 
+  finishTest(testId: number) {
+    return this.http.post<FinishTestResultDto>(
+      `${this.baseUrl}/${testId}/finish`,
+      {},
+      { withCredentials: true }
+    );
+  }
+
 
   addTest(test: Test) {
     return this.http.post<boolean>(`${this.baseUrl}/add`, test, { withCredentials: true });
@@ -258,6 +266,7 @@ export interface UserTest {
   finishedAt: Date;
   score: number;
   isFinished: boolean;
+  isPassed: boolean;
 }
 
 export interface UserTestDto {
@@ -279,7 +288,7 @@ export interface SubmitAnswerDto {
 }
 
 export interface SubmitAnswerResult {
-  isCorrect: boolean[];
+  score: number;
   answeredQuestions: number;
 }
 
@@ -289,6 +298,11 @@ export interface StartTestResponseDto {
   nextQuestion: Question | null;
 }
 
+export interface FinishTestResultDto {
+  score: number;
+  maxScore: number;
+  isPassed: boolean;
+}
 
 export interface TestType {
   id: number;
