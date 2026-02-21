@@ -38,7 +38,7 @@
     <div *ngIf="history.length > 0;else no_tests">
       <table class="justify-center w-full table-fixed">
         <tbody>
-          <tr *ngFor="let try of history" class="hover:bg-gray-300 transition-colors" [class]="try.isFinished ? 'text-green-500' : 'text-red-500'">
+          <tr *ngFor="let try of history" class="hover:bg-gray-300 transition-colors" [class]="try.isPassed ? 'text-green-500' : 'text-red-500'">
             <td class="border-b-2 border-gray-300 p-2 w-1/2">{{ try.test.title }}</td>
             <td class="border-b-2 border-gray-300 p-2 w-1/4 text-right">{{ try.finishedAt | date:'d MMM yyyy HH:mm' }}</td>
             <td class="border-b-2 border-gray-300 p-2 text-right">{{ try.score }}/{{ try.test.questions.length }}</td>
