@@ -4,6 +4,7 @@ namespace WebTests.DTOs
 {
     public class UserTestDto
     {
+        public string Status { get; set; }
         public int UserTestId { get; set; }
         public DateTime StartedAt { get; set; }
         public bool IsFinished { get; set; }
