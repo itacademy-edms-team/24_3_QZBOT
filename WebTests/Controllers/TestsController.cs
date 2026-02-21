@@ -287,6 +287,33 @@ namespace WebTests.Controllers
         }
 
         [Authorize]
+        [HttpPost("{testId}/checkstart")]
+        public async Task<IActionResult> CheckStart(int testId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var test = await _context.Tests
+                .Include(t => t.Questions)
+                .FirstOrDefaultAsync(t => t.Id == testId);
+
+            if (test == null)
+                return NotFound();
+
+            var activeAttempt = await _context.UserTests
+                .Include(t => t.Answers)
+                .FirstOrDefaultAsync(t => t.TestId == testId && t.UserId == userId && !t.IsFinished);
+
+            var finishedAttempt = await _context.UserTests
+                .Include(t => t.Answers)
+                .FirstOrDefaultAsync(t => t.TestId == testId && t.UserId == userId && t.IsFinished);
+
+            if (activeAttempt == null && finishedAttempt == null)
+                return Ok(true);
+
+            return Ok(false);
+        }
+
+        [Authorize]
         [HttpPost("{testId}/start")]
         public async Task<IActionResult> StartTest(int testId)
         {

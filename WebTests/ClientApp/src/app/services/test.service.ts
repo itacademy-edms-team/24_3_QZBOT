@@ -81,6 +81,16 @@ export class TestService {
 
 
 
+  checkStart(testId: number) {
+    return this.http.post<boolean>(
+      `${this.baseUrl}/${testId}/checkstart`,
+      {},
+      { withCredentials: true }
+    );
+  }
+
+
+
   submitAnswer(dto: SubmitAnswerDto) {
     return this.http.post<SubmitAnswerResult>(
       `${this.baseUrl}/answer`,
@@ -270,6 +280,7 @@ export interface UserTest {
 }
 
 export interface UserTestDto {
+  status: string;
   userTestId: number;
   startedAt: Date;
   isFinished: boolean;
