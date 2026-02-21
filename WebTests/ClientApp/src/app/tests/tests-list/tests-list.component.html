@@ -7,11 +7,18 @@
   <div *ngIf="tests;else no_tests">
     <ul class="space-y-3">
       <li *ngFor="let test of tests">
-        <a [routerLink]="['/tests', test.id]"
+        <!--<a [routerLink]="['/tests', test.id]"
            class="block px-5 py-4 border border-gray-300 rounded-xl shadow-sm
                  hover:border-green-600 hover:bg-green-50
                  transition-colors duration-300
-                 text-lg font-medium">{{ test.title }}</a>
+                 text-lg font-medium">{{ test.title }}</a>-->
+        <a (click)="checkStart(test)"
+                class="block px-5 py-4 border border-gray-300 rounded-xl shadow-sm
+                      hover:border-green-600 hover:bg-green-50
+                      transition-colors duration-300
+                      text-lg font-medium"> 
+          {{ test.title }}
+        </a>
       </li>
     </ul>
   </div>
@@ -20,4 +27,22 @@
     <h3 class="text-xl text-gray-500">Нет тестов</h3>
   </ng-template>
 
+</div>
+
+<div *ngIf="isModalStartOpen && selectedTest"
+     class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
+
+  <div class="bg-white p-6 rounded-xl shadow-xl w-80">
+
+    <p class="mb-4 text-lg text-center">Начать тест "{{ selectedTest.title }}"?</p>
+
+    <a [routerLink]="['/tests', selectedTest.id]"
+       class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+      Подтвердить
+    </a>
+    <button (click)="closeModal()"
+            class="block w-full px-4 py-2 bg-gray-200 rounded-lg hover:bg-gray-300">
+      Отмена
+    </button>
+  </div>
 </div>
