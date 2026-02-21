@@ -13,6 +13,7 @@
 
           <input type="checkbox"
                  name="answer"
+                 [checked]="selectedOptionIds.includes(option.id)"
                  [value]="option"
                  [disabled]="isSubmited"
                  (change)="onOptionToggle(option)"
@@ -37,6 +38,7 @@
 
           <input type="radio"
                  name="answer"
+                 [checked]="selectedOptionIds.includes(option.id)"
                  [value]="option"
                  [disabled]="isSubmited"
                  (change)="onOptionToggle(option)"
@@ -74,7 +76,7 @@
       </button>
     </div>
 
-    <div *ngIf="!isLast" class="mt-8">
+    <div *ngIf="test.questions.indexOf(currentQuestion) < test.questions.length - 1" class="mt-8">
       <button (click)="nextQuestion()"
               [disabled]="isSubmited === false"
               class="px-6 py-3 border border-blue-600 text-blue-700 rounded-xl shadow
@@ -84,7 +86,7 @@
       </button>
     </div>
 
-    <div *ngIf="isLast" class="mt-8">
+    <div *ngIf="test.questions.indexOf(currentQuestion) === test.questions.length - 1" class="mt-8">
       <button (click)="finishTest()"
               [disabled]="isSubmited === false"
               class="px-6 py-3 bg-gray-900 text-white rounded-xl shadow hover:bg-gray-700
@@ -106,14 +108,14 @@
   <h3 class="text-center text-xl text-gray-500 py-10">Тест не найден</h3>
 </ng-template>
 
-<div *ngIf="this.mode.showAfterEach && isModalOpen"
+<div *ngIf="this.mode.showAfterEach && isModalAnswerOpen"
      class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-40 z-50">
 
   <div class="bg-white p-6 rounded-xl shadow-xl w-80">
 
     <p class="mb-4 text-lg text-center">{{ textModal }}</p>
 
-    <button (click)="closeModal()"
+    <button (click)="closeAnswerModal()"
             class="block w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
       Ок
     </button>
@@ -146,6 +148,34 @@
     <button (click)="closePassedModal()"
             class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
       Назад
+    </button>
+  </div>
+</div>
+
+<div *ngIf="isModalAnswerOpen"
+     class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
+
+  <div class="bg-white p-6 rounded-xl shadow-xl w-80">
+
+    <p class="mb-4 text-lg text-center">{{ textModal }}</p>
+
+    <button (click)="closeAnswerModal()"
+            class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+      Ок
+    </button>
+  </div>
+</div>
+
+<div *ngIf="isModalTryOpen"
+     class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
+
+  <div class="bg-white p-6 rounded-xl shadow-xl w-80">
+
+    <p class="mb-4 text-lg text-center">{{ textModal }}</p>
+
+    <button (click)="closeModelTryOpen()"
+            class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+      Ок
     </button>
   </div>
 </div>

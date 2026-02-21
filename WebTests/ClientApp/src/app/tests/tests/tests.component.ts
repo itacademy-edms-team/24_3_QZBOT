@@ -36,6 +36,8 @@ export class TestComponent implements OnInit {
   rightAnswers: number = 0;
 
   isFinishModalOpen: boolean = false;
+  isModalAnswerOpen: boolean = false;
+  isModalTryOpen: boolean = false;
   isModalOpen: boolean = false;
   textModal: string = '';
   isPassedModalOpen: boolean = false;
@@ -62,7 +64,8 @@ export class TestComponent implements OnInit {
     startedAt: new Date(0),
     finishedAt: new Date(0),
     score: 0,
-    isFinished: false
+    isFinished: false,
+    isPassed: false
   }
 
   userTest!: UserTestDto;
@@ -99,6 +102,17 @@ export class TestComponent implements OnInit {
             this.testService.startTest(testId).subscribe({
               next: (res) => {
                 this.userTestId = res.userTestId;
+
+                if (res.status == "Finished") {
+                  this.router.navigate(['/tests']) // здесь будет страница итогов
+                  return;
+                }
+
+                else if (res.status == "Active") {
+                  this.isModalTryOpen = true;
+                  this.textModal = `Продолжение попытки от ${res.startedAt}`
+                }
+
                 this.savedAnswers = {};
 
                 res.answers.forEach(a => {
@@ -107,9 +121,11 @@ export class TestComponent implements OnInit {
 
                 const firstUnansweredIndex = this.test.questions.findIndex(q => !this.savedAnswers[q.id])
 
-                this.currentQuestion = firstUnansweredIndex === -1
-                  ? this.test.questions[0]
-                  : this.test.questions[firstUnansweredIndex];
+                if (firstUnansweredIndex !== -1) {
+                  this.loadQuestion(this.test.questions[firstUnansweredIndex]);
+                } else {
+                  this.loadQuestion(this.test.questions[this.test.questions.length - 1]);
+                }
 
                 data.types.forEach(type => {
                   if (type === "AuthOnly") {
@@ -138,21 +154,6 @@ export class TestComponent implements OnInit {
                   this.shuffle(this.test.questions);
                 }
 
-
-                this.testService.isPassed(this.test.id).subscribe({
-                  next: (record) => {
-                    this.try = record
-
-                    if (this.try !== null && !this.mode.manyTimes) {
-                      this.isPassedModalOpen = true;
-                      this.textModal = `Вы уже проходили этот тест ${this.try.finishedAt}`
-                    }
-
-                    this.updateIsLast();
-                    this.updateIsFirst();
-                    this.restoreSelection();
-                  }
-                });
 
                 this.authService.currentUserId.subscribe({
                   next: (data) => {
@@ -200,30 +201,19 @@ export class TestComponent implements OnInit {
     }).subscribe({
       next: (response) => {
 
-        const totalCorrect = this.currentQuestion.options.filter(o => o.isCorrect).length;
-        const isMultiple = totalCorrect > 1;
+        this.savedAnswers[questionId] = [...this.selectedOptionIds];
 
-        if (isMultiple) {
-          const selectedCount = response.isCorrect.length;
-          const correctSelected = response.isCorrect.filter(x => x).length;
-          const wrongSelected = selectedCount - correctSelected;
+        const score = response.score;
 
-          const totalCorrect = this.currentQuestion.options.filter(o => o.isCorrect).length;
-
-          const score = Math.max(0, (correctSelected - wrongSelected) / totalCorrect);
-          this.rightAnswers += score;
-
-          this.isModalOpen = true;
-          this.textModal = "Правильно " + correctSelected;
-        } else {
-          if (response.isCorrect[0] == true) {
-            this.isModalOpen = true;
-            this.textModal = "Правильно";
-            this.rightAnswers += 1;
-          } else {
-            this.isModalOpen = true;
-            this.textModal = "Неправильно";
-          }
+        if (score == 1) {
+          this.isModalAnswerOpen = true;
+          this.textModal = "Правильно";
+        } else if (score == 0) {
+          this.isModalAnswerOpen = true;
+          this.textModal = "Неправильно";
+        } else if (score > 0 && score < 1) {
+          this.isModalAnswerOpen = true;
+          this.textModal = "Почти правильно";
         }
       }
     })
@@ -237,16 +227,11 @@ export class TestComponent implements OnInit {
     const i = this.test.questions.indexOf(this.currentQuestion);
 
     if (i < this.test.questions.length - 1) {
-      this.currentQuestion = this.test.questions[i + 1];
+      this.goToQuestion(i + 1);
     }
 
     this.updateIsLast();
     this.updateIsFirst();
-    this.restoreSelection();
-
-    this.selectedOptionIds = [];
-    this.isSubmited = false;
-    this.isSelected = false;
   }
 
 
@@ -258,7 +243,24 @@ export class TestComponent implements OnInit {
 
     this.updateIsLast();
     this.updateIsFirst();
-    this.restoreSelection();
+  }
+
+
+  loadQuestion(question: Question) {
+    this.currentQuestion = question;
+
+    this.selectedOptionIds =
+      this.savedAnswers[question.id]
+        ? [...this.savedAnswers[question.id]]
+        : [];
+
+    this.isSubmited = !!this.savedAnswers[question.id];
+  }
+
+
+  goToQuestion(index: number) {
+    const question = this.test.questions[index];
+    this.loadQuestion(question);
   }
 
 
@@ -285,37 +287,37 @@ export class TestComponent implements OnInit {
 
 
   finishTest() {
-    this.testService.passTest(this.test.id, this.rightAnswers).subscribe({
-      next: (isPassed) => {
-        if (isPassed) {
-          this.isFinishModalOpen = true;
-          this.textModal = "Результат " + this.rightAnswers + "/" + this.test.questions.length + ". Тест успешно пройден."
+    this.testService.finishTest(this.test.id).subscribe({
+      next: (res) => {
+        if (res.isPassed) {
+          this.textModal = `Результат ${res.score}/${res.maxScore}. Тест успешно пройден`;
         } else {
-          this.isFinishModalOpen = true;
-          this.textModal = "Результат " + this.rightAnswers + "/" + this.test.questions.length + ". Тест не пройден."
+          this.textModal = `Результат ${res.score}/${res.maxScore}. Тест не пройден`;
         }
+
+        this.isFinishModalOpen = true;
       }
-    });
+    })
   }
 
   restoreSelection() {
     const saved = this.savedAnswers[this.currentQuestion.id];
-
     if (!saved) return;
 
-    this.selectedOptionIds = [];
-
-    this.currentQuestion.options.forEach((o, index) => {
-      if (saved.includes(o.id)) {
-        this.selectedOptionIds.push(index);
-      }
-    })
-
+    this.selectedOptionIds = [...saved];
     this.isSubmited = true;
   }
 
   auth() {
     this.router.navigate(['/login'])
+  }
+
+  closeAnswerModal() {
+    this.isModalAnswerOpen = false;
+  }
+
+  closeModelTryOpen() {
+    this.isModalTryOpen = false;
   }
 
   closeModal() {
