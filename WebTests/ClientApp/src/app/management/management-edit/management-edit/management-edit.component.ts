@@ -50,6 +50,9 @@ export class ManagementEditComponent implements OnInit {
 
   currentUserId: string | null = null;       // userId
 
+  isModalDeleting: boolean = false;          // модальное окно удаления теста
+  isDeleted: boolean = false;                // информация об удалении теста
+
   types: TestType[] = [
     { id: 11, name: "Shuffle", description: "вопросы в случайном порядке" },
     { id: 12, name: "AuthOnly", description: "доступ только авторизованным" },
@@ -218,6 +221,38 @@ export class ManagementEditComponent implements OnInit {
         else {
           // ошибка сервера
           this.text_error = "Ошибка редактирования теста"
+        }
+      }
+    })
+  }
+
+  // закрытие модального окна
+  closeModal() {
+    this.isModalDeleting = false;
+    this.isDeleted = false;
+  }
+
+  // закрытие окна, информирующего об удалении
+  closeInfoModal() {
+    this.isDeleted = false;
+    this.router.navigate(['/management/edit']);
+  }
+
+  // удаление теста
+  deleteTest() {
+    this.isModalDeleting = true;
+  }
+
+  // подтверждение удаления
+  confirmDelete() {
+    this.isModalDeleting = false
+
+    this.testService.deleteTest(this.test.id).subscribe({
+      next: (data) => {
+        if (data) {
+          this.isDeleted = true;
+        } else {
+          
         }
       }
     })

@@ -1,10 +1,10 @@
 <div class="max-w-5xl mx-auto px-6 py-4 pt-24">
 
-  <h2 class="text-2xl font-bold mb-4">Редактирование</h2>
+  <div *ngIf="tests.length !== 0;else no_tests">
 
-  <p class="text-gray-600 mb-6">Выберите тест для редактирования</p>
+    <h2 class="text-2xl font-bold mb-4">Редактирование</h2>
 
-  <div *ngIf="tests;else no_tests">
+    <p class="text-gray-600 mb-6">Выберите тест для редактирования</p>
     <ul class="space-y-3">
       <li *ngFor="let test of tests">
         <a [routerLink]="['/management/edit', test.id]"
@@ -17,7 +17,8 @@
   </div>
 
   <ng-template #no_tests>
-    <h3 class="text-xl text-gray-500">Нет тестов</h3>
+    <p class="text-2xl mb-4">Нет тестов</p>
+    <a [routerLink]="['/management/create']">Создать</a>
   </ng-template>
 
 </div>
