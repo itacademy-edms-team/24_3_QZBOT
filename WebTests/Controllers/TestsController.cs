@@ -42,7 +42,7 @@ namespace WebTests.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var tests = _context.Tests
-                .Where(t => t.CreatorId == userId)
+                .Where(t => t.CreatorId == userId && t.isDeleted == false)
                 .ToList();
 
             return Ok(tests);
@@ -52,7 +52,7 @@ namespace WebTests.Controllers
         public IActionResult GetPublishedTests()
         {
             var tests = _context.Tests
-                .Where(t => t.Published == true)
+                .Where(t => t.Published == true && t.isDeleted == false)
                 .Include(t => t.Types)
                 .Select(t => new
                 {
@@ -92,7 +92,7 @@ namespace WebTests.Controllers
         public IActionResult GetTestByTitle(string title)
         {
             var test = _context.Tests
-                .Where(t => t.Title == title)
+                .Where(t => t.Title == title && t.isDeleted == false)
                 .Include(t => t.Types)
                 .Include(t => t.Questions)
                     .ThenInclude(q => q.Options)
@@ -129,7 +129,7 @@ namespace WebTests.Controllers
         public IActionResult GetTestById(int id)
         {
             var test = _context.Tests
-                .Where(t => t.Id == id)
+                .Where(t => t.Id == id && t.isDeleted == false)
                 .Include(t => t.Types)
                 .Include(t => t.Questions)
                     .ThenInclude(q => q.Options)
@@ -166,7 +166,7 @@ namespace WebTests.Controllers
         [HttpGet("exist/{title}")]
         public IActionResult CheckTestExists(string title)
         {
-            var test = _context.Tests.FirstOrDefault(t => t.Title == title);
+            var test = _context.Tests.FirstOrDefault(t => t.Title == title && t.isDeleted == false);
 
             if (test == null)
             {
@@ -260,6 +260,7 @@ namespace WebTests.Controllers
 
 
             var test = await _context.Tests
+                .Where(t => t.isDeleted == false)
                 .Include(t => t.Questions)
                     .ThenInclude(q => q.Options)
                 .Include(t => t.Types)
@@ -293,6 +294,7 @@ namespace WebTests.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var test = await _context.Tests
+                .Where(t => t.isDeleted == false)
                 .Include(t => t.Questions)
                 .FirstOrDefaultAsync(t => t.Id == testId);
 
@@ -320,6 +322,7 @@ namespace WebTests.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var test = await _context.Tests
+                .Where(t => t.isDeleted == false)
                 .Include(t => t.Questions)
                 .FirstOrDefaultAsync(t => t.Id == testId);
 
@@ -456,6 +459,7 @@ namespace WebTests.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var test = await _context.Tests
+                .Where(t => t.isDeleted == false)
                 .Include(t => t.Questions)
                 .FirstOrDefaultAsync(t => t.Id == testId);
 
@@ -510,7 +514,7 @@ namespace WebTests.Controllers
                 return NotFound("Тест не найден");
 
             var test = await _context.Tests
-                .Where(t => t.Id == testId)
+                .Where(t => t.Id == testId && t.isDeleted == false)
                 .Include(q => q.Questions)
                 .FirstOrDefaultAsync();
 
@@ -560,6 +564,7 @@ namespace WebTests.Controllers
                 return Unauthorized();
 
             var test = await _context.Tests
+                .Where(t => t.isDeleted == false)
                 .FirstOrDefaultAsync(t => t.Id == testId);
 
             if (test == null)
@@ -581,6 +586,7 @@ namespace WebTests.Controllers
                 return Unauthorized();
 
             var test = await _context.Tests
+                .Where(t => t.isDeleted == false)
                 .FirstOrDefaultAsync(t => t.Id == testId);
             
             if (test == null)
