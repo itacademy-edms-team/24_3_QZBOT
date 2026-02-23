@@ -114,6 +114,10 @@ export class TestService {
   }
 
 
+  deleteTest(id: number) {
+    return this.http.post(`${this.baseUrl}/${id}/delete`, {}, { withCredentials: true });
+  }
+
 
   editTest(id: number, test: Test) {
     return this.http.post(`${this.baseUrl}/edit/${id}`, test, { withCredentials: true });
