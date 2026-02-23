@@ -80,7 +80,7 @@ namespace WebTests.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var tests = await _context.UserTests
-                .Where(ut => ut.UserId == userId && ut.IsFinished == true)
+                .Where(ut => ut.UserId == userId && ut.IsFinished == false)
                 .Include(ut => ut.Test)
                     .ThenInclude(q => q.Questions)
                 .ToListAsync();
@@ -281,6 +281,26 @@ namespace WebTests.Controllers
 
             TestFactory.FromDto.Update(test, updated, _context);
 
+
+            await _context.SaveChangesAsync();
+
+            return Ok(true);
+        }
+
+        [Authorize]
+        [HttpPost("{testId}/delete")]
+        public async Task<IActionResult> DeleteTest(int testId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var test = await _context.Tests
+                .Where(t => t.CreatorId == userId && t.isDeleted == false)
+                .FirstOrDefaultAsync(t => t.Id == testId);
+
+            if (test == null)
+                return NotFound();
+
+            test.isDeleted = true;
 
             await _context.SaveChangesAsync();
 
