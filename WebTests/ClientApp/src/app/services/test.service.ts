@@ -73,7 +73,17 @@ export class TestService {
 
   startTest(testId: number) {
     return this.http.post<UserTestDto>(
-      `${this.baseUrl}/start/${testId}`,
+      `${this.baseUrl}/${testId}/start`,
+      {},
+      { withCredentials: true }
+    );
+  }
+
+
+
+  checkStart(testId: number) {
+    return this.http.post<boolean>(
+      `${this.baseUrl}/${testId}/checkstart`,
       {},
       { withCredentials: true }
     );
@@ -89,6 +99,14 @@ export class TestService {
     );
   }
 
+
+  finishTest(testId: number) {
+    return this.http.post<FinishTestResultDto>(
+      `${this.baseUrl}/${testId}/finish`,
+      {},
+      { withCredentials: true }
+    );
+  }
 
 
   addTest(test: Test) {
@@ -258,13 +276,20 @@ export interface UserTest {
   finishedAt: Date;
   score: number;
   isFinished: boolean;
+  isPassed: boolean;
 }
 
 export interface UserTestDto {
+  status: string;
   userTestId: number;
-  startedAt: string;
+  startedAt: Date;
   isFinished: boolean;
-  answeredQuestionIds: number[];
+  answers: UserAnswerDto[];
+}
+
+export interface UserAnswerDto {
+  questionId: number;
+  selectedOptionIds: number[]
 }
 
 export interface SubmitAnswerDto {
@@ -274,8 +299,20 @@ export interface SubmitAnswerDto {
 }
 
 export interface SubmitAnswerResult {
-  isCorrect: boolean;
+  score: number;
   answeredQuestions: number;
+}
+
+export interface StartTestResponseDto {
+  userTestId: number;
+  answeredQuestionIds: number[];
+  nextQuestion: Question | null;
+}
+
+export interface FinishTestResultDto {
+  score: number;
+  maxScore: number;
+  isPassed: boolean;
 }
 
 export interface TestType {

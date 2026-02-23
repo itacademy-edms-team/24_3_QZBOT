@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { TestComponent } from '../tests/tests.component';
 import { TestService, Test, Question, Option } from '../../services/test.service';
 import { AuthService } from '../../services/auth.service';
+import { Router, ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-tests-list',
@@ -10,10 +11,13 @@ import { AuthService } from '../../services/auth.service';
 })
 export class TestsListComponent {
   tests: Test[] = [];
+  isModalStartOpen: boolean = false;
+  selectedTest: Test | null = null;
 
   constructor(
     private testService: TestService,
     private authService: AuthService,
+    private router: Router,
   ) { }
 
   ngOnInit() {
@@ -34,5 +38,27 @@ export class TestsListComponent {
         }
       })
     }
+  }
+
+  checkStart(test: Test) {
+    this.testService.checkStart(test.id).subscribe({
+      next: (data) => {
+        if (data) {
+          this.start(test);
+        } else {
+          this.router.navigate(['/tests', test.id])
+        }
+      }
+    })
+  }
+
+  start(test: Test) {
+    this.selectedTest = test;
+    this.isModalStartOpen = true;
+  }
+
+  closeModal() {
+    this.isModalStartOpen = false;
+    this.selectedTest = null;
   }
 }

@@ -16,7 +16,7 @@ namespace WebTests.Models
 
         public DateTime StartedAt { get; set; }
         public DateTime? FinishedAt { get; set; }
-        public int Score { get; set; }
+        public double Score { get; set; }
         public bool IsFinished { get; set; } = false;
         public bool IsPassed { get; set; } = false;
         public ICollection<UserTestAnswer> Answers { get; set; }
