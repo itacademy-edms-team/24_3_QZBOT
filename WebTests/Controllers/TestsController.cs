@@ -80,7 +80,7 @@ namespace WebTests.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var tests = await _context.UserTests
-                .Where(ut => ut.UserId == userId && ut.IsFinished == false)
+                .Where(ut => ut.UserId == userId && ut.IsFinished == true)
                 .Include(ut => ut.Test)
                     .ThenInclude(q => q.Questions)
                 .ToListAsync();
