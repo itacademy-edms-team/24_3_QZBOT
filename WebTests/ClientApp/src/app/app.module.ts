@@ -18,6 +18,7 @@ import { LoginComponent } from './auth/login/login.component';
 import { RegisterComponent } from './auth/register/register.component';
 import { authGuard } from './auth/auth.guard';
 import { MyTestsComponent } from './tests/my-tests/my-tests.component';
+import { ResultsComponent } from './results/results.component';
 
 @NgModule({
   declarations: [
@@ -33,7 +34,8 @@ import { MyTestsComponent } from './tests/my-tests/my-tests.component';
     ProfileComponent,
     LoginComponent,
     RegisterComponent,
-    MyTestsComponent
+    MyTestsComponent,
+    ResultsComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
@@ -55,7 +57,9 @@ import { MyTestsComponent } from './tests/my-tests/my-tests.component';
       { path: 'profile', redirectTo: '/profile/me', pathMatch: 'full' },
       { path: 'profile/:name', component: ProfileComponent, canActivate: [authGuard] },
 
-      { path: 'my-tests', component: MyTestsComponent, canActivate: [authGuard] }
+      { path: 'my-tests', component: MyTestsComponent, canActivate: [authGuard] },
+
+      { path: 'results', component: ResultsComponent, canActivate: [authGuard] }
     ]),
     AppRoutingModule
   ],
