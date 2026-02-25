@@ -332,7 +332,7 @@ namespace WebTests.Controllers
             if (activeAttempt == null && finishedAttempt == null)
                 return Ok(true);
 
-            return Ok(false);
+            return Ok(false); // true - начинаем тест с нуля
         }
 
         [Authorize]
@@ -575,8 +575,8 @@ namespace WebTests.Controllers
         }
 
         [Authorize]
-        [HttpGet("{testId}/attempt")]
-        public async Task<IActionResult> GetAttempt(int testId)
+        [HttpGet("{testId}/attempts")]
+        public async Task<IActionResult> GetAttempts(int testId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -590,10 +590,12 @@ namespace WebTests.Controllers
             if (test == null)
                 return NotFound();
 
-            var attempt = _context.UserTests
-                .FirstOrDefaultAsync(x => x.UserId == userId && x.TestId == testId && !x.IsFinished);
+            var attempts = await _context.UserTests
+                .Where(x => x.UserId == userId && x.TestId == testId)
+                .Include(t => t.Test)
+                .ToListAsync();
 
-            return Ok(attempt);
+            return Ok(attempts);
         }
 
         [Authorize]
