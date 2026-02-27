@@ -100,12 +100,12 @@
 </div>
 
 <ng-template #no_questions>
-  <h3 class="text-center text-xl text-gray-500 py-10">Тест не найден</h3>
+  <h3 class="text-center text-xl text-gray-500 py-[100px]">Тест не найден</h3>
 </ng-template>
 
 
 <ng-template #no_auth>
-  <h3 class="text-center text-xl text-gray-500 py-10">Тест не найден</h3>
+  <h3 class="text-center text-xl text-gray-500 py-[100px]">Тест не найден</h3>
 </ng-template>
 
 <div *ngIf="this.mode.showAfterEach && isModalAnswerOpen"
@@ -152,7 +152,7 @@
   </div>
 </div>
 
-<div *ngIf="isModalAnswerOpen"
+<!--<div *ngIf="isModalAnswerOpen"
      class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">
 
   <div class="bg-white p-6 rounded-xl shadow-xl w-80">
@@ -164,7 +164,7 @@
       Ок
     </button>
   </div>
-</div>
+</div>-->
 
 <div *ngIf="isModalTryOpen"
      class="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-start pt-20 z-50">

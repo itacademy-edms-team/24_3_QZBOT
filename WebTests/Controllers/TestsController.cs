@@ -80,7 +80,7 @@ namespace WebTests.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var tests = await _context.UserTests
-                .Where(ut => ut.UserId == userId && ut.IsFinished == false)
+                .Where(ut => ut.UserId == userId && ut.IsFinished == true)
                 .Include(ut => ut.Test)
                     .ThenInclude(q => q.Questions)
                 .ToListAsync();
@@ -177,6 +177,7 @@ namespace WebTests.Controllers
                 return Ok(true);
             }
         }
+
 
         [HttpPost("check")]
         public IActionResult CheckAnswer([FromBody] AnswerCheckDto dto)
@@ -330,9 +331,20 @@ namespace WebTests.Controllers
                 .FirstOrDefaultAsync(t => t.TestId == testId && t.UserId == userId && t.IsFinished);
 
             if (activeAttempt == null && finishedAttempt == null)
-                return Ok(true);
+                return Ok("new test");
+            else if (activeAttempt != null && finishedAttempt == null)
+                return Ok("continue test");
+            else if (activeAttempt == null && finishedAttempt != null)
+                return Ok("result");
+            else
+                return BadRequest();
 
-            return Ok(false);
+            //if (activeAttempt != null) // true - переход к тесту, false - к итогам
+            //    return Ok(true);
+            //else if (activeAttempt == null && finishedAttempt == null)
+            //    return Ok(true);
+            //else
+            //    return Ok(false);
         }
 
         [Authorize]
@@ -575,8 +587,8 @@ namespace WebTests.Controllers
         }
 
         [Authorize]
-        [HttpGet("{testId}/attempt")]
-        public async Task<IActionResult> GetAttempt(int testId)
+        [HttpGet("{testId}/attempts")]
+        public async Task<IActionResult> GetAttempts(int testId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -590,10 +602,15 @@ namespace WebTests.Controllers
             if (test == null)
                 return NotFound();
 
-            var attempt = _context.UserTests
-                .FirstOrDefaultAsync(x => x.UserId == userId && x.TestId == testId && !x.IsFinished);
+            var attempts = await _context.UserTests
+                .Where(x => x.UserId == userId && x.TestId == testId)
+                .Include(t => t.Test)
+                    .ThenInclude(q => q.Questions)
+                .Include(t => t.Test)
+                    .ThenInclude(t => t.Types)
+                .ToListAsync();
 
-            return Ok(attempt);
+            return Ok(attempts);
         }
 
         [Authorize]

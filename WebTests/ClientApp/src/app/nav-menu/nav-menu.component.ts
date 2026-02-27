@@ -18,6 +18,12 @@ export class NavMenuComponent implements OnInit {
 
   ngOnInit() {
     this.currentUserUsername = this.authService.currentUserUsername || 'Ошибка';
+
+    this.authService.currentUser$.subscribe({
+      next: (data) => {
+        this.currentUserUsername = data || '';
+      }
+    })
   }
 
   collapse() {
