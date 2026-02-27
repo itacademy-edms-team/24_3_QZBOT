@@ -82,10 +82,10 @@ export class TestService {
 
 
   checkStart(testId: number) {
-    return this.http.post<boolean>(
+    return this.http.post(
       `${this.baseUrl}/${testId}/checkstart`,
       {},
-      { withCredentials: true }
+      { withCredentials: true, responseType: 'text' }
     );
   }
 

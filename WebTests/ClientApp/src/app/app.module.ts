@@ -59,7 +59,7 @@ import { ResultsComponent } from './results/results.component';
 
       { path: 'my-tests', component: MyTestsComponent, canActivate: [authGuard] },
 
-      { path: 'results', component: ResultsComponent, canActivate: [authGuard] }
+      { path: 'results/:id', component: ResultsComponent, canActivate: [authGuard] }
     ]),
     AppRoutingModule
   ],

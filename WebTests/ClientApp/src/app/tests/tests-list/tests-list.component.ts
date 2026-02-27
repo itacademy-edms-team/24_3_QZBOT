@@ -43,10 +43,12 @@ export class TestsListComponent {
   checkStart(test: Test) {
     this.testService.checkStart(test.id).subscribe({
       next: (data) => {
-        if (data) {
+        if (data == "new test") {
           this.start(test);
-        } else {
+        } else if (data == "continue test") {
           this.router.navigate(['/tests', test.id])
+        } else if (data == "result") {
+          this.router.navigate(['/results', test.id])
         }
       }
     })

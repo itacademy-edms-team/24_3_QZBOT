@@ -178,6 +178,7 @@ namespace WebTests.Controllers
             }
         }
 
+
         [HttpPost("check")]
         public IActionResult CheckAnswer([FromBody] AnswerCheckDto dto)
         {
@@ -330,9 +331,20 @@ namespace WebTests.Controllers
                 .FirstOrDefaultAsync(t => t.TestId == testId && t.UserId == userId && t.IsFinished);
 
             if (activeAttempt == null && finishedAttempt == null)
-                return Ok(true);
+                return Ok("new test");
+            else if (activeAttempt != null && finishedAttempt == null)
+                return Ok("continue test");
+            else if (activeAttempt == null && finishedAttempt != null)
+                return Ok("result");
+            else
+                return BadRequest();
 
-            return Ok(false); // true - начинаем тест с нуля
+            //if (activeAttempt != null) // true - переход к тесту, false - к итогам
+            //    return Ok(true);
+            //else if (activeAttempt == null && finishedAttempt == null)
+            //    return Ok(true);
+            //else
+            //    return Ok(false);
         }
 
         [Authorize]
@@ -593,6 +605,9 @@ namespace WebTests.Controllers
             var attempts = await _context.UserTests
                 .Where(x => x.UserId == userId && x.TestId == testId)
                 .Include(t => t.Test)
+                    .ThenInclude(q => q.Questions)
+                .Include(t => t.Test)
+                    .ThenInclude(t => t.Types)
                 .ToListAsync();
 
             return Ok(attempts);
