@@ -16,7 +16,7 @@
                 class="block px-5 py-4 border border-gray-300 rounded-xl shadow-sm
                       hover:border-green-600 hover:bg-green-50
                       transition-colors duration-300
-                      text-lg font-medium"> 
+                      text-lg font-medium cursor-pointer"> 
           {{ test.title }}
         </a>
       </li>
@@ -37,7 +37,7 @@
     <p class="mb-4 text-lg text-center">Начать тест "{{ selectedTest.title }}"?</p>
 
     <a [routerLink]="['/tests', selectedTest.id]"
-       class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+       class="block w-full px-4 py-2 bg-green-600 text-center text-white rounded-lg hover:bg-green-700 transition">
       Подтвердить
     </a>
     <button (click)="closeModal()"

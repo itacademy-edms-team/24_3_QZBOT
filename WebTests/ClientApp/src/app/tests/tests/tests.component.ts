@@ -103,14 +103,24 @@ export class TestComponent implements OnInit {
               next: (res) => {
                 this.userTestId = res.userTestId;
 
-                if (res.status == "Finished") {
-                  this.router.navigate(['/tests']) // здесь будет страница итогов
-                  return;
-                }
+                //if (res.status == "Finished") {
+                //  this.router.navigate(['/results', this.test.id]) // здесь будет страница итогов
+                //  return;
+                //}
 
-                else if (res.status == "Active") {
+                if (res.status == "Active") {
                   this.isModalTryOpen = true;
-                  this.textModal = `Продолжение попытки от ${res.startedAt}`
+
+                  const date = new Date(res.startedAt);
+                  const formattedDate = date.toLocaleDateString('ru', {
+                    timeZone: 'Etc/GMT-14',
+                    day: 'numeric',
+                    month: 'long',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  });
+
+                  this.textModal = `Продолжение попытки от ${formattedDate}`
                 }
 
                 this.savedAnswers = {};
@@ -327,7 +337,7 @@ export class TestComponent implements OnInit {
 
   closeFinishModal() {
     this.isFinishModalOpen = false;
-    this.router.navigate(['/tests'])
+    this.router.navigate(['/results', this.test.id])
   }
 
 

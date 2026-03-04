@@ -82,10 +82,10 @@ export class TestService {
 
 
   checkStart(testId: number) {
-    return this.http.post<boolean>(
+    return this.http.post(
       `${this.baseUrl}/${testId}/checkstart`,
       {},
-      { withCredentials: true }
+      { withCredentials: true, responseType: 'text' }
     );
   }
 
@@ -109,14 +109,23 @@ export class TestService {
   }
 
 
+
+  getAttempts(testId: number) {
+    return this.http.get<UserTest[]>(`${this.baseUrl}/${testId}/attempts`, { withCredentials: true });
+  }
+
+
+
   addTest(test: Test) {
     return this.http.post<boolean>(`${this.baseUrl}/add`, test, { withCredentials: true });
   }
 
 
+
   deleteTest(id: number) {
     return this.http.post(`${this.baseUrl}/${id}/delete`, {}, { withCredentials: true });
   }
+
 
 
   editTest(id: number, test: Test) {
