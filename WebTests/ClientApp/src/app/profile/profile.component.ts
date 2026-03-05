@@ -25,9 +25,14 @@ export class ProfileComponent implements OnInit {
       const name = params.get('name');
 
       if (name === "me") {
-        const currentUser = this.authService.currentUserUsername;
-        if (currentUser) {
-          this.router.navigate(['/profile', currentUser], { replaceUrl: true });
+        this.authService.currentUser$.subscribe({
+          next: (data) => {
+            this.username = data || '';
+          }
+        })
+
+        if (this.username) {
+          this.router.navigate(['/profile', this.username], { replaceUrl: true });
         } else {
           this.router.navigate(['/login']);
         }

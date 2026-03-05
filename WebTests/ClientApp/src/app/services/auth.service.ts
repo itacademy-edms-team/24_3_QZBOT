@@ -54,7 +54,6 @@ export class AuthService {
     ).pipe(
       map(response => {
         this.currentUserSubject.next(response.username);
-        localStorage.setItem('username', response.username);
         this.router.navigate(['/profile', response.username]);
 
         return response;
@@ -69,12 +68,10 @@ export class AuthService {
     ).pipe(
       tap(res => {
         this.currentUserSubject.next(res.username);
-        localStorage.setItem('username', res.username);
       }),
       map(() => true),
       catchError(() => {
         this.currentUserSubject.next(null);
-        localStorage.removeItem('username');
         return of(false);
       })
     )
@@ -87,16 +84,12 @@ export class AuthService {
       { withCredentials: true }
     ).subscribe(() => {
       this.currentUserIdCache = null;
-      localStorage.removeItem('username');
       this.currentUserSubject.next(null);
       this.router.navigate(['/login']);
     });
   }
 
 
-  get currentUser() {
-    return this.currentUserSubject.value;
-  }
 
   get isAuthenticated(): boolean {
     return !!this.currentUserSubject.value;
@@ -117,9 +110,5 @@ export class AuthService {
       map(res => res.id),
       catchError(() => of(null))
     );
-  }
-
-  get currentUserUsername(): string | null { // разобраться с этим методом
-    return localStorage.getItem('username');
   }
 }
