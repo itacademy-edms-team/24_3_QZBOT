@@ -9,6 +9,8 @@ import { Test, TestService, UserTest } from '../services/test.service';
   styleUrls: ['./profile.component.css']
 })
 export class ProfileComponent implements OnInit {
+  is_owner: boolean = false;
+  name_from_url: string | null = '';
   username: string = '';
   history: UserTest[] = [];
   created_tests: Test[] = [];
@@ -22,32 +24,44 @@ export class ProfileComponent implements OnInit {
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
-      const name = params.get('name');
+      this.name_from_url = params.get('name');
 
-      if (name === "me") {
+      if (this.name_from_url === "me") {
         this.authService.currentUser$.subscribe({
           next: (data) => {
             this.username = data || '';
           }
         })
 
-        if (this.username) {
-          this.router.navigate(['/profile', this.username], { replaceUrl: true });
-        } else {
+        if (this.username == '') {
           this.router.navigate(['/login']);
+          this.is_owner = false;
+        } else {
+          this.is_owner = true;
         }
+
       } else {
-        this.username = name || 'unknown';
+        this.authService.currentUser$.subscribe({
+          next: (data) => {
+            this.username = data || '';
+          }
+        })
+
+        if (this.username == this.name_from_url) {
+          this.is_owner = true;
+        } else {
+          this.is_owner = false;
+        }
       }
     });
 
-    this.testService.getPassedTests().subscribe({
+    this.testService.getPassedTestsByUsername(this.name_from_url).subscribe({
       next: (data) => {
         this.history = data;
       }
     })
 
-    this.testService.getMyTests().subscribe({
+    this.testService.getMyTestsByUsername(this.name_from_url).subscribe({
       next: (data) => {
         this.created_tests = data;
       }
