@@ -1,4 +1,4 @@
-<div class="pt-20 px-6">
+<div *ngIf="is_user_exists;else no_exists" class="pt-20 px-6">
 
   <div class="flex max-w-5xl mx-auto bg-gray-200 border border-gray-400 rounded-3xl p-5 m-5 mt-0">
     <div class="w-[70px] h-[70px] bg-white rounded-full mr-5 border-2 border-gray-200"></div>
@@ -98,6 +98,12 @@
   </div>
 
 </div>
+
+<ng-template #no_exists>
+  <div class="pt-[100px] px-6">
+    <p class="text-center text-2xl">Пользователь "{{ name_from_url }}" не найден</p>
+  </div>
+</ng-template>
 
 <ng-template #no_tests>
   <p class="text-center">Пусто</p>

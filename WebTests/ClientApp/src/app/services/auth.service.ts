@@ -89,6 +89,13 @@ export class AuthService {
     });
   }
 
+  isUserExist(username: string) {
+    return this.http.get(
+      `${this.apiUrl}/${username}/exist`,
+      { withCredentials: true }
+    )
+  }
+
 
 
   get isAuthenticated(): boolean {
