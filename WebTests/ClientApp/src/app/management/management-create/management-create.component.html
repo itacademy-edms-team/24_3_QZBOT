@@ -179,12 +179,14 @@
   <div class="mt-10">
     <button type="button"
             (click)="json_add = true"
+            [disabled]="is_editing_locked"
             class="px-5 py-3 bg-blue-500 text-white rounded-lg shadow hover:bg-blue-600">
       Добавить с помощью JSON
     </button>
 
     <div *ngIf="json_add" class="mt-6">
       <textarea [(ngModel)]="json_input"
+                [disabled]="is_editing_locked"
                 class="w-full h-60 p-4 border rounded-lg shadow focus:outline-none focus:ring-2 focus:ring-blue-400"
                 placeholder='{
     "title": "Название",
@@ -207,6 +209,7 @@
 
       <button type="button"
               (click)="loadFromJson()"
+              [disabled]="is_editing_locked"
               class="mt-4 px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
         Импортировать JSON
       </button>
