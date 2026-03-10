@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { TestService, Test } from '../../../services/test.service';
 import { ActivatedRoute, Router } from '@angular/router';
+import { CdkDrag } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-management-edit-list',

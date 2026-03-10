@@ -19,6 +19,7 @@ import { RegisterComponent } from './auth/register/register.component';
 import { authGuard } from './auth/auth.guard';
 import { MyTestsComponent } from './tests/my-tests/my-tests.component';
 import { ResultsComponent } from './results/results.component';
+import { CdkDrag, DragDropModule } from '@angular/cdk/drag-drop';
 
 @NgModule({
   declarations: [
@@ -38,6 +39,7 @@ import { ResultsComponent } from './results/results.component';
     ResultsComponent
   ],
   imports: [
+    DragDropModule,
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
     HttpClientModule,
     FormsModule,
@@ -55,7 +57,7 @@ import { ResultsComponent } from './results/results.component';
       { path: 'register', component: RegisterComponent },
 
       { path: 'profile', redirectTo: '/profile/me', pathMatch: 'full' },
-      { path: 'profile/:name', component: ProfileComponent, canActivate: [authGuard] },
+      { path: 'profile/:name', component: ProfileComponent },
 
       { path: 'my-tests', component: MyTestsComponent, canActivate: [authGuard] },
 

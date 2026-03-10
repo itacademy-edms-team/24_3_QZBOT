@@ -31,6 +31,18 @@ export class TestService {
 
 
 
+  getMyTestsByUsername(username: string | null) {
+    return this.http.get<Test[]>(`${this.baseUrl}/my/${username}`, { withCredentials: true });
+  }
+
+
+
+  getPassedTestsByUsername(username: string | null) {
+    return this.http.get<UserTest[]>(`${this.baseUrl}/passed/${username}`, { withCredentials: true });
+  }
+
+
+
   getMyTests() {
     return this.http.get<Test[]>(`${this.baseUrl}/my`, { withCredentials: true });
   }
@@ -40,7 +52,6 @@ export class TestService {
   getPassedTests() {
     return this.http.get<UserTest[]>(`${this.baseUrl}/passed`, { withCredentials: true });
   }
-
 
 
   getPublishedTests() {
