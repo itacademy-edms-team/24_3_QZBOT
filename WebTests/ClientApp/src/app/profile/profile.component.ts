@@ -64,19 +64,19 @@ export class ProfileComponent implements OnInit {
           this.is_owner = false;
         }
       }
+
+      this.testService.getPassedTestsByUsername(this.name_from_url).subscribe({
+        next: (data) => {
+          this.history = data;
+        }
+      })
+
+      this.testService.getMyTestsByUsername(this.name_from_url).subscribe({
+        next: (data) => {
+          this.created_tests = data;
+        }
+      })
     });
-
-    this.testService.getPassedTestsByUsername(this.name_from_url).subscribe({
-      next: (data) => {
-        this.history = data;
-      }
-    })
-
-    this.testService.getMyTestsByUsername(this.name_from_url).subscribe({
-      next: (data) => {
-        this.created_tests = data;
-      }
-    })
   }
 
   onLogout() {
