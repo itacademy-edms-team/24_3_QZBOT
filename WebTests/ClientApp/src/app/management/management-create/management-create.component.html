@@ -44,13 +44,48 @@
 
 
   <!-- ВОПРОСЫ -->
-  <div class="space-y-8 shadow-md rounded-xl">
+  <div class="space-y-8 shadow-md rounded-xl"
+       cdkDropList
+       cdkDropListOrientation="vertical"
+       [cdkDropListDisabled]="is_editing_locked || test.questions.length < 2"
+       [cdkDropListData]="test.questions"
+       (cdkDropListDropped)="dropQuestion($event)">
 
     <div *ngFor="let question of test.questions; let i = index"
+         cdkDrag
          class="bg-white border rounded-xl shadow-sm p-6">
-      <h3 class="text-2xl font-semibold text-gray-900 mb-4">
-        Вопрос {{ i + 1 }}
-      </h3>
+
+      <div class="flex justify-between items-start mb-4">
+
+        <h3 class="text-2xl font-semibold text-gray-900 mb-4">
+          Вопрос {{ i + 1 }}
+        </h3>
+
+        <div cdkDragHandle
+             class="cursor-move text-gray-400 hover:text-gray-600 p-1">
+
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="w-6 h-6"
+               fill="currentColor"
+               viewBox="0 0 24 24">
+
+            <circle cx="5" cy="7" r="1.5" />
+            <circle cx="5" cy="12" r="1.5" />
+            <circle cx="5" cy="17" r="1.5" />
+
+            <circle cx="12" cy="7" r="1.5" />
+            <circle cx="12" cy="12" r="1.5" />
+            <circle cx="12" cy="17" r="1.5" />
+
+            <circle cx="19" cy="7" r="1.5" />
+            <circle cx="19" cy="12" r="1.5" />
+            <circle cx="19" cy="17" r="1.5" />
+
+          </svg>
+
+        </div>
+
+      </div>
 
       <label class="flex items-center gap-2 mb-4 text-gray-700">
         <input type="checkbox"

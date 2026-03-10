@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { TestService, Test, Question, Option, TestType } from '../../../services/test.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
+import { CdkDrag, CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-management-edit',
@@ -256,5 +257,10 @@ export class ManagementEditComponent implements OnInit {
         }
       }
     })
+  }
+
+
+  dropQuestion(event: CdkDragDrop<typeof this.edited_test.questions>) {
+    moveItemInArray(this.edited_test.questions, event.previousIndex, event.currentIndex);
   }
 }

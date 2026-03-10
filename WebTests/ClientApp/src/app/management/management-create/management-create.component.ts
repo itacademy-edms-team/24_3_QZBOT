@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { TestService, Test, Question, TestType } from '../../services/test.service';
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 
 @Component({
   selector: 'app-management-create',
@@ -249,5 +250,9 @@ export class ManagementCreateComponent {
       // JSON синтаксически неверный
       this.json_error.push("Ошибка: невалидный JSON");
     }
+  }
+
+  dropQuestion(event: CdkDragDrop<typeof this.test.questions>) {
+    moveItemInArray(this.test.questions, event.previousIndex, event.currentIndex);
   }
 }
