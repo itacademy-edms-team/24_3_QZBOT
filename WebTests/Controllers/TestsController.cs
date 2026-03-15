@@ -91,10 +91,15 @@ namespace WebTests.Controllers
         public async Task<IActionResult> GetPassedTests(string username)
         {
             var user = _context.Users
-                .FirstOrDefaultAsync(u => u.UserName == username).Result;
+                .FirstOrDefaultAsync(u => u.UserName == username);
+
+            if (user == null)
+                return NotFound();
+
+            var _user = user.Result;
 
             var tests = await _context.UserTests
-                .Where(ut => ut.UserId == user.Id && ut.IsFinished == true)
+                .Where(ut => ut.UserId == _user.Id && ut.IsFinished == true)
                 .Include(ut => ut.Test)
                     .ThenInclude(q => q.Questions)
                 .ToListAsync();
