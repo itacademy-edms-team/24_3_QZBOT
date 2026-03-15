@@ -42,6 +42,9 @@ namespace WebTests.Controllers
                 .FirstOrDefaultAsync(u => u.UserName == username);
             string userId = user?.Id;
 
+            if (userId == null)
+                return NotFound();
+
             var tests = _context.Tests
                 .Where(t => t.CreatorId == userId && t.isDeleted == false)
                 .ToList();
