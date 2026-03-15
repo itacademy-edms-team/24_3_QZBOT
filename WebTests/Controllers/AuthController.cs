@@ -102,6 +102,16 @@ namespace WebTests.Controllers
             });
         }
 
+        [HttpGet("{username}/exist")]
+        public async Task<IActionResult> IsUserExists(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+
+            if (user != null)
+                return Ok(true);
+            else return Ok(false);
+        }
+
         public string GenerateJwtToken(IdentityUser user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();

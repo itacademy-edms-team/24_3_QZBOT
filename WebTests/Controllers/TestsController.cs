@@ -35,8 +35,22 @@ namespace WebTests.Controllers
             return Ok(tests);
         }
 
-        [HttpGet("my")]
+        [HttpGet("my/{username}")]
+        public async Task<IActionResult> GetMyTests(string username)
+        {
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserName == username);
+            string userId = user?.Id;
+
+            var tests = _context.Tests
+                .Where(t => t.CreatorId == userId && t.isDeleted == false)
+                .ToList();
+
+            return Ok(tests);
+        }
+
         [Authorize]
+        [HttpGet("my")]
         public IActionResult GetMyTests()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -73,7 +87,21 @@ namespace WebTests.Controllers
             return Ok(tests);
         }
 
-        [Authorize]
+        [HttpGet("passed/{username}")]
+        public async Task<IActionResult> GetPassedTests(string username)
+        {
+            var user = _context.Users
+                .FirstOrDefaultAsync(u => u.UserName == username).Result;
+
+            var tests = await _context.UserTests
+                .Where(ut => ut.UserId == user.Id && ut.IsFinished == true)
+                .Include(ut => ut.Test)
+                    .ThenInclude(q => q.Questions)
+                .ToListAsync();
+
+            return Ok(tests);
+        }
+
         [HttpGet("passed")]
         public async Task<IActionResult> GetPassedTests()
         {
