@@ -9,7 +9,7 @@ namespace WebTests.Models
         public int Id { get; set; }
 
         public string UserId { get; set; }
-        public IdentityUser User { get; set; }
+        public ApplicationUser User { get; set; }
 
         public int TestId { get; set; }
         public Test Test { get; set; }
