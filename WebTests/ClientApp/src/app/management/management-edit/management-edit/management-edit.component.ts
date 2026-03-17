@@ -263,4 +263,8 @@ export class ManagementEditComponent implements OnInit {
   dropQuestion(event: CdkDragDrop<typeof this.edited_test.questions>) {
     moveItemInArray(this.edited_test.questions, event.previousIndex, event.currentIndex);
   }
+
+  dropOption(event: CdkDragDrop<any[]>, questionIndex: number) {
+    moveItemInArray(this.edited_test.questions[questionIndex].options, event.previousIndex, event.currentIndex);
+  }
 }

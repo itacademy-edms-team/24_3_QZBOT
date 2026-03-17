@@ -44,7 +44,7 @@
 
   <!-- ВОПРОСЫ -->
   <div class="space-y-8 shadow-md rounded-xl"
-       cdkDropList
+       cdkDropList id="questions"
        cdkDropListOrientation="vertical"
        [cdkDropListDisabled]="is_editing_locked || edited_test.questions.length < 2"
        [cdkDropListData]="edited_test.questions"
@@ -102,9 +102,40 @@
              class="w-full p-3 border rounded-lg mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-400 transition" />
 
       <!-- Варианты -->
-      <ul class="space-y-3">
+      <ul class="space-y-3"
+          cdkDropList id="options"
+          cdkDropListOrientation="vertical"
+          [cdkDropListDisabled]="is_editing_locked || edited_test.questions.length < 2"
+          [cdkDropListData]="edited_test.questions[i].options"
+          (cdkDropListDropped)="dropOption($event, i)">
+
         <li *ngFor="let option of question.options; let j = index"
+            cdkDrag
             class="flex items-center gap-3">
+
+          <div cdkDragHandle
+               class="cursor-move text-gray-400 hover:text-gray-600 p-1">
+
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 class="w-6 h-6"
+                 fill="currentColor"
+                 viewBox="0 0 24 24">
+
+              <circle cx="5" cy="7" r="1.5" />
+              <circle cx="5" cy="12" r="1.5" />
+              <circle cx="5" cy="17" r="1.5" />
+
+              <circle cx="12" cy="7" r="1.5" />
+              <circle cx="12" cy="12" r="1.5" />
+              <circle cx="12" cy="17" r="1.5" />
+
+              <circle cx="19" cy="7" r="1.5" />
+              <circle cx="19" cy="12" r="1.5" />
+              <circle cx="19" cy="17" r="1.5" />
+
+            </svg>
+
+          </div>
 
           <input [type]="question.isMultiple ? 'checkbox' : 'radio'"
                  [name]="'correct_' + i"
