@@ -25,6 +25,16 @@ export interface MeResponse {
   username: string;
 }
 
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  phoneNumber: string;
+  avatarUrl: string;
+  birthDate: Date;
+  status: string;
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -96,6 +106,12 @@ export class AuthService {
     )
   }
 
+  getUserByUsername(username: string) {
+    return this.http.get<User>(
+      `${this.apiUrl}/get/${username}`,
+      { withCredentials: true }
+    )
+  }
 
 
   get isAuthenticated(): boolean {

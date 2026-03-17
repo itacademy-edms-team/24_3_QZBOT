@@ -113,6 +113,23 @@ namespace WebTests.Controllers
             else return Ok(false);
         }
 
+        [HttpGet("get/{username}")]
+        public async Task<IActionResult> GetUserByUsername(string username)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+            return Ok(new
+            {
+                id = user.Id,
+                username = user.UserName,
+                email = user.Email,
+                phoneNumber = user.PhoneNumber,
+                avatarUrl = user.AvatarUrl,
+                birthDate = user.BirthDate
+            });
+        }
+
         public string GenerateJwtToken(IdentityUser user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
