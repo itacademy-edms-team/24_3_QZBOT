@@ -1,7 +1,11 @@
 <div *ngIf="is_user_exists;else no_exists" class="pt-20 px-6">
 
   <div class="flex max-w-5xl mx-auto bg-gray-200 border border-gray-400 rounded-3xl p-5 m-5 mt-0">
-    <div class="w-[70px] h-[70px] bg-white rounded-full mr-5 border-2 border-gray-200"></div>
+    <div class="avatar-circle">
+      <img [src]="user.avatarUrl || 'assets/default-avatar.jpg'" alt="User Avatar"
+           class="user-avatar"/>
+    </div>
+    <!--<div class="w-[70px] h-[70px] bg-white rounded-full mr-5 border-2 border-gray-200"></div>-->
     <div>
       <h1 class="text-3xl font-bold text-gray-900">
         {{ name_from_url }}
