@@ -20,6 +20,7 @@ import { authGuard } from './auth/auth.guard';
 import { MyTestsComponent } from './tests/my-tests/my-tests.component';
 import { ResultsComponent } from './results/results.component';
 import { CdkDrag, DragDropModule } from '@angular/cdk/drag-drop';
+import { ProfileEditingComponent } from './profile-editing/profile-editing.component';
 
 @NgModule({
   declarations: [
@@ -36,7 +37,8 @@ import { CdkDrag, DragDropModule } from '@angular/cdk/drag-drop';
     LoginComponent,
     RegisterComponent,
     MyTestsComponent,
-    ResultsComponent
+    ResultsComponent,
+    ProfileEditingComponent
   ],
   imports: [
     DragDropModule,
@@ -58,6 +60,8 @@ import { CdkDrag, DragDropModule } from '@angular/cdk/drag-drop';
 
       { path: 'profile', redirectTo: '/profile/me', pathMatch: 'full' },
       { path: 'profile/:name', component: ProfileComponent },
+
+      { path: 'editprofile', component: ProfileEditingComponent, canActivate: [authGuard] },
 
       { path: 'my-tests', component: MyTestsComponent, canActivate: [authGuard] },
 
