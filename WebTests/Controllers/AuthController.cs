@@ -122,6 +122,7 @@ namespace WebTests.Controllers
             return Ok(new
             {
                 id = user.Id,
+                status = user.Status,
                 username = user.UserName,
                 email = user.Email,
                 phoneNumber = user.PhoneNumber,
