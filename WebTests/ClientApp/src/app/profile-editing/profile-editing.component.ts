@@ -33,6 +33,8 @@ export class ProfileEditingComponent implements OnInit {
   }
   editedFormattedBirthDate: Date = new Date();
 
+  selectedFile: File | null = null;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -48,7 +50,6 @@ export class ProfileEditingComponent implements OnInit {
         this.authService.getUserByUsername(this.username).subscribe({
           next: (data) => {
             this.user = data;
-            //this.formattedBirthDate = new Date(this.user.birthDate).toISOString().split(`T`)[0];
 
             this.edited_user = JSON.parse(JSON.stringify(this.user));
 
@@ -56,6 +57,23 @@ export class ProfileEditingComponent implements OnInit {
         })
       }
     })
+  }
+
+  onFileSelected(event: any) {
+    const file: File = event.target.files[0];
+    if (file) {
+      this.selectedFile = file;
+
+      const reader = new FileReader();
+      reader.onload = (e: any) => {
+        this.edited_user.avatarUrl = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  removeAvatar() {
+    this.edited_user.avatarUrl = '';
   }
 
   btnSaveChanges() {

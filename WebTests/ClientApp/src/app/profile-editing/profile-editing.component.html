@@ -4,6 +4,13 @@
       <div class="avatar-circle">
         <img [src]="edited_user.avatarUrl || 'avatars/default-avatar.jpg'" alt="User Avatar" class="user-avatar" />
       </div>
+      <div class="buttons">
+        <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none"/>
+
+        <button (click)="fileInput.click()" class="btn-upload">Загрузить</button>
+
+        <button *ngIf="edited_user.avatarUrl" (click)="removeAvatar()" class="btn-delete">Удалить</button>
+      </div>
       <div class="flex w-full">
         <p class="p-3">Статус: </p>
         <input type="text"
@@ -18,6 +25,7 @@
         <input type="date"
                name="birth-date"
                [ngModel]="edited_user.birthDate | date:'yyyy-MM-dd'"
+               (ngModelChange)="edited_user.birthDate = $event"
                class=" p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"/>
       </div>
       <div class="mt-8">
