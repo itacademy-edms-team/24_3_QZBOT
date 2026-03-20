@@ -7,6 +7,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.RegularExpressions;
+using WebTests.Data;
+using WebTests.DTOs;
 using WebTests.Models;
 
 namespace WebTests.Controllers
@@ -17,11 +19,13 @@ namespace WebTests.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly AppDbContext _context; 
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration)
+        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration, AppDbContext context)
         {
             _userManager = userManager;
             _configuration = configuration;
+            _context = context;
         }
 
         [HttpPost("register")]
@@ -115,7 +119,7 @@ namespace WebTests.Controllers
 
         [HttpGet("get/{username}")]
         public async Task<IActionResult> GetUserByUsername(string username)
-        {
+       {
             var user = await _userManager.FindByNameAsync(username);
             if (user == null)
                 return NotFound(new { message = "User not found" });
@@ -129,6 +133,24 @@ namespace WebTests.Controllers
                 avatarUrl = user.AvatarUrl,
                 birthDate = user.BirthDate
             });
+        }
+
+        [Authorize]
+        [HttpPost("edit/{username}")]
+        public async Task<IActionResult> EditUserProfile(string username, [FromBody] UserDto dto)
+        {
+            var user = await _userManager.FindByNameAsync(username);
+            if (user == null)
+                return NotFound(new { message = "User not found" });
+
+            user.AvatarUrl = dto.AvatarUrl;
+            user.PhoneNumber = dto.PhoneNumber;
+            user.Status = dto.Status;
+            user.BirthDate = dto.BirthDate;
+
+            await _userManager.UpdateAsync(user);
+
+            return Ok(true);
         }
 
         public string GenerateJwtToken(IdentityUser user)
@@ -151,37 +173,58 @@ namespace WebTests.Controllers
             return tokenHandler.WriteToken(token);
         }
 
-        [HttpPost("upload-avatar")]
-        public async Task<IActionResult> UploadAvatar(IFormFile file)
-        {
-            if (file == null || file.Length == 0)
-                return BadRequest(new { message = "No file uploaded" });
+        //[Authorize]
+        //[HttpPost("upload-avatar")]
+        //public async Task<IActionResult> UploadAvatar(IFormFile file)
+        //{
+        //    if (file == null || file.Length == 0)
+        //        return BadRequest(new { message = "No file uploaded" });
 
-            var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-            var extension = Path.GetExtension(file.FileName).ToLower();
+        //    var allowedExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
+        //    var extension = Path.GetExtension(file.FileName).ToLower();
 
-            if (!allowedExtensions.Contains(extension))
-                return BadRequest(new { message = "Invalid file type" });
+        //    if (!allowedExtensions.Contains(extension))
+        //        return BadRequest(new { message = "Invalid file type" });
 
-            var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars");
+        //    var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "avatars");
 
-            if (!Directory.Exists(uploadsFolder))
-                Directory.CreateDirectory(uploadsFolder);
+        //    if (!Directory.Exists(uploadsFolder))
+        //        Directory.CreateDirectory(uploadsFolder);
 
-            var uniqueFileName = $"{Guid.NewGuid()}{extension}";
-            var filePath = Path.Combine(uploadsFolder, uniqueFileName);
+        //    var uniqueFileName = $"{Guid.NewGuid()}{extension}";
+        //    var filePath = Path.Combine(uploadsFolder, uniqueFileName);
 
-            using (var stream = new FileStream(filePath, FileMode.Create))
-            {
-                await file.CopyToAsync(stream);
-            }
+        //    using (var stream = new FileStream(filePath, FileMode.Create))
+        //    {
+        //        await file.CopyToAsync(stream);
+        //    }
 
-            var user = await _userManager.GetUserAsync(User);
-            user.AvatarUrl = $"/avatars/{uniqueFileName}";
-            await _userManager.UpdateAsync(user);
+        //    var user = await _userManager.GetUserAsync(User);
+        //    user.AvatarUrl = $"/avatars/{uniqueFileName}";
+        //    await _userManager.UpdateAsync(user);
 
-            return Ok(new { url = user.AvatarUrl });
-        }
+        //    return Ok(new { url = user.AvatarUrl });
+        //}
+
+        //[Authorize]
+        //[HttpPost("delete-avatar")]
+        //public async Task<IActionResult> DeleteAvatar()
+        //{
+        //    var user = await _userManager.GetUserAsync(User);
+        //    if (user == null) 
+        //        return NotFound();
+        //    if (!string.IsNullOrEmpty(user.AvatarUrl))
+        //    {
+        //        var filePath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.AvatarUrl.TrimStart('/'));
+        //        if (System.IO.File.Exists(filePath))
+        //            System.IO.File.Delete(filePath);
+
+        //        user.AvatarUrl = null;
+        //        await _userManager.UpdateAsync(user);
+        //    }
+
+        //    return Ok();
+        //}
     }
 
     public class RegisterModel

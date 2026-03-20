@@ -97,4 +97,8 @@ export class ProfileComponent implements OnInit {
   onLogout() {
     this.authService.logout();
   }
+
+  startEdit(user: User) {
+    this.router.navigate(['/editprofile', user])
+  }
 }
