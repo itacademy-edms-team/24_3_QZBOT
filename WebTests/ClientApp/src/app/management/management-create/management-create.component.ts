@@ -255,4 +255,8 @@ export class ManagementCreateComponent {
   dropQuestion(event: CdkDragDrop<typeof this.test.questions>) {
     moveItemInArray(this.test.questions, event.previousIndex, event.currentIndex);
   }
+
+  dropOption(event: CdkDragDrop<any[]>, questionIndex: number) {
+    moveItemInArray(this.test.questions[questionIndex].options, event.previousIndex, event.currentIndex);
+  }
 }

@@ -25,6 +25,16 @@ export interface MeResponse {
   username: string;
 }
 
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  phoneNumber: string;
+  avatarUrl: string;
+  birthDate: Date;
+  status: string;
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -96,6 +106,32 @@ export class AuthService {
     )
   }
 
+  getUserByUsername(username: string) {
+    return this.http.get<User>(
+      `${this.apiUrl}/get/${username}`,
+      { withCredentials: true }
+    )
+  }
+
+  editUserProfile(username: string, updated: User) {
+    return this.http.post(
+      `${this.apiUrl}/edit/${username}`,
+      updated,
+      { withCredentials: true }
+    )
+  }
+
+  //uploadAvatar(formData: FormData) {
+  //  return this.http.post<any>(
+  //    `${this.apiUrl}/upload-avatar`,
+  //    formData,
+  //    { withCredentials: true }
+  //  )
+  //}
+
+  //deleteAvatar() {
+  //  return this.http.delete(`${this.apiUrl}/delete-avatar`, { withCredentials: true })
+  //}
 
 
   get isAuthenticated(): boolean {

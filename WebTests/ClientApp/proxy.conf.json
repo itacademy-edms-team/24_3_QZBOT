@@ -1,0 +1,8 @@
+{
+  "/avatars": {
+    "target": "https://localhost:44356",
+    "secure": false,
+    "logLevel": "debug",
+    "changeOrigin": true
+  }
+}

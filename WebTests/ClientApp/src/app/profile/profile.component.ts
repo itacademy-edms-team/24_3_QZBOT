@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../services/auth.service';
+import { AuthService, User } from '../services/auth.service';
 import { Test, TestService, UserTest } from '../services/test.service';
 
 @Component({
@@ -15,6 +15,15 @@ export class ProfileComponent implements OnInit {
   username: string = '';
   history: UserTest[] = [];
   created_tests: Test[] = [];
+  user: User = {
+    id: '',
+    username: '',
+    email: '',
+    phoneNumber: '',
+    avatarUrl: '',
+    birthDate: new Date(),
+    status: ''
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -65,6 +74,12 @@ export class ProfileComponent implements OnInit {
         }
       }
 
+      this.authService.getUserByUsername(this.name_from_url || '').subscribe({
+        next: (data) => {
+          this.user = data;
+        }
+      })
+
       this.testService.getPassedTestsByUsername(this.name_from_url).subscribe({
         next: (data) => {
           this.history = data;
@@ -81,5 +96,9 @@ export class ProfileComponent implements OnInit {
 
   onLogout() {
     this.authService.logout();
+  }
+
+  startEdit(user: User) {
+    this.router.navigate(['/editprofile', user])
   }
 }

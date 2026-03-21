@@ -79,7 +79,8 @@
             },
             "development": {
               "browserTarget": "WebTests:build:development",
-              "proxyConfig": "proxy.conf.js"
+              //"proxyConfig": "proxy.conf.js",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

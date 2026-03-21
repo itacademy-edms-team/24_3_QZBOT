@@ -10,7 +10,7 @@ namespace WebTests.Models
         public List<Question> Questions { get; set; } = new List<Question>();
         public List<TestTypes>? Types { get; set; }
         public string? CreatorId { get; set; }
-        public IdentityUser? Creator { get; set; }
+        public ApplicationUser? Creator { get; set; }
         public bool Published { get; set; } = false;
         public DateTime CreatedDate { get; set; }
         public DateTime? PublishDate { get; set; }
