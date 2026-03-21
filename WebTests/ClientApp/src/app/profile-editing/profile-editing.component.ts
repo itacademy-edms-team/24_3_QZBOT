@@ -89,15 +89,28 @@ export class ProfileEditingComponent implements OnInit {
 
   // защита от перехода на другую страницу при изменении данных
   canDeactivate(): boolean {
-    if (this.user != this.edited_user) {
+    if (this.edit_access) {
+      return true;
+    }
+
+    const isChanged = JSON.stringify(this.user) !== JSON.stringify(this.edited_user);
+
+    if (isChanged) {
       return confirm("У вас есть несохраненные изменения. Вы уверены, что хотите уйти?")
     }
+
     return true;
   }
 
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
-    if (this.user != this.edited_user) {
+    //if (this.edit_access) {
+    //  $event.returnValue = false;
+    //}
+
+    const isChanged = JSON.stringify(this.user) !== JSON.stringify(this.edited_user);
+
+    if (isChanged) {
       $event.returnValue = true;
     }
   }

@@ -264,7 +264,9 @@ export class ManagementCreateComponent {
 
   // защита от перехода на другую страницу при изменении данных
   canDeactivate(): boolean {
-    if (this.test.title != "" || this.test.types.length != 0 || this.test.questions.length != 0) {
+    const isChanged = this.test.title != "" || this.test.types.length != 0 || this.test.questions.length != 0;
+
+    if (isChanged) {
       return confirm("У вас есть несохраненные изменения. Вы уверены, что хотите уйти?")
     }
     return true;
@@ -272,7 +274,9 @@ export class ManagementCreateComponent {
 
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
-    if (this.test.title != "" || this.test.types.length != 0 || this.test.questions.length != 0) {
+    const isChanged = this.test.title != "" || this.test.types.length != 0 || this.test.questions.length != 0;
+
+    if (isChanged) {
       $event.returnValue = true;
     }
   }

@@ -272,7 +272,13 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
 
   // защита от перехода на другую страницу при изменении данных
   canDeactivate(): boolean {
-    if (this.test != this.edited_test) {
+    if (this.success_edit) {
+      return true;
+    }
+
+    const isChanged = JSON.stringify(this.test) !== JSON.stringify(this.edited_test);
+
+    if (isChanged) {
       return confirm("У вас есть несохраненные изменения. Вы уверены, что хотите уйти?")
     }
     return true;
@@ -280,7 +286,9 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
 
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
-    if (this.test != this.edited_test) {
+    const isChanged = JSON.stringify(this.test) !== JSON.stringify(this.edited_test);
+
+    if (isChanged) {
       $event.returnValue = true;
     }
   }
