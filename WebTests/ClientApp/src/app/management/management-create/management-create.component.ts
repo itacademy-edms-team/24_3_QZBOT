@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { TestService, Test, Question, TestType } from '../../services/test.service';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { ComponentCanDeactivate } from '../../validators/pending-changes.guard';
 
 @Component({
   selector: 'app-management-create',
@@ -258,5 +259,21 @@ export class ManagementCreateComponent {
 
   dropOption(event: CdkDragDrop<any[]>, questionIndex: number) {
     moveItemInArray(this.test.questions[questionIndex].options, event.previousIndex, event.currentIndex);
+  }
+
+
+  // защита от перехода на другую страницу при изменении данных
+  canDeactivate(): boolean {
+    if (this.test.title != "" || this.test.types.length != 0 || this.test.questions.length != 0) {
+      return confirm("У вас есть несохраненные изменения. Вы уверены, что хотите уйти?")
+    }
+    return true;
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any) {
+    if (this.test.title != "" || this.test.types.length != 0 || this.test.questions.length != 0) {
+      $event.returnValue = true;
+    }
   }
 }

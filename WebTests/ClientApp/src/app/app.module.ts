@@ -21,6 +21,7 @@ import { MyTestsComponent } from './tests/my-tests/my-tests.component';
 import { ResultsComponent } from './results/results.component';
 import { CdkDrag, DragDropModule } from '@angular/cdk/drag-drop';
 import { ProfileEditingComponent } from './profile-editing/profile-editing.component';
+import { pendingChangesGuard } from './validators/pending-changes.guard';
 
 @NgModule({
   declarations: [
@@ -51,9 +52,9 @@ import { ProfileEditingComponent } from './profile-editing/profile-editing.compo
       { path: 'tests', component: TestsListComponent },
 
       { path: 'management', component: ManagementComponent },
-      { path: 'management/create', component: ManagementCreateComponent },
+      { path: 'management/create', component: ManagementCreateComponent, canDeactivate: [pendingChangesGuard] },
       { path: 'management/edit', component: ManagementEditListComponent },
-      { path: 'management/edit/:id', component: ManagementEditComponent },
+      { path: 'management/edit/:id', component: ManagementEditComponent, canDeactivate: [pendingChangesGuard] },
 
       { path: 'login', component: LoginComponent },
       { path: 'register', component: RegisterComponent },
@@ -61,7 +62,7 @@ import { ProfileEditingComponent } from './profile-editing/profile-editing.compo
       { path: 'profile', redirectTo: '/profile/me', pathMatch: 'full' },
       { path: 'profile/:name', component: ProfileComponent },
 
-      { path: 'editprofile', component: ProfileEditingComponent, canActivate: [authGuard] },
+      { path: 'editprofile', component: ProfileEditingComponent, canActivate: [authGuard], canDeactivate: [pendingChangesGuard] },
 
       { path: 'my-tests', component: MyTestsComponent, canActivate: [authGuard] },
 

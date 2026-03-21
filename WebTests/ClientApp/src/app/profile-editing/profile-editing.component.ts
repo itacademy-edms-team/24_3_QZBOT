@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { AuthService, User } from '../services/auth.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TestService } from '../services/test.service';
@@ -84,5 +84,21 @@ export class ProfileEditingComponent implements OnInit {
         }
       }
     })
+  }
+
+
+  // защита от перехода на другую страницу при изменении данных
+  canDeactivate(): boolean {
+    if (this.user != this.edited_user) {
+      return confirm("У вас есть несохраненные изменения. Вы уверены, что хотите уйти?")
+    }
+    return true;
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any) {
+    if (this.user != this.edited_user) {
+      $event.returnValue = true;
+    }
   }
 }

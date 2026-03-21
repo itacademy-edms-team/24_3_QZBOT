@@ -1,15 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { TestService, Test, Question, Option, TestType } from '../../../services/test.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { CdkDrag, CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { ComponentCanDeactivate } from '../../../validators/pending-changes.guard';
 
 @Component({
   selector: 'app-management-edit',
   templateUrl: './management-edit.component.html',
   styleUrls: ['./management-edit.component.css']
 })
-export class ManagementEditComponent implements OnInit {
+export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
 
   // Исходный тест, загруженный с сервера
   test: Test = {
@@ -266,5 +267,21 @@ export class ManagementEditComponent implements OnInit {
 
   dropOption(event: CdkDragDrop<any[]>, questionIndex: number) {
     moveItemInArray(this.edited_test.questions[questionIndex].options, event.previousIndex, event.currentIndex);
+  }
+
+
+  // защита от перехода на другую страницу при изменении данных
+  canDeactivate(): boolean {
+    if (this.test != this.edited_test) {
+      return confirm("У вас есть несохраненные изменения. Вы уверены, что хотите уйти?")
+    }
+    return true;
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any) {
+    if (this.test != this.edited_test) {
+      $event.returnValue = true;
+    }
   }
 }
