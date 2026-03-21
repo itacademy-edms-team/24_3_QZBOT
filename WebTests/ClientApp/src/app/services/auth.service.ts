@@ -121,18 +121,6 @@ export class AuthService {
     )
   }
 
-  //uploadAvatar(formData: FormData) {
-  //  return this.http.post<any>(
-  //    `${this.apiUrl}/upload-avatar`,
-  //    formData,
-  //    { withCredentials: true }
-  //  )
-  //}
-
-  //deleteAvatar() {
-  //  return this.http.delete(`${this.apiUrl}/delete-avatar`, { withCredentials: true })
-  //}
-
 
   get isAuthenticated(): boolean {
     return !!this.currentUserSubject.value;
