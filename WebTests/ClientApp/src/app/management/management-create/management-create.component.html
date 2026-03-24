@@ -24,6 +24,21 @@
     </div>
   </div>
 
+  <!--Описание теста-->
+  <div *ngIf="test.title != ''" class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
+    <div class="flex flex-col gap-4">
+      <p class="text-xl font-semibold">Описание</p>
+
+      <textarea type="text"
+                name="test-description"
+                rows="2"
+                [(ngModel)]="test.description"
+                [readonly]="is_editing_locked"
+                placeholder="Опишите тест"
+                class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition resize-none"></textarea>
+    </div>
+  </div>
+
   <!-- Типы теста -->
   <div class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
     <div class="flex flex-col gap-4">
@@ -191,6 +206,7 @@
     </button>
   </div>
 
+  <!-- Минимальный процент правильных ответов -->
   <div *ngIf="test.questions.length > 2 && test.title != ''"
        class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
     <label>
@@ -202,6 +218,21 @@
            [(ngModel)]="test.minimumSuccessPercent"
            [readonly]="is_editing_locked"
            placeholder="Минимальный процент"
+           class="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300 transition" />
+  </div>
+
+  <!--Сложность теста-->
+  <div *ngIf="test.questions.length > 2 && test.title != ''"
+       class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
+    <label>
+      Сложность теста
+    </label>
+    <input type="number"
+           min="0"
+           max="5"
+           [(ngModel)]="test.difficult"
+           [readonly]="is_editing_locked"
+           placeholder="Сложность теста"
            class="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300 transition" />
   </div>
 
