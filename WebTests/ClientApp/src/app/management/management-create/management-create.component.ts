@@ -22,6 +22,9 @@ export class ManagementCreateComponent {
     createdDate: new Date(0),
     editDate: new Date(0),
     minimumSuccessPercent: 70,
+    coverUrl: '',
+    description: '',
+    difficult: 0,
   };
 
   types: TestType[] = [
@@ -245,7 +248,10 @@ export class ManagementCreateComponent {
         minimumSuccessPercent: obj.minSuccessPercent,
         publishDate: new Date(0),
         createdDate: new Date(0),
-        editDate: new Date(0)
+        editDate: new Date(0),
+        coverUrl: '',
+        description: '',
+        difficult: 0,
       };
     } catch (e) {
       // JSON синтаксически неверный

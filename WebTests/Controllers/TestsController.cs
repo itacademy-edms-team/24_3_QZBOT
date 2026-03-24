@@ -83,7 +83,10 @@ namespace WebTests.Controllers
                     t.CreatedDate,
                     t.PublishDate,
                     t.EditTime,
-                    t.MinSuccessPercent
+                    t.MinSuccessPercent,
+                    t.CoverUrl,
+                    t.Description,
+                    t.Difficult
                 })
                 .ToList();
 

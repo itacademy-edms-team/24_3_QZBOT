@@ -289,6 +289,9 @@ export interface Test {
   publishDate: Date;
   editDate: Date;
   minimumSuccessPercent: number;
+  coverUrl: string;
+  description: string;
+  difficult: number;
 }
 
 
