@@ -152,6 +152,10 @@ export class TestService {
       changes.push(`Название теста изменено с "${original.title}" на "${updated.title}"`);
     }
 
+    if (original.description !== updated.description) {
+      changes.push(`Описание теста изменено с "${original.description}" на "${updated.description}"`);
+    }
+
     updated.questions.forEach((newQuestion, i) => {
       const oldQuestion = original.questions[i];
 
@@ -201,6 +205,12 @@ export class TestService {
       changes.push(`Понижен минимальный процент правильных ответов`)
     } else if (original.minimumSuccessPercent < updated.minimumSuccessPercent) {
       changes.push(`Повышен минимальный процент правильных ответов`)
+    }
+
+    if (original.difficult > updated.difficult) {
+      changes.push(`Понижен уровень сложности теста`)
+    } else if (original.difficult < updated.difficult) {
+      changes.push(`Повышен уровень сложности теста`)
     }
 
     const addedTypes = updated.types.filter(type => !original.types.includes(type));

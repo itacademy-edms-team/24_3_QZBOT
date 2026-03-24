@@ -3,6 +3,7 @@
     public class TestDto
     {
         public string Title { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
         public List<QuestionDto> Questions { get; set; }
         public List<string> Types { get; set; } = new();
         public string CreatorId { get; set; }
@@ -11,5 +12,6 @@
         public DateTime? PublishDate { get; set; }
         public DateTime EditTime { get; set; } = DateTime.UtcNow;
         public int MinimumSuccessPercent { get; set; }
+        public int Difficult { get; set; }
     }
 }

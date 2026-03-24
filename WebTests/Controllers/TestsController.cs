@@ -144,10 +144,12 @@ namespace WebTests.Controllers
             {
                 Id = test.Id,
                 Title = test.Title,
+                Description = test.Description,
                 Published = test.Published,
                 CreatorId = test.CreatorId,
                 MinimumSuccessPercent = test.MinSuccessPercent,
                 Types = test.Types.Select(t => t.Name).ToList(),
+                Difficult = test.Difficult,
                 Questions = test.Questions.Select(q => new QuestionDto
                 {
                     Id = q.Id,
@@ -181,10 +183,12 @@ namespace WebTests.Controllers
             {
                 Id = test.Id,
                 Title = test.Title,
+                Description = test.Description,
                 Published = test.Published,
                 CreatorId = test.CreatorId,
                 MinimumSuccessPercent = test.MinSuccessPercent,
                 Types = test.Types.Select(t => t.Name).ToList(),
+                Difficult = test.Difficult,
                 Questions = test.Questions.Select(q => new QuestionDto
                 {
                     Id = q.Id,
@@ -325,6 +329,44 @@ namespace WebTests.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(true);
+        }
+
+        [Authorize]
+        [HttpPost("upload-cover/{testId}")]
+        public async Task<IActionResult> UploadCover(int testId, IFormFile file)
+        {
+            var test = await _context.Tests.FirstOrDefaultAsync(t => t.Id == testId && t.isDeleted == false);
+
+            if (test == null)
+                return NotFound();
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            if (userId != test.CreatorId)
+                return Forbid();
+
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded");
+
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "covers");
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            var fileName = $"test_{testId}_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(folderPath, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            test.CoverUrl = $"/covers/{fileName}";
+            await _context.SaveChangesAsync();
+
+            return Ok(new { CoverUrl = test.CoverUrl });
         }
 
         [Authorize]

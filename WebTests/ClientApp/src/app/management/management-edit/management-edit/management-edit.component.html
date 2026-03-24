@@ -1,10 +1,12 @@
 <div *ngIf="test.title != '';else no_test" class="mx-auto max-w-4xl p-6 pt-24">
 
-  <h2 class="text-3xl font-bold mb-6">Редактирование {{ test_title }}</h2>
+  <p class="text-3xl font-bold mb-6">Редактирование {{ test_title }}</p>
 
   <!-- Название теста -->
   <div class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
     <div class="flex flex-col gap-4">
+
+      <p class="text-xl font-semibold">Название</p>
 
       <input type="text"
              name="test-title"
@@ -21,6 +23,20 @@
         Опубликовать тест
       </label>
 
+    </div>
+  </div>
+
+  <div class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
+    <div class="flex flex-col gap-4">
+      <p class="text-xl font-semibold">Описание</p>
+
+      <textarea type="text"
+                name="test-description"
+                rows="2"
+                [(ngModel)]="edited_test.description"
+                [readonly]="is_editing_locked"
+                placeholder="Опишите тест"
+                class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition resize-none"></textarea>
     </div>
   </div>
 
@@ -56,9 +72,9 @@
 
       <div class="flex justify-between items-start mb-4">
 
-        <h3 class="text-2xl font-semibold text-gray-900 mb-4">
+        <p class="text-2xl font-semibold text-gray-900 mb-4">
           Вопрос {{ i + 1 }}
-        </h3>
+        </p>
 
         <div cdkDragHandle
              class="cursor-move text-gray-400 hover:text-gray-600 p-1">
@@ -190,6 +206,7 @@
     </button>
   </div>
 
+  <!--Минимальный процент правильных ответов-->
   <div *ngIf="edited_test.questions.length > 2 && edited_test.title != ''"
        class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
     <label>
@@ -201,6 +218,21 @@
            [(ngModel)]="edited_test.minimumSuccessPercent"
            [readonly]="is_editing_locked"
            placeholder="Минимальный процент"
+           class="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300 transition" />
+  </div>
+
+  <!--Сложность теста-->
+  <div *ngIf="edited_test.questions.length > 2 && edited_test.title != ''"
+       class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
+    <label>
+      Сложность теста
+    </label>
+    <input type="number"
+           min="0"
+           max="5"
+           [(ngModel)]="edited_test.difficult"
+           [readonly]="is_editing_locked"
+           placeholder="Сложность теста"
            class="flex-1 p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300 transition" />
   </div>
 
