@@ -156,6 +156,10 @@ export class TestService {
       changes.push(`Описание теста изменено с "${original.description}" на "${updated.description}"`);
     }
 
+    if (original.coverUrl !== updated.coverUrl) {
+      changes.push(`Обложка теста изменена`);
+    }
+
     updated.questions.forEach((newQuestion, i) => {
       const oldQuestion = original.questions[i];
 
