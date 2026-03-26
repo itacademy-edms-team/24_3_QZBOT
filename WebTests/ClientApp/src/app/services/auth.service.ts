@@ -113,10 +113,10 @@ export class AuthService {
     )
   }
 
-  editUserProfile(username: string, updated: User) {
+  editUserProfile(username: string, formData: FormData) {
     return this.http.post(
       `${this.apiUrl}/edit/${username}`,
-      updated,
+      formData,
       { withCredentials: true }
     )
   }

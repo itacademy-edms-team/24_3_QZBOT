@@ -77,7 +77,18 @@ export class ProfileEditingComponent implements OnInit {
   }
 
   btnSaveChanges() {
-    this.authService.editUserProfile(this.user.username, this.edited_user).subscribe({
+    const formData = new FormData();
+
+    formData.append('status', this.edited_user.status);
+    formData.append('birthDate', this.edited_user.birthDate.toString());
+
+    if (this.selectedFile) {
+      formData.append('avatar', this.selectedFile);
+    } else {
+      formData.append('avatar', '');
+    }
+
+    this.authService.editUserProfile(this.user.username, formData).subscribe({
       next: (data) => {
         if (data) {
           this.edit_access = true;
