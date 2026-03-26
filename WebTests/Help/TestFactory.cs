@@ -11,6 +11,8 @@ namespace WebTests.TestFactory
             var test = new Test();
             test.Title = dto.Title;
             test.Description = dto.Description;
+            test.CoverUrl = dto.CoverUrl;
+
             test.CreatedDate = DateTime.UtcNow;
 
             if (dto.Published)
@@ -82,6 +84,8 @@ namespace WebTests.TestFactory
             test.EditTime = DateTime.UtcNow;
 
             test.Description = dto.Description;
+
+            test.CoverUrl = dto.CoverUrl;
 
             test.Types.Clear();
 

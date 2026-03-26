@@ -22,6 +22,8 @@ import { ResultsComponent } from './results/results.component';
 import { CdkDrag, DragDropModule } from '@angular/cdk/drag-drop';
 import { ProfileEditingComponent } from './profile-editing/profile-editing.component';
 import { pendingChangesGuard } from './validators/pending-changes.guard';
+import { ImageCropperModule } from 'ngx-image-cropper';
+import { CommonModule } from '@angular/common';
 
 @NgModule({
   declarations: [
@@ -39,9 +41,11 @@ import { pendingChangesGuard } from './validators/pending-changes.guard';
     RegisterComponent,
     MyTestsComponent,
     ResultsComponent,
-    ProfileEditingComponent
+    ProfileEditingComponent,
   ],
   imports: [
+    CommonModule,
+    ImageCropperModule,
     DragDropModule,
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
     HttpClientModule,

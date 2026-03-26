@@ -184,6 +184,7 @@ namespace WebTests.Controllers
                 Id = test.Id,
                 Title = test.Title,
                 Description = test.Description,
+                CoverUrl = test.CoverUrl,
                 Published = test.Published,
                 CreatorId = test.CreatorId,
                 MinimumSuccessPercent = test.MinSuccessPercent,

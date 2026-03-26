@@ -26,6 +26,7 @@
     "@angular/router": "^15.2.8",
     "bootstrap": "^5.3.8",
     "jquery": "^3.6.4",
+    "ngx-image-cropper": "^7.0.0",
     "oidc-client": "^1.11.5",
     "popper.js": "^1.16.0",
     "run-script-os": "^1.1.6",
