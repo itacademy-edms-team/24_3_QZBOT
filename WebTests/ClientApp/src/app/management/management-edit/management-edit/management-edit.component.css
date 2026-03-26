@@ -22,3 +22,20 @@
 .cdk-drag-list-dragging .cdk-drag {
     transition: transform 200ms ease;
 }
+
+
+/* Принудительно задаем размеры для кроппера внутри модалки */
+image-cropper {
+  width: 100% !important;
+  max-height: 60vh !important; /* Чтобы не вылезало за экран */
+  display: block;
+}
+
+/* Стили для области, где лежит картинка */
+.cropper-wrapper {
+  min-height: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f3f4f6; /* light gray */
+}

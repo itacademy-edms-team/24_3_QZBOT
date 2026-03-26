@@ -41,6 +41,24 @@
     </div>
   </div>
 
+  <!--Обложка теста-->
+  <div class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
+    <p class="text-xl font-semibold">Обложка</p>
+    <div (click)="coverInput.click()"
+         class="mt-5 relative w-full h-52 bg-gray-200 border-2 border-dashed border-gray-400 rounded-[40px] overflow-hidden group cursor-pointer">
+
+      <img [src]="edited_test.coverUrl || 'covers/default-test-cover.jpg'"
+           class="w-full h-full object-cover transition duration-300 group-hover:opacity-75"
+           alt="Test Cover" />
+
+      <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <span class="bg-black/50 text-white px-4 py-2 rounded-full text-sm">Нажмите, чтобы изменить обложку</span>
+      </div>
+
+      <input type="file" #coverInput (change)="onCoverSelected($event)" accept="image/*" class="hidden" />
+    </div>
+  </div>
+
   <!-- Типы теста -->
   <div class="bg-white shadow-md rounded-xl p-6 border border-gray-200 mb-8">
     <div class="flex flex-col gap-4">
@@ -334,5 +352,39 @@
             class="block w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
       Ок
     </button>
+  </div>
+</div>
+
+
+<div *ngIf="showCropper" class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+  <div class="bg-white rounded-3xl p-6 w-full max-w-4xl shadow-xl flex flex-col h-[80vh]">
+
+    <div class="flex justify-between items-center mb-4">
+      <h3 class="text-2xl font-bold">Обрежьте обложку</h3>
+      <p class="text-gray-500">Зафиксировано соотношение 3:1 (1200x400)</p>
+    </div>
+
+    <div class="flex-1 overflow-hidden bg-gray-100 rounded-lg">
+      <image-cropper [imageChangedEvent]="imageChangedEvent"
+                     [maintainAspectRatio]="true"
+                     [aspectRatio]="3 / 1"
+                     [resizeToWidth]="1200"
+                     [imageQuality]="90"
+                     format="jpeg"
+                     (imageCropped)="imageCropped($event)"
+                     (cropperReady)="cropperReady()"
+                     class="max-w-full"></image-cropper>
+    </div>
+
+    <div class="mt-6 flex justify-end gap-3">
+      <button (click)="cancelCrop()" class="px-6 py-2.5 border border-gray-300 rounded-full hover:bg-gray-50 transition">
+        Отмена
+      </button>
+      <button (click)="applyCrop()"
+              class="px-6 py-2.5 bg-indigo-600 text-white rounded-full hover:bg-indigo-700 shadow transition disabled:opacity-50"
+              [disabled]="!croppedImage">
+        Применить обрезку
+      </button>
+    </div>
   </div>
 </div>

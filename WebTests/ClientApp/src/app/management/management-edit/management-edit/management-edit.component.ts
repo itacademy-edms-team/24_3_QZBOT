@@ -1,9 +1,10 @@
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { TestService, Test, Question, Option, TestType } from '../../../services/test.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { CdkDrag, CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ComponentCanDeactivate } from '../../../validators/pending-changes.guard';
+import { ImageCroppedEvent } from 'ngx-image-cropper';
 
 @Component({
   selector: 'app-management-edit',
@@ -48,6 +49,13 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     description: '',
     difficult: 0,
   };
+
+  selectedCoverFile: File | null = null;     // выбранный файл обложки
+
+  // переменные для обрезки изображения
+  imageChangedEvent: any = '';               // событие изменения изображения для кроппера
+  croppedImage: string | null = null;        // результат кропа изображения
+  showCropper: boolean = false;              // показывать ли кроппер
 
   // сообщения и состояния UI
   text_error: string = "";
@@ -267,6 +275,7 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
   }
 
 
+  // перетаскивание вопросов и вариантов ответов
   dropQuestion(event: CdkDragDrop<typeof this.edited_test.questions>) {
     moveItemInArray(this.edited_test.questions, event.previousIndex, event.currentIndex);
   }
@@ -290,6 +299,7 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     return true;
   }
 
+  // защита от закрытия вкладки при изменении данных
   @HostListener('window:beforeunload', ['$event'])
   unloadNotification($event: any) {
     const isChanged = JSON.stringify(this.test) !== JSON.stringify(this.edited_test);
@@ -297,5 +307,56 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     if (isChanged) {
       $event.returnValue = true;
     }
+  }
+
+  // получение доступа к элементу input для загрузки обложки
+  @ViewChild('coverInput') coverInputVariable!: ElementRef;
+
+  // обработка выбора файла обложки
+  onCoverSelected(event: any) {
+    this.imageChangedEvent = event;
+
+    this.showCropper = true;
+  }
+
+  // обработка события кропа изображения
+  imageCropped(event: ImageCroppedEvent) {
+    if (event.base64) {
+      this.croppedImage = event.base64;
+      console.log("Base64 получен напрямую из события");
+    }
+    else if (event.blob) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        this.croppedImage = reader.result as string;
+        console.log("Base64 сгенерирован из Blob вручную");
+      };
+      reader.readAsDataURL(event.blob);
+    } else {
+      console.warn("Данные для изображения еще не готовы");
+    }
+  }
+
+  // сброс выбранного файла в input после кропа или отмены
+  resetInput() {
+    this.coverInputVariable.nativeElement.value = "";
+  }
+
+  // применение обрезанного изображения в качестве обложки теста
+  applyCrop() {
+    if (this.croppedImage) {
+      this.edited_test.coverUrl = this.croppedImage;
+      this.showCropper = false;
+      this.imageChangedEvent = '';
+      this.resetInput();
+    }
+  }
+
+  // отмена обрезки изображения
+  cancelCrop() {
+    this.showCropper = false;
+    this.imageChangedEvent = '';
+    this.croppedImage = null;
+    this.resetInput();
   }
 }
