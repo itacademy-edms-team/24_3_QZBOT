@@ -139,8 +139,8 @@ export class TestService {
 
 
 
-  editTest(id: number, test: Test) {
-    return this.http.post(`${this.baseUrl}/edit/${id}`, test, { withCredentials: true });
+  editTest(id: number, formData: FormData) {
+    return this.http.post(`${this.baseUrl}/edit/${id}`, formData, { withCredentials: true });
   }
 
 

@@ -289,10 +289,20 @@ namespace WebTests.Controllers
 
         [Authorize]
         [HttpPost("edit/{id}")]
-        public async Task<IActionResult> EditTest(int id, [FromBody] TestDto updated)
+        public async Task<IActionResult> EditTest(int id, [FromForm] EditFormTestDto form)
         {
-            if (updated == null)
+            if (string.IsNullOrEmpty(form.Test))
                 return BadRequest("DTO is null");
+
+            var updated = JsonSerializer.Deserialize<TestDto>(
+                form.Test,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (updated == null) 
+                return BadRequest("Invalid test data");
 
             if (string.IsNullOrEmpty(updated.Title))
                 return BadRequest("Title is required");
@@ -323,6 +333,34 @@ namespace WebTests.Controllers
             if (userId != test.CreatorId)
                 return Forbid();
 
+            if (!string.IsNullOrEmpty(test.CoverUrl))
+            {
+                var oldPath = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    test.CoverUrl.TrimStart('/')
+                );
+
+                if (System.IO.File.Exists(oldPath))
+                    System.IO.File.Delete(oldPath);
+            }
+
+            if (form.Cover != null)
+            {
+                var fileName = Guid.NewGuid() + Path.GetExtension(form.Cover.FileName);
+
+                var path = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot/covers",
+                    fileName);
+
+                using (var stream = new FileStream(path, FileMode.Create))
+                {
+                    await form.Cover.CopyToAsync(stream);
+                }
+
+                updated.CoverUrl = "/covers/" + fileName;
+            }
 
             TestFactory.FromDto.Update(test, updated, _context);
 

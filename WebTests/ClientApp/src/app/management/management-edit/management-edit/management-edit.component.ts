@@ -54,7 +54,8 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
 
   // переменные для обрезки изображения
   imageChangedEvent: any = '';               // событие изменения изображения для кроппера
-  croppedImage: string | null = null;        // результат кропа изображения
+  croppedImageBlob: Blob | null = null;
+  croppedImagePreview: string | null = null;
   showCropper: boolean = false;              // показывать ли кроппер
 
   // сообщения и состояния UI
@@ -226,7 +227,15 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
 
   // подтверждение и отправка изменений на сервер
   btnConfirm() {
-    this.testService.editTest(this.test.id, this.edited_test).subscribe({
+    const formData = new FormData();
+
+    formData.append("test", JSON.stringify(this.edited_test));
+
+    if (this.selectedCoverFile) {
+      formData.append("cover", this.selectedCoverFile);
+    }
+
+    this.testService.editTest(this.test.id, formData).subscribe({
       next: (data) => {
         if (data) {
           // успех
@@ -319,21 +328,11 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     this.showCropper = true;
   }
 
-  // обработка события кропа изображения
   imageCropped(event: ImageCroppedEvent) {
-    if (event.base64) {
-      this.croppedImage = event.base64;
-      console.log("Base64 получен напрямую из события");
-    }
-    else if (event.blob) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        this.croppedImage = reader.result as string;
-        console.log("Base64 сгенерирован из Blob вручную");
-      };
-      reader.readAsDataURL(event.blob);
-    } else {
-      console.warn("Данные для изображения еще не готовы");
+    if (event.blob) {
+      this.croppedImageBlob = event.blob;
+
+      this.croppedImagePreview = URL.createObjectURL(event.blob);
     }
   }
 
@@ -342,12 +341,19 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     this.coverInputVariable.nativeElement.value = "";
   }
 
-  // применение обрезанного изображения в качестве обложки теста
   applyCrop() {
-    if (this.croppedImage) {
-      this.edited_test.coverUrl = this.croppedImage;
+    if (this.croppedImageBlob) {
+      this.selectedCoverFile = new File(
+        [this.croppedImageBlob],
+        "cover.jpg",
+        { type: "image/jpeg" }
+      );
+
+      this.edited_test.coverUrl = this.croppedImagePreview || '';
+
       this.showCropper = false;
-      this.imageChangedEvent = '';
+      this.imageChangedEvent = "";
+
       this.resetInput();
     }
   }
@@ -356,7 +362,6 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
   cancelCrop() {
     this.showCropper = false;
     this.imageChangedEvent = '';
-    this.croppedImage = null;
     this.resetInput();
   }
 }
