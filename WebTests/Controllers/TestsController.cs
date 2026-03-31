@@ -47,6 +47,7 @@ namespace WebTests.Controllers
 
             var tests = _context.Tests
                 .Where(t => t.CreatorId == userId && t.isDeleted == false)
+                .Include(t => t.Questions)
                 .ToList();
 
             return Ok(tests);
@@ -60,6 +61,7 @@ namespace WebTests.Controllers
 
             var tests = _context.Tests
                 .Where(t => t.CreatorId == userId && t.isDeleted == false)
+                .Include(t => t.Questions)
                 .ToList();
 
             return Ok(tests);
