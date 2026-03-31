@@ -139,8 +139,8 @@ export class TestService {
 
 
 
-  editTest(id: number, test: Test) {
-    return this.http.post(`${this.baseUrl}/edit/${id}`, test, { withCredentials: true });
+  editTest(id: number, formData: FormData) {
+    return this.http.post(`${this.baseUrl}/edit/${id}`, formData, { withCredentials: true });
   }
 
 
@@ -150,6 +150,14 @@ export class TestService {
 
     if (original.title !== updated.title) {
       changes.push(`Название теста изменено с "${original.title}" на "${updated.title}"`);
+    }
+
+    if (original.description !== updated.description) {
+      changes.push(`Описание теста изменено с "${original.description}" на "${updated.description}"`);
+    }
+
+    if (original.coverUrl !== updated.coverUrl) {
+      changes.push(`Обложка теста изменена`);
     }
 
     updated.questions.forEach((newQuestion, i) => {
@@ -201,6 +209,12 @@ export class TestService {
       changes.push(`Понижен минимальный процент правильных ответов`)
     } else if (original.minimumSuccessPercent < updated.minimumSuccessPercent) {
       changes.push(`Повышен минимальный процент правильных ответов`)
+    }
+
+    if (original.difficult > updated.difficult) {
+      changes.push(`Понижен уровень сложности теста`)
+    } else if (original.difficult < updated.difficult) {
+      changes.push(`Повышен уровень сложности теста`)
     }
 
     const addedTypes = updated.types.filter(type => !original.types.includes(type));
@@ -289,6 +303,9 @@ export interface Test {
   publishDate: Date;
   editDate: Date;
   minimumSuccessPercent: number;
+  coverUrl: string;
+  description: string;
+  difficult: number;
 }
 
 

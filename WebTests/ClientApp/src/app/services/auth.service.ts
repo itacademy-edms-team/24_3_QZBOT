@@ -113,25 +113,13 @@ export class AuthService {
     )
   }
 
-  editUserProfile(username: string, updated: User) {
+  editUserProfile(username: string, formData: FormData) {
     return this.http.post(
       `${this.apiUrl}/edit/${username}`,
-      updated,
+      formData,
       { withCredentials: true }
     )
   }
-
-  //uploadAvatar(formData: FormData) {
-  //  return this.http.post<any>(
-  //    `${this.apiUrl}/upload-avatar`,
-  //    formData,
-  //    { withCredentials: true }
-  //  )
-  //}
-
-  //deleteAvatar() {
-  //  return this.http.delete(`${this.apiUrl}/delete-avatar`, { withCredentials: true })
-  //}
 
 
   get isAuthenticated(): boolean {

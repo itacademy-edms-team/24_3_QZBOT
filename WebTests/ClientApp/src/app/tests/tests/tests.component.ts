@@ -21,7 +21,10 @@ export class TestComponent implements OnInit {
     publishDate: new Date(0),
     createdDate: new Date(0),
     editDate: new Date(0),
-    minimumSuccessPercent: 70
+    minimumSuccessPercent: 70,
+    coverUrl: '',
+    description: '',
+    difficult: 0,
   };
 
   errorMessage = '';
@@ -54,7 +57,10 @@ export class TestComponent implements OnInit {
     publishDate: new Date(0),
     createdDate: new Date(0),
     editDate: new Date(0),
-    minimumSuccessPercent: 70
+    minimumSuccessPercent: 70,
+    coverUrl: '',
+    description: '',
+    difficult: 0,
   };
 
   try: UserTest | null = {

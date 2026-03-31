@@ -1,15 +1,17 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { TestService, Test, Question, Option, TestType } from '../../../services/test.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../services/auth.service';
 import { CdkDrag, CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { ComponentCanDeactivate } from '../../../validators/pending-changes.guard';
+import { ImageCroppedEvent } from 'ngx-image-cropper';
 
 @Component({
   selector: 'app-management-edit',
   templateUrl: './management-edit.component.html',
   styleUrls: ['./management-edit.component.css']
 })
-export class ManagementEditComponent implements OnInit {
+export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
 
   // Исходный тест, загруженный с сервера
   test: Test = {
@@ -22,7 +24,10 @@ export class ManagementEditComponent implements OnInit {
     publishDate: new Date(0),
     createdDate: new Date(0),
     editDate: new Date(0),
-    minimumSuccessPercent: 70
+    minimumSuccessPercent: 70,
+    coverUrl: '',
+    description: '',
+    difficult: 0,
   };
 
   // копия названия для отображения
@@ -39,8 +44,19 @@ export class ManagementEditComponent implements OnInit {
     publishDate: new Date(0),
     createdDate: new Date(0),
     editDate: new Date(0),
-    minimumSuccessPercent: 70
+    minimumSuccessPercent: 70,
+    coverUrl: '',
+    description: '',
+    difficult: 0,
   };
+
+  selectedCoverFile: File | null = null;     // выбранный файл обложки
+
+  // переменные для обрезки изображения
+  imageChangedEvent: any = '';               // событие изменения изображения для кроппера
+  croppedImageBlob: Blob | null = null;
+  croppedImagePreview: string | null = null;
+  showCropper: boolean = false;              // показывать ли кроппер
 
   // сообщения и состояния UI
   text_error: string = "";
@@ -211,7 +227,15 @@ export class ManagementEditComponent implements OnInit {
 
   // подтверждение и отправка изменений на сервер
   btnConfirm() {
-    this.testService.editTest(this.test.id, this.edited_test).subscribe({
+    const formData = new FormData();
+
+    formData.append("test", JSON.stringify(this.edited_test));
+
+    if (this.selectedCoverFile) {
+      formData.append("cover", this.selectedCoverFile);
+    }
+
+    this.testService.editTest(this.test.id, formData).subscribe({
       next: (data) => {
         if (data) {
           // успех
@@ -260,11 +284,84 @@ export class ManagementEditComponent implements OnInit {
   }
 
 
+  // перетаскивание вопросов и вариантов ответов
   dropQuestion(event: CdkDragDrop<typeof this.edited_test.questions>) {
     moveItemInArray(this.edited_test.questions, event.previousIndex, event.currentIndex);
   }
 
   dropOption(event: CdkDragDrop<any[]>, questionIndex: number) {
     moveItemInArray(this.edited_test.questions[questionIndex].options, event.previousIndex, event.currentIndex);
+  }
+
+
+  // защита от перехода на другую страницу при изменении данных
+  canDeactivate(): boolean {
+    if (this.success_edit) {
+      return true;
+    }
+
+    const isChanged = JSON.stringify(this.test) !== JSON.stringify(this.edited_test);
+
+    if (isChanged) {
+      return confirm("У вас есть несохраненные изменения. Вы уверены, что хотите уйти?")
+    }
+    return true;
+  }
+
+  // защита от закрытия вкладки при изменении данных
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any) {
+    const isChanged = JSON.stringify(this.test) !== JSON.stringify(this.edited_test);
+
+    if (isChanged) {
+      $event.returnValue = true;
+    }
+  }
+
+  // получение доступа к элементу input для загрузки обложки
+  @ViewChild('coverInput') coverInputVariable!: ElementRef;
+
+  // обработка выбора файла обложки
+  onCoverSelected(event: any) {
+    this.imageChangedEvent = event;
+
+    this.showCropper = true;
+  }
+
+  imageCropped(event: ImageCroppedEvent) {
+    if (event.blob) {
+      this.croppedImageBlob = event.blob;
+
+      this.croppedImagePreview = URL.createObjectURL(event.blob);
+    }
+  }
+
+  // сброс выбранного файла в input после кропа или отмены
+  resetInput() {
+    this.coverInputVariable.nativeElement.value = "";
+  }
+
+  applyCrop() {
+    if (this.croppedImageBlob) {
+      this.selectedCoverFile = new File(
+        [this.croppedImageBlob],
+        "cover.jpg",
+        { type: "image/jpeg" }
+      );
+
+      this.edited_test.coverUrl = this.croppedImagePreview || '';
+
+      this.showCropper = false;
+      this.imageChangedEvent = "";
+
+      this.resetInput();
+    }
+  }
+
+  // отмена обрезки изображения
+  cancelCrop() {
+    this.showCropper = false;
+    this.imageChangedEvent = '';
+    this.resetInput();
   }
 }

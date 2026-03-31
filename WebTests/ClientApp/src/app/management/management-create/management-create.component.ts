@@ -1,6 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 import { TestService, Test, Question, TestType } from '../../services/test.service';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+import { ComponentCanDeactivate } from '../../validators/pending-changes.guard';
 
 @Component({
   selector: 'app-management-create',
@@ -21,6 +22,9 @@ export class ManagementCreateComponent {
     createdDate: new Date(0),
     editDate: new Date(0),
     minimumSuccessPercent: 70,
+    coverUrl: '',
+    description: '',
+    difficult: 0,
   };
 
   types: TestType[] = [
@@ -244,7 +248,10 @@ export class ManagementCreateComponent {
         minimumSuccessPercent: obj.minSuccessPercent,
         publishDate: new Date(0),
         createdDate: new Date(0),
-        editDate: new Date(0)
+        editDate: new Date(0),
+        coverUrl: '',
+        description: '',
+        difficult: 0,
       };
     } catch (e) {
       // JSON синтаксически неверный
@@ -258,5 +265,25 @@ export class ManagementCreateComponent {
 
   dropOption(event: CdkDragDrop<any[]>, questionIndex: number) {
     moveItemInArray(this.test.questions[questionIndex].options, event.previousIndex, event.currentIndex);
+  }
+
+
+  // защита от перехода на другую страницу при изменении данных
+  canDeactivate(): boolean {
+    const isChanged = this.test.title != "" || this.test.types.length != 0 || this.test.questions.length != 0;
+
+    if (isChanged) {
+      return confirm("У вас есть несохраненные изменения. Вы уверены, что хотите уйти?")
+    }
+    return true;
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  unloadNotification($event: any) {
+    const isChanged = this.test.title != "" || this.test.types.length != 0 || this.test.questions.length != 0;
+
+    if (isChanged) {
+      $event.returnValue = true;
+    }
   }
 }

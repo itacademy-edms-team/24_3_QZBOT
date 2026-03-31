@@ -10,6 +10,9 @@ namespace WebTests.TestFactory
         {
             var test = new Test();
             test.Title = dto.Title;
+            test.Description = dto.Description;
+            test.CoverUrl = dto.CoverUrl;
+
             test.CreatedDate = DateTime.UtcNow;
 
             if (dto.Published)
@@ -25,7 +28,8 @@ namespace WebTests.TestFactory
             test.Types = types;
 
             test.MinSuccessPercent = dto.MinimumSuccessPercent;
-
+            
+            test.Difficult = dto.Difficult;
 
             foreach (var question in dto.Questions)
             {
@@ -79,7 +83,9 @@ namespace WebTests.TestFactory
 
             test.EditTime = DateTime.UtcNow;
 
+            test.Description = dto.Description;
 
+            test.CoverUrl = dto.CoverUrl;
 
             test.Types.Clear();
 
@@ -91,6 +97,7 @@ namespace WebTests.TestFactory
 
             test.MinSuccessPercent = dto.MinimumSuccessPercent;
 
+            test.Difficult = dto.Difficult;
 
             test.Questions.Clear();
 

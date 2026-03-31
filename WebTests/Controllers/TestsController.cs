@@ -83,7 +83,10 @@ namespace WebTests.Controllers
                     t.CreatedDate,
                     t.PublishDate,
                     t.EditTime,
-                    t.MinSuccessPercent
+                    t.MinSuccessPercent,
+                    t.CoverUrl,
+                    t.Description,
+                    t.Difficult
                 })
                 .ToList();
 
@@ -141,10 +144,12 @@ namespace WebTests.Controllers
             {
                 Id = test.Id,
                 Title = test.Title,
+                Description = test.Description,
                 Published = test.Published,
                 CreatorId = test.CreatorId,
                 MinimumSuccessPercent = test.MinSuccessPercent,
                 Types = test.Types.Select(t => t.Name).ToList(),
+                Difficult = test.Difficult,
                 Questions = test.Questions.Select(q => new QuestionDto
                 {
                     Id = q.Id,
@@ -178,10 +183,13 @@ namespace WebTests.Controllers
             {
                 Id = test.Id,
                 Title = test.Title,
+                Description = test.Description,
+                CoverUrl = test.CoverUrl,
                 Published = test.Published,
                 CreatorId = test.CreatorId,
                 MinimumSuccessPercent = test.MinSuccessPercent,
                 Types = test.Types.Select(t => t.Name).ToList(),
+                Difficult = test.Difficult,
                 Questions = test.Questions.Select(q => new QuestionDto
                 {
                     Id = q.Id,
@@ -281,10 +289,20 @@ namespace WebTests.Controllers
 
         [Authorize]
         [HttpPost("edit/{id}")]
-        public async Task<IActionResult> EditTest(int id, [FromBody] TestDto updated)
+        public async Task<IActionResult> EditTest(int id, [FromForm] EditFormTestDto form)
         {
-            if (updated == null)
+            if (string.IsNullOrEmpty(form.Test))
                 return BadRequest("DTO is null");
+
+            var updated = JsonSerializer.Deserialize<TestDto>(
+                form.Test,
+                new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+            if (updated == null) 
+                return BadRequest("Invalid test data");
 
             if (string.IsNullOrEmpty(updated.Title))
                 return BadRequest("Title is required");
@@ -315,6 +333,34 @@ namespace WebTests.Controllers
             if (userId != test.CreatorId)
                 return Forbid();
 
+            if (!string.IsNullOrEmpty(test.CoverUrl))
+            {
+                var oldPath = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot",
+                    test.CoverUrl.TrimStart('/')
+                );
+
+                if (System.IO.File.Exists(oldPath))
+                    System.IO.File.Delete(oldPath);
+            }
+
+            if (form.Cover != null)
+            {
+                var fileName = Guid.NewGuid() + Path.GetExtension(form.Cover.FileName);
+
+                var path = Path.Combine(
+                    Directory.GetCurrentDirectory(),
+                    "wwwroot/covers",
+                    fileName);
+
+                using (var stream = new FileStream(path, FileMode.Create))
+                {
+                    await form.Cover.CopyToAsync(stream);
+                }
+
+                updated.CoverUrl = "/covers/" + fileName;
+            }
 
             TestFactory.FromDto.Update(test, updated, _context);
 
@@ -322,6 +368,44 @@ namespace WebTests.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(true);
+        }
+
+        [Authorize]
+        [HttpPost("upload-cover/{testId}")]
+        public async Task<IActionResult> UploadCover(int testId, IFormFile file)
+        {
+            var test = await _context.Tests.FirstOrDefaultAsync(t => t.Id == testId && t.isDeleted == false);
+
+            if (test == null)
+                return NotFound();
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            if (userId != test.CreatorId)
+                return Forbid();
+
+            if (file == null || file.Length == 0)
+                return BadRequest("No file uploaded");
+
+            var folderPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "covers");
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            var fileName = $"test_{testId}_{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+            var filePath = Path.Combine(folderPath, fileName);
+
+            using (var stream = new FileStream(filePath, FileMode.Create))
+            {
+                await file.CopyToAsync(stream);
+            }
+
+            test.CoverUrl = $"/covers/{fileName}";
+            await _context.SaveChangesAsync();
+
+            return Ok(new { CoverUrl = test.CoverUrl });
         }
 
         [Authorize]

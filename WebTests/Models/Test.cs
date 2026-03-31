@@ -17,5 +17,8 @@ namespace WebTests.Models
         public DateTime EditTime { get; set; } = DateTime.UtcNow;
         public int MinSuccessPercent { get; set; } = 70;
         public bool isDeleted { get; set; } = false;
+        public string? Description { get; set; }
+        public int? Difficult { get; set; }
+        public string? CoverUrl { get; set; }
     }
 }
