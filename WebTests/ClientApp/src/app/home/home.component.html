@@ -1,10 +1,54 @@
-<div class="pt-10">
-  <div class="max-w-3xl mx-auto px-6">
+<main class="pt-24 pb-24">
+  <div class="max-w-4xl mx-auto px-6 text-center mb-16">
+    <h1 class="text-5xl md:text-7xl font-black tracking-tighter text-black mb-4">
+      Исследуйте мир тестов.
+    </h1>
+    <p class="text-2xl md:text-3xl font-bold tracking-tight text-gray-400">
+      Проходите или создавайте квизы по любой теме.
+    </p>
+  </div>
 
-    <div class="text-3xl text-center pt-40 font-inter">
-      <p class="font-bold">Discover User Tests</p>
-      <p class="text-gray-500">Explore and create quizzes on any subject.</p>
+  <!--<div class="max-w-6xl mx-auto px-6 grid grid-cols-1 md:grid-cols-3 gap-12 mb-40">
+
+    <div class="group cursor-default">
+      <div class="aspect-square bg-gray-100 rounded-3xl flex items-center justify-center mb-8 transition-transform group-hover:scale-[1.02]">
+        <div class="w-24 h-24 bg-white shadow-sm border border-gray-200"></div>
+      </div>
+      <h3 class="text-xl font-bold mb-2">Browse tests.</h3>
+      <p class="text-gray-500 leading-relaxed">
+        Find user-generated quizzes and tests on a wide range of topics, from science to pop culture.
+      </p>
     </div>
 
+    <div class="group cursor-default">
+      <div class="aspect-square bg-gray-100 rounded-3xl flex items-center justify-center mb-8 transition-transform group-hover:scale-[1.02]">
+        <div class="w-28 h-28 bg-white rounded-full shadow-sm border border-gray-200"></div>
+      </div>
+      <h3 class="text-xl font-bold mb-2">Create your own.</h3>
+      <p class="text-gray-500 leading-relaxed">
+        Share your knowledge and creativity by making your own tests for others to try.
+      </p>
+    </div>
+
+    <div class="group cursor-default">
+      <div class="aspect-square bg-gray-100 rounded-3xl flex items-center justify-center mb-8 transition-transform group-hover:scale-[1.02]">
+        <div class="w-28 h-28 bg-white shadow-sm border border-gray-200" style="clip-path: polygon(50% 0%, 0% 100%, 100% 100%);"></div>
+      </div>
+      <h3 class="text-xl font-bold mb-2">Track progress.</h3>
+      <p class="text-gray-500 leading-relaxed">
+        See your test results and track improvements as you complete different challenges.
+      </p>
+    </div>
+
+  </div>-->
+
+  <div class="max-w-4xl mx-auto px-6 text-center border-t border-gray-100 pt-20">
+    <h2 class="text-4xl font-black tracking-tighter mb-4">Готовы создавать?</h2>
+    <p class="text-lg text-gray-500 mb-8 font-medium">Поделитесь своим тестом с миром.</p>
+
+    <button [routerLink]="['/login']"
+            class="bg-black text-white px-10 py-4 rounded-full font-bold text-lg hover:bg-gray-800 transition-all active:scale-95 shadow-lg shadow-black/10">
+      Создать тест
+    </button>
   </div>
-</div>
+</main>

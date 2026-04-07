@@ -11,6 +11,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 })
 export class TestsListComponent {
   tests: Test[] = [];
+  filteredTests: Test[] = [];
+  searchText: string = '';
   isModalStartOpen: boolean = false;
   selectedTest: Test | null = null;
 
@@ -25,15 +27,19 @@ export class TestsListComponent {
       this.testService.getPublishedTests().subscribe({
         next: (data) => {
           this.tests = data;
+          this.filteredTests = data;
         }
       })
     } else {
       this.testService.getPublishedTests().subscribe({
         next: (data) => {
           data.forEach((test) => {
-            if (!test.types.includes("AuthOnly")) {
-              this.tests.push(test);
-            }
+            this.tests = data.filter(test => !test.types.includes("AuthOnly"));
+            this.filteredTests = this.tests;
+
+            //if (!test.types.includes("AuthOnly")) {
+            //  this.tests.push(test);
+            //}
           })
         }
       })
@@ -62,5 +68,13 @@ export class TestsListComponent {
   closeModal() {
     this.isModalStartOpen = false;
     this.selectedTest = null;
+  }
+
+  filterTests() {
+    const text = this.searchText.toLowerCase();
+
+    this.filteredTests = this.tests.filter(test =>
+      test.title.toLowerCase().includes(text)
+    );
   }
 }

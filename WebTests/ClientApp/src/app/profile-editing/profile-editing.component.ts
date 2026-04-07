@@ -84,8 +84,6 @@ export class ProfileEditingComponent implements OnInit {
 
     if (this.selectedFile) {
       formData.append('avatar', this.selectedFile);
-    } else {
-      formData.append('avatar', '');
     }
 
     this.authService.editUserProfile(this.user.username, formData).subscribe({

@@ -47,6 +47,7 @@ namespace WebTests.Controllers
 
             var tests = _context.Tests
                 .Where(t => t.CreatorId == userId && t.isDeleted == false)
+                .Include(t => t.Questions)
                 .ToList();
 
             return Ok(tests);
@@ -60,6 +61,7 @@ namespace WebTests.Controllers
 
             var tests = _context.Tests
                 .Where(t => t.CreatorId == userId && t.isDeleted == false)
+                .Include(t => t.Questions)
                 .ToList();
 
             return Ok(tests);
@@ -333,20 +335,20 @@ namespace WebTests.Controllers
             if (userId != test.CreatorId)
                 return Forbid();
 
-            if (!string.IsNullOrEmpty(test.CoverUrl))
-            {
-                var oldPath = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot",
-                    test.CoverUrl.TrimStart('/')
-                );
-
-                if (System.IO.File.Exists(oldPath))
-                    System.IO.File.Delete(oldPath);
-            }
-
             if (form.Cover != null)
             {
+                if (!string.IsNullOrEmpty(test.CoverUrl))
+                {
+                    var oldPath = Path.Combine(
+                        Directory.GetCurrentDirectory(),
+                        "wwwroot",
+                        test.CoverUrl.TrimStart('/')
+                    );
+
+                    if (System.IO.File.Exists(oldPath))
+                        System.IO.File.Delete(oldPath);
+                }
+
                 var fileName = Guid.NewGuid() + Path.GetExtension(form.Cover.FileName);
 
                 var path = Path.Combine(

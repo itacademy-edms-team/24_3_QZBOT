@@ -151,7 +151,7 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
 
   // указание типа теста
   toggleType(typeName: string) {
-    const idx = this.test.types.indexOf(typeName);
+    const idx = this.edited_test.types.indexOf(typeName);
     if (idx >= 0) {
       this.edited_test.types.splice(idx, 1);
     } else {

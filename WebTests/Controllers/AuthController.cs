@@ -119,7 +119,7 @@ namespace WebTests.Controllers
 
         [HttpGet("get/{username}")]
         public async Task<IActionResult> GetUserByUsername(string username)
-       {
+        {
             var user = await _userManager.FindByNameAsync(username);
             if (user == null)
                 return NotFound(new { message = "User not found" });
@@ -143,16 +143,16 @@ namespace WebTests.Controllers
             if (user == null)
                 return NotFound(new { message = "User not found" });
 
-            if (!string.IsNullOrEmpty(user.AvatarUrl))
-            {
-                var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.AvatarUrl.TrimStart('/'));
-
-                if (System.IO.File.Exists(oldPath))
-                    System.IO.File.Delete(oldPath);
-            }
-
             if (dto.Avatar != null)
             {
+                if (!string.IsNullOrEmpty(user.AvatarUrl))
+                {
+                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.AvatarUrl.TrimStart('/'));
+
+                    if (System.IO.File.Exists(oldPath))
+                        System.IO.File.Delete(oldPath);
+                }
+
                 var fileName = $"{Guid.NewGuid()}{Path.GetExtension(dto.Avatar.FileName)}";
                 var filePath = Path.Combine("wwwroot", "avatars", fileName);
                 Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
@@ -162,12 +162,8 @@ namespace WebTests.Controllers
                 }
                 user.AvatarUrl = $"/avatars/{fileName}";
             }
-            else
-            {
-                user.AvatarUrl = null;
-            }
 
-                user.Status = dto.Status;
+            user.Status = dto.Status;
             user.BirthDate = dto.BirthDate;
 
             await _userManager.UpdateAsync(user);

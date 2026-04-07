@@ -1,43 +1,89 @@
-<div class="pt-20 px-6">
-  <div class="max-w-3xl mx-auto bg-gray-100 border border-gray-400 rounded-3xl p-5 m-5 mt-0">
+<div class="max-w-3xl mx-auto pt-20 px-6 pb-20">
+
+  <div class="bg-white border border-gray-100 rounded-[3rem] p-6 shadow-sm relative overflow-hidden">
+    <div class="absolute top-0 right-0 w-24 h-24 bg-gray-50 rounded-bl-[4rem] -z-10"></div>
+
     <div class="flex flex-col items-center">
-      <div class="avatar-circle">
-        <img [src]="edited_user.avatarUrl || 'avatars/default-avatar.jpg'" alt="User Avatar" class="user-avatar" />
-      </div>
-      <div class="buttons">
-        <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" style="display: none"/>
 
-        <button (click)="fileInput.click()" class="btn-upload">Загрузить</button>
+      <div class="relative group mb-8">
+        <div class="w-32 h-32 rounded-full border-4 border-gray-50 p-1 shadow-inner bg-white overflow-hidden">
+          <img [src]="edited_user.avatarUrl || 'avatars/default-avatar.jpg'"
+               alt="User Avatar"
+               class="w-full h-full object-cover rounded-full shadow-sm transition-transform duration-500 group-hover:scale-110" />
+        </div>
 
-        <button *ngIf="edited_user.avatarUrl" (click)="removeAvatar()" class="btn-delete">Удалить</button>
+        <label (click)="fileInput.click()"
+               class="absolute inset-0 flex items-center justify-center bg-black/40 text-white opacity-0 group-hover:opacity-100 rounded-full cursor-pointer transition-opacity duration-300">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+        </label>
       </div>
-      <div class="flex w-full">
-        <p class="p-3">Статус: </p>
-        <input type="text"
-               name="user-status"
-               [(ngModel)]="edited_user.status"
-               placeholder="ваш статус"
-               class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition" />
-        <p class="p-3 whitespace-nowrap">50 символов</p>
-      </div>
-      <div class="flex pt-3">
-        <p class="p-3 whitespace-nowrap">Дата рождения:</p>
-        <input type="date"
-               name="birth-date"
-               [ngModel]="edited_user.birthDate | date:'yyyy-MM-dd'"
-               (ngModelChange)="edited_user.birthDate = $event"
-               class=" p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 transition"/>
-      </div>
-      <div class="mt-8">
-        <button type="button"
-                (click)="btnSaveChanges()"
-                class="px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 shadow transition">
-          Сохранить изменения
+
+      <div class="flex gap-3 mb-12">
+        <input type="file" #fileInput (change)="onFileSelected($event)" accept="image/*" class="hidden" />
+
+        <button (click)="fileInput.click()"
+                class="px-5 py-2 bg-black text-white text-xs font-black uppercase tracking-widest rounded-xl hover:scale-105 transition-transform">
+          Загрузить новое
+        </button>
+
+        <button *ngIf="edited_user.avatarUrl" (click)="removeAvatar()"
+                class="px-5 py-2 bg-red-50 text-red-500 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-red-500 hover:text-white transition-all">
+          Удалить
         </button>
       </div>
-      <div *ngIf="edit_access">
-        <p>Изменения сохранены</p>
+
+      <div class="w-full space-y-8">
+
+        <div class="relative">
+          <label class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300 absolute -top-2.5 left-6 bg-white px-2">
+            Статус
+          </label>
+          <div class="flex items-center">
+            <input type="text"
+                   name="user-status"
+                   maxlength="50"
+                   [(ngModel)]="edited_user.status"
+                   placeholder="How are you feeling today?"
+                   class="w-full p-5 bg-gray-50 border border-transparent rounded-[1.5rem] text-black font-bold focus:bg-white focus:border-gray-100 focus:outline-none transition-all placeholder-gray-300" />
+            <span class="ml-4 text-[10px] font-black text-gray-200 whitespace-nowrap uppercase">
+              {{ edited_user.status.length || 0 }} / 50
+            </span>
+          </div>
+        </div>
+
+        <div class="relative">
+          <label class="text-[10px] font-black uppercase tracking-[0.2em] text-gray-300 absolute -top-2.5 left-6 bg-white px-2">
+            Дата рождения
+          </label>
+          <input type="date"
+                 name="birth-date"
+                 [ngModel]="edited_user.birthDate | date:'yyyy-MM-dd'"
+                 (ngModelChange)="edited_user.birthDate = $event"
+                 class="w-full p-5 bg-gray-50 border border-transparent rounded-[1.5rem] text-black font-bold focus:bg-white focus:border-gray-100 focus:outline-none transition-all" />
+        </div>
+
       </div>
+
+      <div class="mt-12 w-full">
+        <button type="button"
+                (click)="btnSaveChanges()"
+                class="w-full py-5 bg-black text-white rounded-[1.5rem] font-black text-lg hover:shadow-2xl hover:shadow-gray-200 hover:-translate-y-1 transition-all disabled:opacity-30"
+                [disabled]="edit_access">
+          {{ edit_access ? 'Изменения сохранены' : 'Сохранить изменения' }}
+        </button>
+
+        <div *ngIf="edit_access"
+             class="mt-4 flex items-center justify-center gap-2 text-green-500 font-bold animate-bounce">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+          </svg>
+          Профиль успешно обновлен!
+        </div>
+      </div>
+
     </div>
   </div>
 </div>

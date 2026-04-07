@@ -1,77 +1,51 @@
-<header class="fixed top-0 left-0 right-0 shadow">
-  <nav class="bg-white border-b">
-    <div class="container mx-auto px-10 flex items-center justify-between h-16">
-
-      <!-- Лого -->
-      <a class="text-xl font-semibold" [routerLink]="['/']">Web-тесты</a>
-
-      <!-- Кнопка бургер -->
-      <button (click)="toggle()"
-              class="md:hidden p-2 rounded focus:outline-none focus:ring"
-              aria-label="Toggle navigation">
-        <svg *ngIf="!isExpanded" xmlns="http://www.w3.org/2000/svg"
-             class="h-6 w-6" fill="none"
-             viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-        </svg>
-
-        <svg *ngIf="isExpanded" xmlns="http://www.w3.org/2000/svg"
-             class="h-6 w-6" fill="none"
-             viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round"
-                stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-
-      <!-- Меню -->
-      <div class="w-full md:flex md:items-center md:w-auto"
-           [ngClass]="{
-          'block': isExpanded,
-          'hidden': !isExpanded
+<header class="fixed top-0 left-0 right-0 z-50 transition-all duration-500"
+        [ngClass]="{
+          'bg-white/70 backdrop-blur-lg border-b border-gray-100 shadow-sm': isScrolled,
+          'bg-transparent': !isScrolled
         }">
-        <ul class="md:flex md:space-x-6 mt-4 md:mt-0">
+  <nav>
+    <div class="container mx-auto px-6 md:px-10 flex items-center justify-between transition-all duration-500"
+         [ngClass]="isScrolled ? 'h-12' : 'h-16'">
 
-          <!-- Управление -->
-          <li class="py-2 md:py-0"
-              [routerLinkActive]="['text-blue-600', 'font-semibold']"
+      <a class="font-black tracking-tighter transition-all duration-500"
+         [ngClass]="isScrolled ? 'text-lg' : 'text-xl'"
+         [routerLink]="['/']">
+        Testify
+      </a>
+
+      <div class="hidden md:flex items-center">
+        <ul class="flex space-x-6 text-[14px] font-semibold text-gray-500/80">
+
+          <li class="transition-colors hover:text-black"
+              [routerLinkActive]="['text-black']"
               [routerLinkActiveOptions]="{ exact: true }">
-            <div *ngIf="authService.isAuthenticated">
-              <a class="hover:text-blue-600 transition" [routerLink]="['/management']">
-                Управление
-              </a>
-            </div>
+            <a [routerLink]="['/tests']">Обзор тестов</a>
           </li>
 
-          <!-- Тесты -->
-          <li class="py-2 md:py-0"
-              [routerLinkActive]="['text-blue-600', 'font-semibold']"
-              [routerLinkActiveOptions]="{ exact: true }">
-            <a class="hover:text-blue-600 transition" [routerLink]="['/tests']">
-              Тесты
-            </a>
+          <li class="transition-colors hover:text-black"
+              *ngIf="authService.isAuthenticated"
+              [routerLinkActive]="['text-black']">
+            <a [routerLink]="['/management']">Управление</a>
           </li>
 
-          <!-- Профиль / Войти -->
-          <li class="py-2 md:py-0"
-              [routerLinkActive]="['text-blue-600', 'font-semibold']"
-              [routerLinkActiveOptions]="{ exact: true }">
+          <li class="transition-colors hover:text-black"
+              [routerLinkActive]="['text-black']">
             <div *ngIf="authService.isAuthenticated; else loginLink">
-              <a class="hover:text-blue-600 transition"
-                 [routerLink]="['/profile', currentUserUsername]">
-                {{ currentUserUsername }}
-              </a>
+              <a [routerLink]="['/profile', currentUserUsername]">{{ currentUserUsername }}</a>
             </div>
-
             <ng-template #loginLink>
-              <a class="hover:text-blue-600 transition" [routerLink]="['/login']">
-                Войти
-              </a>
+              <a [routerLink]="['/login']">Войти</a>
             </ng-template>
           </li>
 
         </ul>
       </div>
+
+      <button (click)="toggle()" class="md:hidden p-1 text-gray-600">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
 
     </div>
   </nav>
