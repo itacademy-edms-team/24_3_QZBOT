@@ -336,33 +336,7 @@ namespace WebTests.Controllers
                 return Forbid();
 
             if (form.Cover != null)
-            {
-                if (!string.IsNullOrEmpty(test.CoverUrl))
-                {
-                    var oldPath = Path.Combine(
-                        Directory.GetCurrentDirectory(),
-                        "wwwroot",
-                        test.CoverUrl.TrimStart('/')
-                    );
-
-                    if (System.IO.File.Exists(oldPath))
-                        System.IO.File.Delete(oldPath);
-                }
-
-                var fileName = Guid.NewGuid() + Path.GetExtension(form.Cover.FileName);
-
-                var path = Path.Combine(
-                    Directory.GetCurrentDirectory(),
-                    "wwwroot/covers",
-                    fileName);
-
-                using (var stream = new FileStream(path, FileMode.Create))
-                {
-                    await form.Cover.CopyToAsync(stream);
-                }
-
-                updated.CoverUrl = "/covers/" + fileName;
-            }
+                updated.CoverUrl = await Help.Image.TestCover(form.Cover, test.CoverUrl);
 
             TestFactory.FromDto.Update(test, updated, _context);
 
