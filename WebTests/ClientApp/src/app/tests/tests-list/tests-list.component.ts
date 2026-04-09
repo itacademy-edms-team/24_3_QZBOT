@@ -36,10 +36,6 @@ export class TestsListComponent {
           data.forEach((test) => {
             this.tests = data.filter(test => !test.types.includes("AuthOnly"));
             this.filteredTests = this.tests;
-
-            //if (!test.types.includes("AuthOnly")) {
-            //  this.tests.push(test);
-            //}
           })
         }
       })
