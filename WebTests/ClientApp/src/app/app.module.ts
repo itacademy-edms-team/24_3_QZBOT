@@ -32,6 +32,7 @@ import { TestInfoComponent } from './tests/test-info/test-info.component';
     NavMenuComponent,
     HomeComponent,
     TestComponent,
+    TestInfoComponent,
     TestsListComponent,
     ManagementComponent,
     ManagementCreateComponent,
