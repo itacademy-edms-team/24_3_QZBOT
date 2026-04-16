@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { Test, TestService } from '../../services/test.service';
 import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, User } from '../../services/auth.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-test-info',
@@ -25,6 +26,18 @@ export class TestInfoComponent implements OnInit {
     difficult: 0,
   };
 
+  creator: User = {
+    id: "",
+    username: "",
+    email: "",
+    phoneNumber: "",
+    avatarUrl: "",
+    birthDate: new Date(0),
+    status: ""
+  }
+
+  state: string = '';
+
   constructor(
     private testService: TestService,
     private authService: AuthService,
@@ -39,6 +52,18 @@ export class TestInfoComponent implements OnInit {
         this.testService.getTestById(testId).subscribe({
           next: (data) => {
             this.test = data;
+          }
+        })
+
+        this.testService.checkTestInfo(testId).subscribe({
+          next: (data) => {
+            this.state = data;
+          }
+        })
+
+        this.testService.getAuthor(testId).subscribe({
+          next: (data) => {
+            this.creator = data;
           }
         })
       }

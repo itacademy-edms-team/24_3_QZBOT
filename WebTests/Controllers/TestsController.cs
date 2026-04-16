@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security;
 using System.Security.Claims;
+using System.Security.Policy;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Transactions;
@@ -18,10 +20,12 @@ namespace WebTests.Controllers
     public class TestsController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
 
-        public TestsController(AppDbContext context)
+        public TestsController(AppDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         [HttpGet("all")]
@@ -405,8 +409,8 @@ namespace WebTests.Controllers
         }
 
         [Authorize]
-        [HttpPost("{testId}/checkstart")]
-        public async Task<IActionResult> CheckStart(int testId)
+        [HttpPost("{testId}/checktestinfo")]
+        public async Task<IActionResult> CheckTestInfo(int testId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -434,13 +438,6 @@ namespace WebTests.Controllers
                 return Ok("result");
             else
                 return BadRequest();
-
-            //if (activeAttempt != null) // true - переход к тесту, false - к итогам
-            //    return Ok(true);
-            //else if (activeAttempt == null && finishedAttempt == null)
-            //    return Ok(true);
-            //else
-            //    return Ok(false);
         }
 
         [Authorize]
@@ -731,6 +728,35 @@ namespace WebTests.Controllers
                 .FirstOrDefaultAsync();
 
             return Ok(record);
+        }
+
+        [HttpGet("getAuthor/{testId}")]
+        public async Task<IActionResult> GetAuthor(int testId)
+        {
+            var authorId = await _context.Tests
+                .Where(t => t.isDeleted == false && t.Id == testId)
+                .Select(t => t.CreatorId)
+                .FirstOrDefaultAsync();
+
+            if (authorId != null)
+            {
+                var author = await _userManager.FindByIdAsync(authorId);
+
+                var result = new UserDto()
+                {
+                    Id = author.Id,
+                    Username = author.UserName,
+                    PhoneNumber = author.PhoneNumber,
+                    Email = author.Email,
+                    AvatarUrl = author.AvatarUrl,
+                    BirthDate = author.BirthDate,
+                    Status = author.Status,
+                };
+
+                return Ok(result);
+            }
+
+            return NotFound();
         }
     }
 }

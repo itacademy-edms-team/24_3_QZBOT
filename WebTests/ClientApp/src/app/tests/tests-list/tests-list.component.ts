@@ -43,7 +43,7 @@ export class TestsListComponent {
   }
 
   checkStart(test: Test) {
-    this.testService.checkStart(test.id).subscribe({
+    this.testService.checkTestInfo(test.id).subscribe({
       next: (data) => {
         if (data == "new test") {
           this.start(test);

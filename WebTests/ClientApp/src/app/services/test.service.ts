@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { AuthService } from './auth.service';
+import { AuthService, User } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -92,9 +92,9 @@ export class TestService {
 
 
 
-  checkStart(testId: number) {
+  checkTestInfo(testId: number) {
     return this.http.post(
-      `${this.baseUrl}/${testId}/checkstart`,
+      `${this.baseUrl}/${testId}/checktestinfo`,
       {},
       { withCredentials: true, responseType: 'text' }
     );
@@ -286,6 +286,11 @@ export class TestService {
       return this.http.get<UserTest | null>(`${this.baseUrl}/isPassed/${testId}`, { withCredentials: true });
     }
     return of(null);
+  }
+
+
+  getAuthor(testId: number) {
+    return this.http.get<User>(`${this.baseUrl}/getAuthor/${testId}`, { withCredentials: true });
   }
 }
 
