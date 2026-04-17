@@ -742,6 +742,9 @@ namespace WebTests.Controllers
             {
                 var author = await _userManager.FindByIdAsync(authorId);
 
+                if (author == null)
+                    return NotFound();
+
                 var result = new UserDto()
                 {
                     Id = author.Id,

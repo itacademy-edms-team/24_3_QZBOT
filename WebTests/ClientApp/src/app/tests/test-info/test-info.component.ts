@@ -52,6 +52,10 @@ export class TestInfoComponent implements OnInit {
         this.testService.getTestById(testId).subscribe({
           next: (data) => {
             this.test = data;
+          },
+          error: (err) => {
+            console.error('Ошибка загрузки: ', err);
+            this.router.navigate(['/tests'])
           }
         })
 
