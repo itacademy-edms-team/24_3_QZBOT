@@ -109,10 +109,10 @@ export class TestComponent implements OnInit {
               next: (res) => {
                 this.userTestId = res.userTestId;
 
-                //if (res.status == "Finished") {
-                //  this.router.navigate(['/results', this.test.id]) // здесь будет страница итогов
-                //  return;
-                //}
+                if (res.status == "Finished") {
+                  this.router.navigate(['/results', this.test.id]) // здесь будет страница итогов
+                  return;
+                }
 
                 if (res.status == "Active") {
                   this.isModalTryOpen = true;
