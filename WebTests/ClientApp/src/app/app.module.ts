@@ -24,6 +24,7 @@ import { ProfileEditingComponent } from './profile-editing/profile-editing.compo
 import { pendingChangesGuard } from './validators/pending-changes.guard';
 import { ImageCropperModule } from 'ngx-image-cropper';
 import { CommonModule } from '@angular/common';
+import { TestInfoComponent } from './tests/test-info/test-info.component';
 
 @NgModule({
   declarations: [
@@ -31,6 +32,7 @@ import { CommonModule } from '@angular/common';
     NavMenuComponent,
     HomeComponent,
     TestComponent,
+    TestInfoComponent,
     TestsListComponent,
     ManagementComponent,
     ManagementCreateComponent,
@@ -53,6 +55,7 @@ import { CommonModule } from '@angular/common';
     RouterModule.forRoot([
       { path: '', component: HomeComponent, pathMatch: 'full' },
       { path: 'tests/:id', component: TestComponent },
+      { path: 'test/:id', component: TestInfoComponent },
       { path: 'tests', component: TestsListComponent },
 
       { path: 'management', component: ManagementComponent },

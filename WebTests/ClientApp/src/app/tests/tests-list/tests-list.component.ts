@@ -36,10 +36,6 @@ export class TestsListComponent {
           data.forEach((test) => {
             this.tests = data.filter(test => !test.types.includes("AuthOnly"));
             this.filteredTests = this.tests;
-
-            //if (!test.types.includes("AuthOnly")) {
-            //  this.tests.push(test);
-            //}
           })
         }
       })
@@ -47,7 +43,7 @@ export class TestsListComponent {
   }
 
   checkStart(test: Test) {
-    this.testService.checkStart(test.id).subscribe({
+    this.testService.checkTestInfo(test.id).subscribe({
       next: (data) => {
         if (data == "new test") {
           this.start(test);

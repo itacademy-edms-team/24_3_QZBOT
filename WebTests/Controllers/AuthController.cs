@@ -144,24 +144,7 @@ namespace WebTests.Controllers
                 return NotFound(new { message = "User not found" });
 
             if (dto.Avatar != null)
-            {
-                if (!string.IsNullOrEmpty(user.AvatarUrl))
-                {
-                    var oldPath = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", user.AvatarUrl.TrimStart('/'));
-
-                    if (System.IO.File.Exists(oldPath))
-                        System.IO.File.Delete(oldPath);
-                }
-
-                var fileName = $"{Guid.NewGuid()}{Path.GetExtension(dto.Avatar.FileName)}";
-                var filePath = Path.Combine("wwwroot", "avatars", fileName);
-                Directory.CreateDirectory(Path.GetDirectoryName(filePath)!);
-                using (var stream = new FileStream(filePath, FileMode.Create))
-                {
-                    await dto.Avatar.CopyToAsync(stream);
-                }
-                user.AvatarUrl = $"/avatars/{fileName}";
-            }
+                user.AvatarUrl = await Help.Image.UserAvatar(dto.Avatar, user.AvatarUrl);
 
             user.Status = dto.Status;
             user.BirthDate = dto.BirthDate;
