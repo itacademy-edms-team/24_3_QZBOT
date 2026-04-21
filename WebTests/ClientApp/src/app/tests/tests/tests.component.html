@@ -6,7 +6,7 @@
     </h3>
 
     <div *ngIf="test.timeLimitSeconds" class="text-2xl font-bold mb-6">
-      Осталось: {{ remainingTime }} сек.
+      Осталось: {{ formattedTime }}.
     </div>
 
     <div *ngIf="currentQuestion.isMultiple;else no_multiple">

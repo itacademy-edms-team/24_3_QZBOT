@@ -356,6 +356,13 @@ export class TestComponent implements OnInit {
     this.finishTest();
   }
 
+  get formattedTime(): string {
+    const minutes = Math.floor(this.remainingTime / 60);
+    const seconds = this.remainingTime % 60;
+
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  }
+
   restoreSelection() {
     const saved = this.savedAnswers[this.currentQuestion.id];
     if (!saved) return;
