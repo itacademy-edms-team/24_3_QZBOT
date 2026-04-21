@@ -311,6 +311,7 @@ export interface Test {
   coverUrl: string;
   description: string;
   difficult: number;
+  timeLimitSeconds: number;
 }
 
 
@@ -331,6 +332,7 @@ export interface UserTestDto {
   startedAt: Date;
   isFinished: boolean;
   answers: UserAnswerDto[];
+  timeLimitSeconds: number;
 }
 
 export interface UserAnswerDto {

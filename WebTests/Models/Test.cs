@@ -20,5 +20,6 @@ namespace WebTests.Models
         public string? Description { get; set; }
         public int? Difficult { get; set; }
         public string? CoverUrl { get; set; }
+        public int? TimeLimitSeconds { get; set; }
     }
 }

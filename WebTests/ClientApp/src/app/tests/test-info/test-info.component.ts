@@ -24,6 +24,7 @@ export class TestInfoComponent implements OnInit {
     coverUrl: '',
     description: '',
     difficult: 0,
+    timeLimitSeconds: 0
   };
 
   creator: User = {

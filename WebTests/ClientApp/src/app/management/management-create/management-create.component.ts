@@ -25,6 +25,7 @@ export class ManagementCreateComponent {
     coverUrl: '',
     description: '',
     difficult: 0,
+    timeLimitSeconds: 0
   };
 
   types: TestType[] = [
@@ -252,6 +253,7 @@ export class ManagementCreateComponent {
         coverUrl: '',
         description: '',
         difficult: 0,
+        timeLimitSeconds: 0,
       };
     } catch (e) {
       // JSON синтаксически неверный

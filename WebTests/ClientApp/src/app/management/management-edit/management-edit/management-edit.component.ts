@@ -28,6 +28,7 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     coverUrl: '',
     description: '',
     difficult: 0,
+    timeLimitSeconds: 0,
   };
 
   // копия названия для отображения
@@ -48,6 +49,7 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     coverUrl: '',
     description: '',
     difficult: 0,
+    timeLimitSeconds: 0,
   };
 
   selectedCoverFile: File | null = null;     // выбранный файл обложки

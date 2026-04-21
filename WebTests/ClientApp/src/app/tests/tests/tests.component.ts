@@ -25,6 +25,7 @@ export class TestComponent implements OnInit {
     coverUrl: '',
     description: '',
     difficult: 0,
+    timeLimitSeconds: 0
   };
 
   errorMessage = '';
@@ -61,6 +62,7 @@ export class TestComponent implements OnInit {
     coverUrl: '',
     description: '',
     difficult: 0,
+    timeLimitSeconds: 0
   };
 
   try: UserTest | null = {
@@ -89,6 +91,10 @@ export class TestComponent implements OnInit {
     manyTimes: false
   }
 
+  remainingTime: number = 0;
+  private timerId: any;
+  startedAt: Date = new Date(0);
+
   constructor(
     private testService: TestService,
     private authService: AuthService,
@@ -107,6 +113,7 @@ export class TestComponent implements OnInit {
 
             this.testService.startTest(testId).subscribe({
               next: (res) => {
+                this.startedAt = res.startedAt;
                 this.userTestId = res.userTestId;
 
                 if (res.status == "Finished") {
@@ -128,6 +135,8 @@ export class TestComponent implements OnInit {
 
                   this.textModal = `Продолжение попытки от ${formattedDate}`
                 }
+
+                this.startTimer();
 
                 this.savedAnswers = {};
 
@@ -314,6 +323,37 @@ export class TestComponent implements OnInit {
         this.isFinishModalOpen = true;
       }
     })
+  }
+
+  startTimer() {
+    if (!this.test.timeLimitSeconds || this.test.timeLimitSeconds <= 0) {
+      return;
+    }
+
+    this.updateRemainingTime();
+
+    this.timerId = setInterval(() => {
+      this.updateRemainingTime();
+
+      if (this.remainingTime <= 0) {
+        clearInterval(this.timerId);
+        this.onTimeExpired();
+      }
+    }, 1000);
+  }
+
+  updateRemainingTime() {
+    const now = new Date().getTime();
+    const start = new Date(this.startedAt).getTime();
+
+    const elapsed = Math.floor((now - start) / 1000);
+    const remaining = this.test.timeLimitSeconds - elapsed;
+
+    this.remainingTime = Math.max(0, remaining)
+  }
+
+  onTimeExpired() {
+    this.finishTest();
   }
 
   restoreSelection() {

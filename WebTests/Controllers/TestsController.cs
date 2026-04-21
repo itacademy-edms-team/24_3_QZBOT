@@ -196,6 +196,7 @@ namespace WebTests.Controllers
                 MinimumSuccessPercent = test.MinSuccessPercent,
                 Types = test.Types.Select(t => t.Name).ToList(),
                 Difficult = test.Difficult,
+                TimeLimitSeconds = test.TimeLimitSeconds,
                 Questions = test.Questions.Select(q => new QuestionDto
                 {
                     Id = q.Id,
@@ -602,6 +603,16 @@ namespace WebTests.Controllers
 
             if (userTest == null)
                 return NotFound();
+
+
+            bool isExpired = false;
+
+            if (test.TimeLimitSeconds != null)
+            {
+                var elapsed = DateTime.UtcNow - userTest.StartedAt;
+                isExpired = elapsed.TotalSeconds >= test.TimeLimitSeconds.Value;
+            }
+
 
             double totalScore = userTest.Answers.Sum(a => a.Score);
             int totalQuestions = userTest.Test.Questions.Count;
