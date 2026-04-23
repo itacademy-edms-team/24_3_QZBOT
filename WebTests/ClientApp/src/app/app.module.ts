@@ -54,8 +54,13 @@ import { TestInfoComponent } from './tests/test-info/test-info.component';
     FormsModule,
     RouterModule.forRoot([
       { path: '', component: HomeComponent, pathMatch: 'full' },
-      { path: 'tests/:id', component: TestComponent },
-      { path: 'test/:id', component: TestInfoComponent },
+      { path: 'tests/id/:id', component: TestComponent },
+      { path: 'test/id/:id', component: TestInfoComponent },
+
+      { path: 'tests/:token', component: TestComponent },
+      { path: 'test/:token', component: TestInfoComponent },
+      
+
       { path: 'tests', component: TestsListComponent },
 
       { path: 'management', component: ManagementComponent },
