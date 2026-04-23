@@ -312,6 +312,8 @@ export interface Test {
   description: string;
   difficult: number;
   timeLimitSeconds: number;
+  isPublic: boolean;
+  accessToken: string;
 }
 
 

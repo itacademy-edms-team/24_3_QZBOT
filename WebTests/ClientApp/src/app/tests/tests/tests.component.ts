@@ -25,7 +25,9 @@ export class TestComponent implements OnInit {
     coverUrl: '',
     description: '',
     difficult: 0,
-    timeLimitSeconds: 0
+    timeLimitSeconds: 0,
+    isPublic: false,
+    accessToken: ''
   };
 
   errorMessage = '';
@@ -62,7 +64,9 @@ export class TestComponent implements OnInit {
     coverUrl: '',
     description: '',
     difficult: 0,
-    timeLimitSeconds: 0
+    timeLimitSeconds: 0,
+    isPublic: false,
+    accessToken: ''
   };
 
   try: UserTest | null = {

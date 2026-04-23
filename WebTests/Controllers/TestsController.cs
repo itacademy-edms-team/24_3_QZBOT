@@ -75,7 +75,7 @@ namespace WebTests.Controllers
         public IActionResult GetPublishedTests()
         {
             var tests = _context.Tests
-                .Where(t => t.Published == true && t.isDeleted == false)
+                .Where(t => t.Published == true && t.IsPublic == true && t.isDeleted == false)
                 .Include(t => t.Types)
                 .Select(t => new
                 {
@@ -92,7 +92,9 @@ namespace WebTests.Controllers
                     t.MinSuccessPercent,
                     t.CoverUrl,
                     t.Description,
-                    t.Difficult
+                    t.Difficult,
+                    t.IsPublic,
+                    t.AccessToken,
                 })
                 .ToList();
 
@@ -183,6 +185,9 @@ namespace WebTests.Controllers
                 .FirstOrDefault(t => t.Id == id);
 
             if (test == null)
+                return NotFound();
+
+            if (!test.IsPublic)
                 return NotFound();
 
             var dto = new TestReadDto
@@ -282,6 +287,8 @@ namespace WebTests.Controllers
 
             test.CreatorId = userId;
             test.CreatedDate = DateTime.UtcNow;
+
+            // при создании приватного генерировать AccessToken
 
             if (!dto.Published)
                 test.PublishDate = null;
