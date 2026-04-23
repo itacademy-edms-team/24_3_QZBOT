@@ -11,7 +11,7 @@ namespace WebTests.DTOs
         public List<UserAnswerDto> Answers { get; set; }
 
         public List<int> AnsweredQuestionIds { get; set; }
-        public int TimeLimitSeconds { get; set; }
+        public int? TimeLimitSeconds { get; set; }
 
         public static UserTestDto MapToDto(UserTest attempt)
         {
