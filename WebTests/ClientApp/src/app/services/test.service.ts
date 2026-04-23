@@ -30,6 +30,11 @@ export class TestService {
   }
 
 
+  getTestByToken(token: string): Observable<Test> {
+    return this.http.get<Test>(`${this.baseUrl}/token/${token}`, { withCredentials: true })
+  }
+
+
 
   getMyTestsByUsername(username: string | null) {
     return this.http.get<Test[]>(`${this.baseUrl}/my/${username}`, { withCredentials: true });
@@ -94,12 +99,20 @@ export class TestService {
 
   checkTestInfo(testId: number) {
     return this.http.post(
-      `${this.baseUrl}/${testId}/checktestinfo`,
+      `${this.baseUrl}/${testId}/CheckTestInfo`,
       {},
       { withCredentials: true, responseType: 'text' }
     );
   }
 
+
+  checkTestInfoByToken(token: string) {
+    return this.http.post(
+      `${this.baseUrl}/${token}/CheckTestInfoByToken`,
+      {},
+      { withCredentials: true, responseType: 'text' }
+    )
+  }
 
 
   submitAnswer(dto: SubmitAnswerDto) {
@@ -291,6 +304,10 @@ export class TestService {
 
   getAuthor(testId: number) {
     return this.http.get<User>(`${this.baseUrl}/getAuthor/${testId}`, { withCredentials: true });
+  }
+
+  getAuthorByToken(token: string) {
+    return this.http.get<User>(`${this.baseUrl}/getAuthorByToken/${token}`, { withCredentials: true });
   }
 }
 

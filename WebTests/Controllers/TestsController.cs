@@ -219,6 +219,49 @@ namespace WebTests.Controllers
             return Ok(dto);
         }
 
+        [HttpGet("token/{token}")]
+        public IActionResult GetTestByToken(string token)
+        {
+            var test = _context.Tests
+                .Where(t => t.AccessToken == token && t.isDeleted == false)
+                .Include(t => t.Types)
+                .Include(t => t.Questions)
+                    .ThenInclude(q => q.Options)
+                .FirstOrDefault(t => t.AccessToken == token);
+
+            if (test == null)
+                return NotFound();
+
+            var dto = new TestReadDto
+            {
+                Id = test.Id,
+                Title = test.Title,
+                Description = test.Description,
+                CoverUrl = test.CoverUrl,
+                Published = test.Published,
+                CreatorId = test.CreatorId,
+                MinimumSuccessPercent = test.MinSuccessPercent,
+                Types = test.Types.Select(t => t.Name).ToList(),
+                Difficult = test.Difficult,
+                TimeLimitSeconds = test.TimeLimitSeconds,
+                AccessToken = test.AccessToken,
+                Questions = test.Questions.Select(q => new QuestionDto
+                {
+                    Id = q.Id,
+                    Text = q.Text,
+                    isMultiple = q.IsMultiple,
+                    Options = q.Options.Select(o => new AnswerOptionDto
+                    {
+                        Id = o.Id,
+                        Text = o.Text,
+                        IsCorrect = o.IsCorrect
+                    }).ToList()
+                }).ToList()
+            };
+
+            return Ok(dto);
+        }
+
         [HttpGet("exist/{title}")]
         public IActionResult CheckTestExists(string title)
         {
@@ -417,7 +460,7 @@ namespace WebTests.Controllers
         }
 
         [Authorize]
-        [HttpPost("{testId}/checktestinfo")]
+        [HttpPost("{testId}/CheckTestInfo")]
         public async Task<IActionResult> CheckTestInfo(int testId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -437,6 +480,38 @@ namespace WebTests.Controllers
             var finishedAttempt = await _context.UserTests
                 .Include(t => t.Answers)
                 .FirstOrDefaultAsync(t => t.TestId == testId && t.UserId == userId && t.IsFinished);
+
+            if (activeAttempt == null && finishedAttempt == null)
+                return Ok("new test");
+            else if (activeAttempt != null && finishedAttempt == null)
+                return Ok("continue test");
+            else if (activeAttempt == null && finishedAttempt != null)
+                return Ok("result");
+            else
+                return BadRequest();
+        }
+
+        [Authorize]
+        [HttpPost("{token}/CheckTestInfoByToken")]
+        public async Task<IActionResult> CheckTestInfoByToken(string token)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var test = await _context.Tests
+                .Where(t => t.isDeleted == false)
+                .Include(t => t.Questions)
+                .FirstOrDefaultAsync(t => t.AccessToken == token);
+
+            if (test == null)
+                return NotFound();
+
+            var activeAttempt = await _context.UserTests
+                .Include(t => t.Answers)
+                .FirstOrDefaultAsync(t => t.TestId == test.Id && t.UserId == userId && !t.IsFinished);
+
+            var finishedAttempt = await _context.UserTests
+                .Include(t => t.Answers)
+                .FirstOrDefaultAsync(t => t.TestId == test.Id && t.UserId == userId && t.IsFinished);
 
             if (activeAttempt == null && finishedAttempt == null)
                 return Ok("new test");
@@ -753,6 +828,38 @@ namespace WebTests.Controllers
         {
             var authorId = await _context.Tests
                 .Where(t => t.isDeleted == false && t.Id == testId)
+                .Select(t => t.CreatorId)
+                .FirstOrDefaultAsync();
+
+            if (authorId != null)
+            {
+                var author = await _userManager.FindByIdAsync(authorId);
+
+                if (author == null)
+                    return NotFound();
+
+                var result = new UserDto()
+                {
+                    Id = author.Id,
+                    Username = author.UserName,
+                    PhoneNumber = author.PhoneNumber,
+                    Email = author.Email,
+                    AvatarUrl = author.AvatarUrl,
+                    BirthDate = author.BirthDate,
+                    Status = author.Status,
+                };
+
+                return Ok(result);
+            }
+
+            return NotFound();
+        }
+
+        [HttpGet("getAuthorByToken/{token}")]
+        public async Task<IActionResult> GetAuthorByToken(string token)
+        {
+            var authorId = await _context.Tests
+                .Where(t => t.isDeleted == false && t.AccessToken == token)
                 .Select(t => t.CreatorId)
                 .FirstOrDefaultAsync();
 
