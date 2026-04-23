@@ -73,4 +73,12 @@ export class TestsListComponent {
       test.title.toLowerCase().includes(text)
     );
   }
+
+  getTestLink(test: Test | null | undefined) {
+    if (!test) return ['/test'];
+
+    return test.accessToken
+      ? ['/test', test.accessToken]
+      : ['/test/id', test.id];
+  }
 }

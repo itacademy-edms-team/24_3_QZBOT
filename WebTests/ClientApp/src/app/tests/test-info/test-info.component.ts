@@ -51,6 +51,7 @@ export class TestInfoComponent implements OnInit {
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       const testId = Number(params.get('id'));
+      const testToken = String(params.get('token'));
       if (testId) {
         this.testService.getTestById(testId).subscribe({
           next: (data) => {
@@ -74,6 +75,38 @@ export class TestInfoComponent implements OnInit {
           }
         })
       }
+
+      else if (testToken) {
+        this.testService.getTestByToken(testToken).subscribe({
+          next: (data) => {
+            this.test = data;
+          },
+          error: (err) => {
+            console.error('Ошибка загрузки: ', err);
+            this.router.navigate(['/tests'])
+          }
+        })
+
+        this.testService.checkTestInfoByToken(testToken).subscribe({
+          next: (data) => {
+            this.state = data;
+          }
+        })
+
+        this.testService.getAuthorByToken(testToken).subscribe({
+          next: (data) => {
+            this.creator = data;
+          }
+        })
+      }
     })
+  }
+
+  getTestLink(test: Test | null | undefined) {
+    if (!test) return ['/test'];
+
+    return test.accessToken
+      ? ['/tests', test.accessToken]
+      : ['/tests/id', test.id];
   }
 }

@@ -549,6 +549,7 @@ namespace WebTests.Controllers
                     Status = "Active",
                     UserTestId = activeAttempt.Id,
                     StartedAt = activeAttempt.StartedAt,
+                    TimeLimitSeconds = test.TimeLimitSeconds,
                     Answers = activeAttempt.Answers.Select(a => new UserAnswerDto
                     {
                         QuestionId = a.QuestionId,
