@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TestService, TestType, Test, Question, Option, UserTest, UserTestDto, SubmitAnswerDto, SubmitAnswerResult } from '../../services/test.service';
+import { TestService, TestType, Test, Question, Option, UserTest, UserTestDto, SubmitAnswerDto, SubmitAnswerResult, UserAnswerDto } from '../../services/test.service';
 import { AuthService } from '../../services/auth.service';
 import { Observable, map } from 'rxjs';
 
@@ -109,99 +109,103 @@ export class TestComponent implements OnInit {
 
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
-      const testId = Number(params.get('id'));
-      if (testId) {
-        this.testService.getTestById(testId).subscribe({
-          next: (data) => {
-            this.test = data;
+      console.log('Все ключи в этом роуте:', params.keys);
 
-            this.testService.startTest(testId).subscribe({
-              next: (res) => {
-                this.startedAt = res.startedAt;
-                this.userTestId = res.userTestId;
+      const id = Number(params.get('id'));
+      const token = params.get('token');
 
-                if (res.status == "Finished") {
-                  this.router.navigate(['/results', this.test.id]) // здесь будет страница итогов
-                  return;
-                }
+      if (id) {
+        this.loadById(id);
+      } else if (token) {
+        this.loadByToken(token);
+      }
+    })
+  }
 
-                if (res.status == "Active") {
-                  this.isModalTryOpen = true;
+  private handleTestStart(test: Test, res: any) {
+    this.test = test;
 
-                  const date = new Date(res.startedAt);
-                  const formattedDate = date.toLocaleDateString('ru', {
-                    timeZone: 'Etc/GMT-14',
-                    day: 'numeric',
-                    month: 'long',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  });
+    this.startedAt = res.startedAt;
+    this.userTestId = res.userTestId;
 
-                  this.textModal = `Продолжение попытки от ${formattedDate}`
-                }
+    if (res.status == "Finished") {
+      this.router.navigate(['/results', this.test.id])
+      return
+    }
 
-                this.startTimer();
+    else if (res.status == "Active") {
+      this.isModalTryOpen = true;
 
-                this.savedAnswers = {};
+      const date = new Date(res.startedAt);
+      const formattedDate = date.toLocaleDateString('ru', {
+        timeZone: 'Etc/GMT-14',
+        day: 'numeric',
+        month: 'long',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
 
-                res.answers.forEach(a => {
-                  this.savedAnswers[a.questionId] = a.selectedOptionIds;
-                });
+      this.textModal = `Продолжение попытки от ${formattedDate}`;
+    }
 
-                const firstUnansweredIndex = this.test.questions.findIndex(q => !this.savedAnswers[q.id])
+    this.startTimer();
 
-                if (firstUnansweredIndex !== -1) {
-                  this.loadQuestion(this.test.questions[firstUnansweredIndex]);
-                } else {
-                  this.loadQuestion(this.test.questions[this.test.questions.length - 1]);
-                }
+    this.savedAnswers = {};
+    res.answers.forEach((a: UserAnswerDto) => {
+      this.savedAnswers[a.questionId] = a.selectedOptionIds;
+    })
 
-                data.types.forEach(type => {
-                  if (type === "AuthOnly") {
-                    this.mode.authOnly = true;
-                  } else if (type === "Strict") {
-                    this.mode.strict = true;
-                  } else if (type === "AllowBack") {
-                    this.mode.allowBack = true;
-                  } else if (type === "ShowAfterEach") {
-                    this.mode.showAfterEach = true;
-                  } else if (type === "Shuffle") {
-                    this.mode.shuffle = true;
-                  } else if (type === "ManyTimes") {
-                    this.mode.manyTimes = true;
-                  }
-                })
+    const firstUnansweredIndex = this.test.questions.findIndex(q => !this.savedAnswers[q.id])
 
+    if (firstUnansweredIndex !== -1) {
+      this.loadQuestion(this.test.questions[firstUnansweredIndex]);
+    } else {
+      this.loadQuestion(this.test.questions[this.test.questions.length - 1]);
+    }
 
-                if (this.mode.authOnly) {
-                  if (!this.authService.isAuthenticated) {
-                    this.isUnauth = true;
-                  }
-                }
+    this.applyModes(test);
 
-                if (this.mode.shuffle) {
-                  this.shuffle(this.test.questions);
-                }
+    if (this.mode.authOnly && !this.authService.isAuthenticated) {
+      this.isUnauth = true;
+    }
 
+    if (this.mode.shuffle) {
+      this.shuffle(test.questions);
+    }
 
-                this.authService.currentUserId.subscribe({
-                  next: (data) => {
-                    if (data === this.test.creatorId) {
-                      this.isCreator = true;
-                    }
-                  }
-                })
-              },
-              error: (err) => {
-                this.userTest.userTestId = 0;
-              }
-            })
-          }
-        })
+    this.authService.currentUserId.subscribe(userId => {
+      if (userId === test.creatorId) {
+        this.isCreator = true;
       }
     });
   }
 
+  private loadById(id: number) {
+    this.testService.getTestById(id).subscribe(test => {
+      this.testService.startTestById(id).subscribe(res => {
+        this.handleTestStart(test, res);
+      })
+    })
+  }
+
+  private loadByToken(token: string) {
+    this.testService.getTestByToken(token).subscribe(test => {
+      this.testService.startTestByToken(token).subscribe(res => {
+        this.handleTestStart(test, res);
+      })
+    })
+  }
+
+  private applyModes(test: Test) {
+    test.types.forEach(type => {
+      if (type === "AuthOnly") this.mode.authOnly = true;
+      else if (type === "Strict") this.mode.strict = true;
+      else if (type === "AllowBack") this.mode.allowBack = true;
+      else if (type === "ShowAfterEach") this.mode.showAfterEach = true;
+      else if (type === "Shuffle") this.mode.shuffle = true;
+      else if (type === "ManyTimes") this.mode.manyTimes = true;
+    });
+  }
 
   onOptionToggle(option: Option) {
     const isMultiple = this.currentQuestion.isMultiple;
