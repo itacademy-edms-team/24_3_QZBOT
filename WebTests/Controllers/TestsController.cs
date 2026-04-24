@@ -524,8 +524,8 @@ namespace WebTests.Controllers
         }
 
         [Authorize]
-        [HttpPost("{testId}/start")]
-        public async Task<IActionResult> StartTest(int testId)
+        [HttpPost("{testId}/StartById")]
+        public async Task<IActionResult> StartTestById(int testId)
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
@@ -575,6 +575,74 @@ namespace WebTests.Controllers
             {
                 UserId = userId,
                 TestId = testId,
+                StartedAt = DateTime.UtcNow,
+                IsFinished = false,
+            };
+
+            _context.UserTests.Add(newAttempt);
+            await _context.SaveChangesAsync();
+
+            return Ok(new UserTestDto
+            {
+                Status = "New",
+                UserTestId = newAttempt.Id,
+                StartedAt = newAttempt.StartedAt,
+                Answers = new List<UserAnswerDto>()
+            });
+        }
+
+        [Authorize]
+        [HttpPost("{testToken}/StartByToken")]
+        public async Task<IActionResult> StartTestByToken(string testToken)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var test = await _context.Tests
+                .Where(t => t.isDeleted == false)
+                .Include(t => t.Questions)
+                .FirstOrDefaultAsync(t => t.AccessToken == testToken);
+
+            if (test == null)
+                return NotFound();
+
+
+            var activeAttempt = await _context.UserTests
+                .Include(t => t.Answers)
+                .FirstOrDefaultAsync(t => t.TestId == test.Id && t.UserId == userId && !t.IsFinished);
+
+            if (activeAttempt != null)
+            {
+                return Ok(new UserTestDto
+                {
+                    Status = "Active",
+                    UserTestId = activeAttempt.Id,
+                    StartedAt = activeAttempt.StartedAt,
+                    TimeLimitSeconds = test.TimeLimitSeconds,
+                    Answers = activeAttempt.Answers.Select(a => new UserAnswerDto
+                    {
+                        QuestionId = a.QuestionId,
+                        SelectedOptionIds = JsonSerializer.Deserialize<List<int>>(a.SelectedOptionsJson)!
+                    }).ToList()
+                });
+            }
+
+            var finishedAttempt = await _context.UserTests
+                .Where(t => t.TestId == test.Id && t.UserId == userId && t.IsFinished)
+                .OrderByDescending(t => t.FinishedAt)
+                .FirstOrDefaultAsync();
+
+            if (finishedAttempt != null)
+            {
+                return Ok(new UserTestDto // было StartTestResponseDto
+                {
+                    Status = "Finished"
+                });
+            }
+
+            var newAttempt = new UserTest
+            {
+                UserId = userId,
+                TestId = test.Id,
                 StartedAt = DateTime.UtcNow,
                 IsFinished = false,
             };
