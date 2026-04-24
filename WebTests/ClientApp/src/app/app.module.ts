@@ -57,8 +57,8 @@ import { TestInfoComponent } from './tests/test-info/test-info.component';
       { path: 'tests/id/:id', component: TestComponent },
       { path: 'test/id/:id', component: TestInfoComponent },
 
-      { path: 'tests/:token', component: TestComponent },
-      { path: 'test/:token', component: TestInfoComponent },
+      { path: 'tests/t/:token', component: TestComponent },
+      { path: 'test/t/:token', component: TestInfoComponent },
       
 
       { path: 'tests', component: TestsListComponent },
