@@ -78,7 +78,7 @@ export class TestsListComponent {
     if (!test) return ['/test'];
 
     return test.accessToken
-      ? ['/test', test.accessToken]
+      ? ['/test/t', test.accessToken]
       : ['/test/id', test.id];
   }
 }

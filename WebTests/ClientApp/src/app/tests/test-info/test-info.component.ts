@@ -106,7 +106,7 @@ export class TestInfoComponent implements OnInit {
     if (!test) return ['/test'];
 
     return test.accessToken
-      ? ['/tests', test.accessToken]
+      ? ['/tests/t', test.accessToken]
       : ['/tests/id', test.id];
   }
 }

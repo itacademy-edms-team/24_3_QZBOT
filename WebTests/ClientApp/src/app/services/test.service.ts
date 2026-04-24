@@ -87,9 +87,18 @@ export class TestService {
 
 
 
-  startTest(testId: number) {
+  startTestById(testId: number) {
     return this.http.post<UserTestDto>(
-      `${this.baseUrl}/${testId}/start`,
+      `${this.baseUrl}/${testId}/StartById`,
+      {},
+      { withCredentials: true }
+    );
+  }
+
+
+  startTestByToken(token: string) {
+    return this.http.post<UserTestDto>(
+      `${this.baseUrl}/${token}/StartByToken`,
       {},
       { withCredentials: true }
     );
