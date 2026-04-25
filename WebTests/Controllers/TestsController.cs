@@ -202,6 +202,52 @@ namespace WebTests.Controllers
                 Types = test.Types.Select(t => t.Name).ToList(),
                 Difficult = test.Difficult,
                 TimeLimitSeconds = test.TimeLimitSeconds,
+                AccessToken = test.AccessToken,
+                IsPublic = test.IsPublic,
+                Questions = test.Questions.Select(q => new QuestionDto
+                {
+                    Id = q.Id,
+                    Text = q.Text,
+                    isMultiple = q.IsMultiple,
+                    Options = q.Options.Select(o => new AnswerOptionDto
+                    {
+                        Id = o.Id,
+                        Text = o.Text,
+                        IsCorrect = o.IsCorrect
+                    }).ToList()
+                }).ToList()
+            };
+
+            return Ok(dto);
+        }
+
+        [HttpGet("management/id/{id}")]
+        public IActionResult GetTestForManagementById(int id)
+        {
+            var test = _context.Tests
+                .Where(t => t.Id == id && t.isDeleted == false)
+                .Include(t => t.Types)
+                .Include(t => t.Questions)
+                    .ThenInclude(q => q.Options)
+                .FirstOrDefault(t => t.Id == id);
+
+            if (test == null)
+                return NotFound();
+
+            var dto = new TestReadDto
+            {
+                Id = test.Id,
+                Title = test.Title,
+                Description = test.Description,
+                CoverUrl = test.CoverUrl,
+                Published = test.Published,
+                CreatorId = test.CreatorId,
+                MinimumSuccessPercent = test.MinSuccessPercent,
+                Types = test.Types.Select(t => t.Name).ToList(),
+                Difficult = test.Difficult,
+                TimeLimitSeconds = test.TimeLimitSeconds,
+                AccessToken = test.AccessToken,
+                IsPublic = test.IsPublic,
                 Questions = test.Questions.Select(q => new QuestionDto
                 {
                     Id = q.Id,

@@ -99,6 +99,10 @@ namespace WebTests.TestFactory
 
             test.Difficult = dto.Difficult;
 
+            test.IsPublic = dto.IsPublic;
+
+            test.AccessToken = dto.AccessToken;
+
             test.Questions.Clear();
 
             foreach (var q in dto.Questions)

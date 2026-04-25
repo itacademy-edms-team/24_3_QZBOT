@@ -106,7 +106,7 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
       }
 
       // загрузка теста по ID 
-      this.testService.getTestById(this.test.id).subscribe({
+      this.testService.getTestForManagementById(this.test.id).subscribe({
         next: (data) => {
           this.test = data;
 
@@ -255,6 +255,8 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
         }
       }
     })
+
+    this.confirm_edit = false;
   }
 
   // закрытие модального окна

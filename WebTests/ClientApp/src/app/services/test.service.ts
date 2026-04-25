@@ -30,6 +30,11 @@ export class TestService {
   }
 
 
+  getTestForManagementById(id: number): Observable<Test> {
+    return this.http.get<Test>(`${this.baseUrl}/management/id/${id}`, { withCredentials: true })
+  }
+
+
   getTestByToken(token: string): Observable<Test> {
     return this.http.get<Test>(`${this.baseUrl}/token/${token}`, { withCredentials: true })
   }
@@ -262,12 +267,33 @@ export class TestService {
       changes.push(`Тест опубликован`);
     }
 
+    if (original.isPublic == false && updated.isPublic == true) {
+      changes.push(`Тест теперь публичный`);
+    }
+    if (original.isPublic == true && updated.isPublic == false) {
+      changes.push(`Тест теперь приватный`);
+    }
+
+    if (original.accessToken != null && updated.accessToken == null) {
+      changes.push(`Уникальная ссылка удалена`);
+    }
+    if (original.accessToken == null && updated.accessToken != null) {
+      changes.push(`Уникальная ссылка создана`);
+    }
+    if (original.accessToken != updated.accessToken) {
+      changes.push(`Уникальная ссылка изменена`);
+    }
+
     return changes;
   }
 
 
 
   checkTest(test: Test) {
+    if (test.accessToken == '' && test.isPublic == false && test.published) {
+      return "Приватный тест не может быть опубликован без уникальной ссылки";
+    }
+
     for (var i = 0; i < test.questions.length; i++) {
 
       if (test.questions[i].text == "") {

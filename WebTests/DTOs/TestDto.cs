@@ -1,4 +1,6 @@
-﻿namespace WebTests.DTOs
+﻿using Microsoft.Win32.SafeHandles;
+
+namespace WebTests.DTOs
 {
     public class TestDto
     {
@@ -14,5 +16,7 @@
         public DateTime EditTime { get; set; } = DateTime.UtcNow;
         public int MinimumSuccessPercent { get; set; }
         public int Difficult { get; set; }
+        public string? AccessToken { get; set; }
+        public bool IsPublic { get; set; }
     }
 }
