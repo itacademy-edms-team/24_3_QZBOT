@@ -205,6 +205,24 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     }, 2000);
   }
 
+  generateLink() {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+      this.edited_test.accessToken = crypto.randomUUID();
+      return;
+    }
+
+    this.edited_test.accessToken = this.generateUUIDFallback();
+  }
+
+  private generateUUIDFallback(): string {
+    // простой UUID v4-подобный генератор
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+  }
+
   // множественный выбор
   onMultipleChange(question: any) {
     if (!question.isMultiple) {
@@ -400,5 +418,13 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     this.showCropper = false;
     this.imageChangedEvent = '';
     this.resetInput();
+  }
+
+  get fontSizeClass(): string {
+    const len = this.edited_test.accessToken.length;
+
+    if (len > 20) return 'text-lg';
+    if (len > 30) return 'text-base';
+    return 'text-2xl';
   }
 }

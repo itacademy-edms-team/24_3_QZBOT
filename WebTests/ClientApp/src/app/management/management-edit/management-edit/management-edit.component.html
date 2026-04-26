@@ -75,18 +75,32 @@
   
   <div class="bg-white border border-gray-100 rounded-[2.5rem] p-10 shadow-xl shadow-gray-100/50 mb-8 space-y-8">
     <label class="flex items-center gap-3 cursor-pointer">
-      <input type="checkbox" [(ngModel)]="is_customlink_enabled" (change)="toggleCustomLink()" class="h-5 w-5 rounded border-gray-300 text-black focus:ring-black" />
+      <input type="checkbox"
+             [(ngModel)]="is_customlink_enabled"
+             (change)="toggleCustomLink()"
+             class="h-5 w-5 rounded border-gray-300 text-black focus:ring-black" />
       <span class="text-gray-700 font-bold cursor-default">Уникальная ссылка на тест</span>
     </label>
 
     <div class="flex items-center border-gray-50 focus-within:border-black transition-colors">
-      <span class="text-2xl font-black border-b-2 text-gray-400 select-none">testify.ru/tests/t/</span>
-      <input type="text" [(ngModel)]="edited_test.accessToken" [readonly]="is_editing_locked" [disabled]="!is_customlink_enabled || is_editing_locked"
+      <span [ngClass]="fontSizeClass" class="text-2xl font-black border-b-2 text-gray-400 select-none">testify.ru/tests/t/</span>
+      <input type="text"
+             [(ngModel)]="edited_test.accessToken"
+             [readonly]="is_editing_locked"
+             [disabled]="!is_customlink_enabled || is_editing_locked"
+             [ngClass]="fontSizeClass"
              class="w-full text-2xl font-black border-b-2 tracking-tight outline-none mr-2 bg-transparent disabled:text-gray-300" />
       <button type="button" (click)="copyLink()" [disabled]="!fullLink" class="ml-3 px-3 py-1.5 text-sm font-semibold border border-gray-200 rounded-lg hover:bg-gray-50 transition disabled:opacity-40">
         {{ copied ? 'Скопировано!' : 'Копировать' }}
       </button>
     </div>
+
+    <button type="button"
+            (click)="generateLink()"
+            [disabled]="!is_customlink_enabled || is_editing_locked"
+            class="ml-2 px-3 py-1.5 text-sm font-semibold border border-gray-200 rounded-lg hover:bg-gray-50 transition disabled:opacity-40">
+      Сгенерировать случайную ссылку
+    </button>
     
   </div>
 
@@ -222,7 +236,7 @@
 
       <div *ngIf="text_error"
            class="p-4 rounded-2xl bg-red-50 border border-red-100 text-red-600 text-sm font-bold flex items-center gap-3 animate-pulse">
-        <span class="text-lg">⚠️</span> {{ text_error }}
+        {{ text_error }}
       </div>
 
       <div class="bg-black rounded-[2.5rem] p-8 md:p-10 text-white shadow-2xl">
