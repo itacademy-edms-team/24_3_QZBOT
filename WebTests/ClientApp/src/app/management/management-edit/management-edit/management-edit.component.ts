@@ -70,6 +70,9 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
   changes: string[] = [];                    // список изменений, вычисляется перед подтверждением 
   is_editing_locked: boolean = false;        // блокировка UI до подтверждения
   success_edit: boolean = false;             // флаг успешного сохранения
+  is_customlink_enabled: boolean = false;    // флаг создания кастомной ссылки
+  copied: boolean = false;                   // флаг копирования ссылки
+  private copyTimeout: any;                  // уведомление о копировании
 
   currentUserId: string | null = null;       // userId
 
@@ -165,6 +168,13 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     }
   }
 
+  // создание кастомной ссылки
+  toggleCustomLink() {
+    if (!this.is_customlink_enabled) {
+      this.edited_test.accessToken = '';
+    }
+  }
+
   // выбор правильного варианта
   toggleCorrectOption(question: any, selectedIndex: number) {
     if (question.isMultiple) {
@@ -174,6 +184,25 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
         o.isCorrect = i === selectedIndex;
       })
     }
+  }
+
+  get fullLink(): string {
+    return this.edited_test.accessToken
+      ? `http://localhost:4200/test/t/${this.edited_test.accessToken}`
+      : '';
+  }
+
+  copyLink() {
+    if (!this.fullLink) return;
+
+    navigator.clipboard.writeText(this.fullLink);
+
+    this.copied = true;
+
+    clearTimeout(this.copyTimeout);
+    this.copyTimeout = setTimeout(() => {
+      this.copied = false;
+    }, 2000);
   }
 
   // множественный выбор

@@ -35,12 +35,6 @@
 
 
 
-    <!--<div class="flex items-center gap-3">
-    <input type="checkbox" [(ngModel)]="edited_test.isPublic" [disabled]="is_editing_locked" id="edit-public"
-           class="h-5 w-5 rounded border-gray-300 text-black focus:ring-black" />
-    <label for="edit-public" class="text-gray-700 font-bold">Общий доступ</label>
-  </div>-->
-
     <div class="space-y-2">
       <label class="text-xs font-black uppercase tracking-widest text-gray-300">Описание</label>
       <textarea rows="2" [(ngModel)]="edited_test.description" [readonly]="is_editing_locked"
@@ -78,11 +72,22 @@
     </div>
   </div>
 
-
+  
   <div class="bg-white border border-gray-100 rounded-[2.5rem] p-10 shadow-xl shadow-gray-100/50 mb-8 space-y-8">
-    <label class="text-xs font-black uppercase tracking-widest text-gray-300">Уникальная ссылка на тест</label>
-    <input type="text" [(ngModel)]="edited_test.accessToken" [readonly]="is_editing_locked"
-           class="w-full text-2xl font-black tracking-tight border-b-2 border-gray-50 focus:border-black outline-none transition-colors pb-2" />
+    <label class="flex items-center gap-3 cursor-pointer">
+      <input type="checkbox" [(ngModel)]="is_customlink_enabled" (change)="toggleCustomLink()" class="h-5 w-5 rounded border-gray-300 text-black focus:ring-black" />
+      <span class="text-gray-700 font-bold cursor-default">Уникальная ссылка на тест</span>
+    </label>
+
+    <div class="flex items-center border-gray-50 focus-within:border-black transition-colors">
+      <span class="text-2xl font-black border-b-2 text-gray-400 select-none">testify.ru/tests/t/</span>
+      <input type="text" [(ngModel)]="edited_test.accessToken" [readonly]="is_editing_locked" [disabled]="!is_customlink_enabled || is_editing_locked"
+             class="w-full text-2xl font-black border-b-2 tracking-tight outline-none mr-2 bg-transparent disabled:text-gray-300" />
+      <button type="button" (click)="copyLink()" [disabled]="!fullLink" class="ml-3 px-3 py-1.5 text-sm font-semibold border border-gray-200 rounded-lg hover:bg-gray-50 transition disabled:opacity-40">
+        {{ copied ? 'Скопировано!' : 'Копировать' }}
+      </button>
+    </div>
+    
   </div>
 
 
@@ -252,13 +257,6 @@
           </button>
         </div>
       </div>
-
-      <!--<div class="text-center">
-        <a [routerLink]="['/tests', edited_test.id]"
-           class="text-xs font-black uppercase tracking-widest text-gray-300 hover:text-black transition-colors">
-          View live version →
-        </a>
-      </div>-->
     </div>
 
     <div *ngIf="success_edit"
