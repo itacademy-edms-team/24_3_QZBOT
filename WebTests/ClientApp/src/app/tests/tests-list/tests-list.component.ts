@@ -16,6 +16,9 @@ export class TestsListComponent {
   isModalStartOpen: boolean = false;
   selectedTest: Test | null = null;
 
+  sortBy: string = 'title';
+  sortDirection: 'asc' | 'desc' = 'asc';
+
   constructor(
     private testService: TestService,
     private authService: AuthService,
@@ -23,23 +26,18 @@ export class TestsListComponent {
   ) { }
 
   ngOnInit() {
-    if (this.authService.isAuthenticated) {
-      this.testService.getPublishedTests().subscribe({
-        next: (data) => {
+    this.testService.getPublishedTests().subscribe({
+      next: (data) => {
+        if (this.authService.isAuthenticated) {
           this.tests = data;
-          this.filteredTests = data;
+        } else {
+          this.tests = data.filter(t => !t.types.includes("AuthOnly"));
         }
-      })
-    } else {
-      this.testService.getPublishedTests().subscribe({
-        next: (data) => {
-          data.forEach((test) => {
-            this.tests = data.filter(test => !test.types.includes("AuthOnly"));
-            this.filteredTests = this.tests;
-          })
-        }
-      })
-    }
+
+        this.filteredTests = [...this.tests];
+        this.applySorting();
+      }
+    });
   }
 
   checkStart(test: Test) {
@@ -72,6 +70,8 @@ export class TestsListComponent {
     this.filteredTests = this.tests.filter(test =>
       test.title.toLowerCase().includes(text)
     );
+
+    this.applySorting();
   }
 
   getTestLink(test: Test | null | undefined) {
@@ -80,5 +80,25 @@ export class TestsListComponent {
     return test.accessToken
       ? ['/test/t', test.accessToken]
       : ['/test/id', test.id];
+  }
+
+  applySorting() {
+    const sorted = [...this.filteredTests];
+
+    sorted.sort((a, b) => {
+      let result = 0;
+
+      if (this.sortBy === 'title') {
+        result = a.title.localeCompare(b.title);
+      }
+
+      if (this.sortBy === 'difficulty') {
+        result = a.difficult - b.difficult;
+      }
+
+      return this.sortDirection === 'asc' ? result : -result;
+    });
+
+    this.filteredTests = sorted;
   }
 }

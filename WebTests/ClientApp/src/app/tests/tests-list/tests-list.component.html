@@ -1,6 +1,6 @@
 <div class="max-w-5xl mx-auto px-6 pt-24 pb-20">
 
-  <div class="flex items-center justify-center mb-16">
+  <div class="flex items-center justify-center mb-4">
     <div class="flex items-center w-full max-w-2xl bg-gray-100 rounded-full p-1 shadow-sm border border-gray-50">
       <div class="pl-5 text-gray-400">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -12,6 +12,61 @@
              [(ngModel)]="searchText"
              (input)="filterTests()"
              class="flex-1 bg-transparent mx-2 py-3 px-4 text-lg focus:outline-none placeholder-gray-400 font-medium" />
+    </div>
+  </div>
+
+  <div class="flex items-center justify-center mb-10">
+    <div class="flex items-center gap-2 bg-gray-100 rounded-full p-1 shadow-sm border border-gray-50">
+
+      <!-- Сортировка по названию -->
+      <button (click)="sortBy = 'title'; applySorting()"
+              [ngClass]="sortBy === 'title'
+        ? 'bg-white shadow text-black'
+        : 'text-gray-400 hover:text-black'"
+              class="px-5 py-2 rounded-full font-bold transition-all">
+        Название
+      </button>
+
+      <!-- Сортировка по сложности -->
+      <button (click)="sortBy = 'difficulty'; applySorting()"
+              [ngClass]="sortBy === 'difficulty'
+        ? 'bg-white shadow text-black'
+        : 'text-gray-400 hover:text-black'"
+              class="px-5 py-2 rounded-full font-bold transition-all">
+        Сложность
+      </button>
+
+      <!-- Разделитель -->
+      <div class="w-px h-6 bg-gray-200 mx-1"></div>
+
+      <!-- Направление -->
+      <button (click)="sortDirection = sortDirection === 'asc' ? 'desc' : 'asc'; applySorting()"
+              class="px-4 py-2 rounded-full text-gray-400 hover:text-black transition-all">
+
+        <!-- Иконка вверх -->
+        <svg *ngIf="sortDirection === 'asc'"
+             xmlns="http://www.w3.org/2000/svg"
+             class="h-5 w-5"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M5 15l7-7 7 7" />
+        </svg>
+
+        <!-- Иконка вниз -->
+        <svg *ngIf="sortDirection === 'desc'"
+             xmlns="http://www.w3.org/2000/svg"
+             class="h-5 w-5"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 9l-7 7-7-7" />
+        </svg>
+
+      </button>
+
     </div>
   </div>
 
