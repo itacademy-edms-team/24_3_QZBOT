@@ -79,6 +79,12 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
   isModalDeleting: boolean = false;          // модальное окно удаления теста
   isDeleted: boolean = false;                // информация об удалении теста
 
+  time = {
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  }
+
   types: TestType[] = [
     { id: 11, name: "Shuffle", description: "вопросы в случайном порядке" },
     { id: 12, name: "AuthOnly", description: "доступ только авторизованным" },
@@ -124,6 +130,12 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
 
           // сохраняем название для заголовка UI
           this.test_title = data.title;
+
+          const total = this.edited_test.timeLimitSeconds || 0;
+
+          this.time.hours = Math.floor(total / 3600);
+          this.time.minutes = Math.floor((total % 3600) / 60);
+          this.time.seconds = total % 60;
         }
       });
     });
@@ -426,5 +438,13 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     if (len > 20) return 'text-lg';
     if (len > 30) return 'text-base';
     return 'text-2xl';
+  }
+
+  updateTimeLimit() {
+    const h = this.time.hours || 0;
+    const m = this.time.minutes || 0;
+    const s = this.time.seconds || 0;
+
+    this.edited_test.timeLimitSeconds = h * 3600 + m * 60 + s;
   }
 }

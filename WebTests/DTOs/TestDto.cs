@@ -18,5 +18,6 @@ namespace WebTests.DTOs
         public int Difficult { get; set; }
         public string? AccessToken { get; set; }
         public bool IsPublic { get; set; }
+        public int? TimeLimitSeconds { get; set; }
     }
 }

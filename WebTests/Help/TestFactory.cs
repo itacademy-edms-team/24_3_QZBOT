@@ -103,6 +103,8 @@ namespace WebTests.TestFactory
 
             test.AccessToken = dto.AccessToken;
 
+            test.TimeLimitSeconds = dto.TimeLimitSeconds;
+
             test.Questions.Clear();
 
             foreach (var q in dto.Questions)

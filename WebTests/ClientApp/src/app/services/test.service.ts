@@ -284,6 +284,20 @@ export class TestService {
       changes.push(`Уникальная ссылка изменена`);
     }
 
+    if (original.timeLimitSeconds == null && updated.timeLimitSeconds != null) {
+      changes.push(`Добавлено ограничение по времени`);
+    }
+    if (original.timeLimitSeconds != null && updated.timeLimitSeconds == null) {
+      changes.push(`Ограничения по времени больше нет`);
+    }
+    if (original.timeLimitSeconds > updated.timeLimitSeconds) {
+      changes.push(`Ограничение по времени уменьшено`);
+    }
+    if (original.timeLimitSeconds < updated.timeLimitSeconds) {
+      changes.push(`Ограничение по времени увеличено`);
+    }
+
+
     return changes;
   }
 
