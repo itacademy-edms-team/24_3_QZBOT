@@ -53,7 +53,9 @@
       </div>
       <div class="text-center border-l border-gray-50 md:block hidden">
         <p class="text-[10px] font-black uppercase text-gray-300 tracking-widest mb-1">Таймер</p>
-        <p class="text-xl font-black">Нет</p>
+        <p *ngIf="test.timeLimitSeconds!=null" class="text-xl font-black">{{ (test.timeLimitSeconds * 1000) | date:'mm:ss' }}</p>
+        <p *ngIf="test.timeLimitSeconds==null" class="text-xl font-black">Нет</p>
+
       </div>
       <div class="text-center border-l border-gray-50 md:block hidden">
         <p class="text-[10px] font-black uppercase text-gray-300 tracking-widest mb-1">Попытки</p>
