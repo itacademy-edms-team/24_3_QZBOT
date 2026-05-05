@@ -99,6 +99,9 @@ export class TestComponent implements OnInit {
   private timerId: any;
   startedAt: Date = new Date(0);
 
+  isGuest: boolean = false;
+  guestKey: string = '';
+
   constructor(
     private testService: TestService,
     private authService: AuthService,
@@ -108,16 +111,16 @@ export class TestComponent implements OnInit {
 
 
   ngOnInit() {
-    this.route.paramMap.subscribe(params => {
-      console.log('Все ключи в этом роуте:', params.keys);
+    this.isGuest = !this.authService.isAuthenticated;
 
+    this.route.paramMap.subscribe(params => {
       const id = Number(params.get('id'));
       const token = params.get('token');
 
       if (id) {
-        this.loadById(id);
+        this.isGuest ? this.loadGuestById(id) : this.loadById(id);
       } else if (token) {
-        this.loadByToken(token);
+        this.isGuest ? this.loadGuestByToken(token) : this.loadByToken(token);
       }
     })
   }
@@ -180,6 +183,18 @@ export class TestComponent implements OnInit {
     });
   }
 
+  private loadGuestById(id: number) {
+    this.testService.getTestById(id).subscribe(test => {
+      this.initGuestTest(test);
+    })
+  }
+
+  private loadGuestByToken(token: string) {
+    this.testService.getTestByToken(token).subscribe(test => {
+      this.initGuestTest(test);
+    })
+  }
+
   private loadById(id: number) {
     this.testService.getTestById(id).subscribe(test => {
       this.testService.startTestById(id).subscribe(res => {
@@ -194,6 +209,34 @@ export class TestComponent implements OnInit {
         this.handleTestStart(test, res);
       })
     })
+  }
+
+  private initGuestTest(test: Test) {
+    this.test = test;
+    this.applyModes(test);
+
+    this.guestKey = `guest_attempt_${test.id}`;
+
+    const saved = localStorage.getItem(this.guestKey);
+
+    if (saved) {
+      const attempt = JSON.parse(saved);
+      this.savedAnswers = {};
+
+      attempt.answers.forEach((a: any) => {
+        this.savedAnswers[a.questionId] = a.optionIds;
+      });
+    } else {
+      const attempt = {
+        testId: test.id,
+        startedAt: new Date().toISOString(),
+        answers: []
+      };
+
+      localStorage.setItem(this.guestKey, JSON.stringify(attempt));
+    }
+
+    this.loadQuestion(test.questions[0]);
   }
 
   private applyModes(test: Test) {
@@ -227,6 +270,11 @@ export class TestComponent implements OnInit {
 
 
   submitAnswer(questionId: number, title: string) {
+    if (this.isGuest) {
+      this.submitGuestAnswer(questionId);
+      return;
+    }
+
     this.testService.submitAnswer({
       userTestId: this.userTestId,
       questionId,
@@ -254,7 +302,33 @@ export class TestComponent implements OnInit {
     this.isSubmited = true;
   }
 
+  submitGuestAnswer(questionId: number) {
+    const raw = localStorage.getItem(this.guestKey);
+    if (!raw) return;
 
+    const attempt = JSON.parse(raw);
+
+    const existing = attempt.answers.find(
+      (a: any) => Number(a.questionId) === Number(questionId)
+    );
+
+    console.log(typeof questionId, questionId);
+    console.log(attempt.answers.map((a: any) => typeof a.questionId));
+
+    if (existing) {
+      existing.optionIds = [...this.selectedOptionIds];
+    } else {
+      attempt.answers.push({
+        questionId,
+        optionIds: [...this.selectedOptionIds]
+      });
+    }
+
+    localStorage.setItem(this.guestKey, JSON.stringify(attempt));
+
+    this.savedAnswers[questionId] = [...this.selectedOptionIds];
+    this.isSubmited = true;
+  }
 
   nextQuestion() {
     const i = this.test.questions.indexOf(this.currentQuestion);
@@ -320,6 +394,11 @@ export class TestComponent implements OnInit {
 
 
   finishTest() {
+    if (this.isGuest) {
+      this.finishGuestTest();
+      return;
+    }
+
     this.testService.finishTest(this.test.id).subscribe({
       next: (res) => {
         if (res.isPassed) {
@@ -331,6 +410,10 @@ export class TestComponent implements OnInit {
         this.isFinishModalOpen = true;
       }
     })
+  }
+
+  finishGuestTest() {
+    this.isUnauthModalOpen = true;
   }
 
   startTimer() {

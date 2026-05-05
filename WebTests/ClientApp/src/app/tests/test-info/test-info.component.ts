@@ -40,6 +40,7 @@ export class TestInfoComponent implements OnInit {
   }
 
   state: string = '';
+  isAuth: boolean = this.authService.isAuthenticated;
 
   constructor(
     private testService: TestService,
