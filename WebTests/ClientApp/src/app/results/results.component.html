@@ -1,55 +1,86 @@
-<div class="mx-auto max-w-4xl p-6 pt-24">
-  <div *ngIf="userTests.length !== 0;else no_attempts">
-    <div *ngIf="userTests[0].test.types.includes('ManyTimes');else no_manytimes">
-      <div class="max-w-3xl mx-auto bg-gray-100 border border-gray-400 rounded-3xl p-5 m-5 mt-0">
-        <table class="justify-center w-full table-fixed">
-          <tbody>
-            <tr>
-              <th class="w-1/4 text-center">Начало</th>
-              <th class="w-1/4 text-center">Конец</th>
-              <th class="w-1/4 text-center">Продолжительность</th>
-              <th class="w-1/4 text-right">Балл</th>
-            </tr>
-            <tr *ngFor="let ut of userTests" class="hover:bg-gray-300 transition-colors">
-              <td class="border-b-2 border-gray-300 p-2">{{ userTests[0].startedAt | date:'d MMM yyyy HH:mm' }}</td>
-              <td class="border-b-2 border-gray-300 p-2">{{ userTests[0].finishedAt | date:'d MMM yyyy HH:mm' }}</td>
-              <td class="border-b-2 border-gray-300 p-2">{{ userTests[0].finishedAt | date:'d MMM yyyy HH:mm' }}</td>
-              <td class="border-b-2 border-gray-300 p-2">{{ userTests[0].score }}/{{ userTests[0].test.questions.length }}</td>
-            </tr>
-          </tbody>
-        </table>
+<div class="max-w-4xl mx-auto px-6 pt-24 pb-24 relative z-10">
+
+  <div *ngIf="userTests.length !== 0; else no_attempts">
+
+    <div class="mb-12 text-center">
+      <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-black mb-2">
+        История прохождений
+      </h1>
+      <p class="text-gray-400 font-bold italic tracking-tight">{{ userTests[0].test.title }}</p>
+    </div>
+
+    <div *ngIf="userTests[0].test.types.includes('ManyTimes'); else no_manytimes">
+      <div class="bg-white rounded-[3rem] p-8 shadow-2xl shadow-gray-200/50 border border-gray-50">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="border-b border-gray-100">
+                <th class="py-4 px-2 text-[10px] font-black uppercase tracking-widest text-gray-300">Начало</th>
+                <th class="py-4 px-2 text-[10px] font-black uppercase tracking-widest text-gray-300">Продолжительность</th>
+                <th class="py-4 px-2 text-right text-[10px] font-black uppercase tracking-widest text-gray-300">Балл</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ut of userTests" class="group hover:bg-gray-50 transition-all">
+                <td class="py-5 px-2">
+                  <p class="font-bold text-gray-800">{{ ut.startedAt | date:'d MMM yyyy' }}</p>
+                  <p class="text-xs text-gray-400 font-bold">{{ ut.startedAt | date:'HH:mm' }}</p>
+                </td>
+                <td class="py-5 px-2 text-gray-500 font-medium">
+                  {{ ut.finishedAt | date:'HH:mm' }}
+                </td>
+                <td class="py-5 px-2 text-right">
+                  <span class="inline-block px-4 py-2 bg-black text-white rounded-2xl font-black text-sm">
+                    {{ ut.score }} / {{ ut.test.questions.length }}
+                  </span>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
     <ng-template #no_manytimes>
-      <div class="max-w-3xl mx-auto bg-green-100 border rounded-3xl p-5 m-5 mt-0" [class]="userTests[0].isPassed ? 'border-green-400 bg-green-100' : 'border-red-400 bg-red-100'">
-        <p class="text-2xl text-center my-5 mt-0">{{ userTests[0].test.title }}</p>
-        <table class="justify-center w-full table-fixed">
-          <tbody>
-            <tr>
-              <th class="text-center">Начало</th>
-              <th class="text-center">Конец</th>
-              <th class="">Балл</th>
-              <th class="">Итог</th>
-            </tr>
-            <tr class="transition-colors" [class]="userTests[0].isPassed ? 'hover:bg-green-300' : 'hover:bg-red-300'">
-              <td class="border-b-2 border-gray-300 p-2 text-center">{{ userTests[0].startedAt | date:'d MMM yyyy HH:mm' }}</td>
-              <td class="border-b-2 border-gray-300 p-2 text-center">{{ userTests[0].finishedAt | date:'d MMM yyyy HH:mm' }}</td>
-              <td class="border-b-2 border-gray-300 p-2 text-center">{{ userTests[0].score }}/{{ userTests[0].test.questions.length }}</td>
-              <td *ngIf="userTests[0].isPassed == true;else notPassed" class="border-b-2 border-gray-300 p-2 text-center">Успех</td>
-              <ng-template #notPassed>
-                <td class="border-b-2 border-gray-300 p-2 text-center">Провал</td>
-              </ng-template>
-            </tr>
-          </tbody>
-        </table>
+      <div class="bg-white rounded-[3rem] p-10 shadow-2xl shadow-gray-200/50 border border-gray-50 text-center">
+
+        <div class="inline-block mb-8 px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs"
+             [ngClass]="userTests[0].isPassed ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
+          {{ userTests[0].isPassed ? 'Тест пройден' : 'Тест не пройден' }}
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-8 mb-10 py-8 border-y border-gray-50">
+          <div>
+            <p class="text-[10px] font-black uppercase text-gray-300 tracking-widest mb-1">Начало</p>
+            <p class="text-lg font-black">{{ userTests[0].startedAt | date:'HH:mm' }}</p>
+            <p class="text-[10px] font-bold text-gray-400">{{ userTests[0].startedAt | date:'d MMM yyyy' }}</p>
+          </div>
+          <div>
+            <p class="text-[10px] font-black uppercase text-gray-300 tracking-widest mb-1">Ваш балл</p>
+            <p class="text-3xl font-black" [class.text-green-600]="userTests[0].isPassed">
+              {{ userTests[0].score }}<span class="text-gray-200 text-xl">/{{ userTests[0].test.questions.length }}</span>
+            </p>
+          </div>
+          <div class="col-span-2 md:col-span-1">
+            <!--<p class="text-[10px] font-black uppercase text-gray-300 tracking-widest mb-1">Вердикт</p>-->
+            <p class="text-lg font-black">{{ userTests[0].isPassed ? 'Успешно' : 'Провал' }}</p>
+          </div>
+        </div>
+
+        <div *ngIf="userTests[0].score / userTests[0].test.questions.length > 0.5"
+             class="text-4xl font-black tracking-tighter text-black italic">
+          Замечательно!
+        </div>
       </div>
-      <div *ngIf="userTests[0].score / userTests[0].test.questions.length > 0.5" class="text-center pt-4 text-2xl">Замечательно!</div>
-      <!--<ng-template #bad_result class="text-center pt-4 text-2xl">Замечательно!</ng-template>-->
     </ng-template>
   </div>
 </div>
 
-<ng-template #no_attempts class="mx-auto max-w-4xl p-6 pt-24">
-  <p class="text-3xl text-center">Данные не найдены</p>
+<ng-template #no_attempts>
+  <div class="max-w-4xl mx-auto px-6 pt-24 text-center">
+    <div class="bg-gray-50 rounded-[3rem] p-20 border-2 border-dashed border-gray-200">
+      <p class="text-3xl font-black tracking-tighter text-gray-300">Данные не найдены</p>
+      <a routerLink="/" class="mt-6 inline-block font-bold text-black border-b-2 border-black">Вернуться на главную</a>
+    </div>
+  </div>
 </ng-template>

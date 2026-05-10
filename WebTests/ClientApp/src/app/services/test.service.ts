@@ -30,6 +30,16 @@ export class TestService {
   }
 
 
+  getTestForManagementById(id: number): Observable<Test> {
+    return this.http.get<Test>(`${this.baseUrl}/management/id/${id}`, { withCredentials: true })
+  }
+
+
+  getTestByToken(token: string): Observable<Test> {
+    return this.http.get<Test>(`${this.baseUrl}/token/${token}`, { withCredentials: true })
+  }
+
+
 
   getMyTestsByUsername(username: string | null) {
     return this.http.get<Test[]>(`${this.baseUrl}/my/${username}`, { withCredentials: true });
@@ -82,9 +92,18 @@ export class TestService {
 
 
 
-  startTest(testId: number) {
+  startTestById(testId: number) {
     return this.http.post<UserTestDto>(
-      `${this.baseUrl}/${testId}/start`,
+      `${this.baseUrl}/${testId}/StartById`,
+      {},
+      { withCredentials: true }
+    );
+  }
+
+
+  startTestByToken(token: string) {
+    return this.http.post<UserTestDto>(
+      `${this.baseUrl}/${token}/StartByToken`,
       {},
       { withCredentials: true }
     );
@@ -94,12 +113,20 @@ export class TestService {
 
   checkTestInfo(testId: number) {
     return this.http.post(
-      `${this.baseUrl}/${testId}/checktestinfo`,
+      `${this.baseUrl}/${testId}/CheckTestInfo`,
       {},
       { withCredentials: true, responseType: 'text' }
     );
   }
 
+
+  checkTestInfoByToken(token: string) {
+    return this.http.post(
+      `${this.baseUrl}/${token}/CheckTestInfoByToken`,
+      {},
+      { withCredentials: true, responseType: 'text' }
+    )
+  }
 
 
   submitAnswer(dto: SubmitAnswerDto) {
@@ -240,12 +267,47 @@ export class TestService {
       changes.push(`Тест опубликован`);
     }
 
+    if (original.isPublic == false && updated.isPublic == true) {
+      changes.push(`Тест теперь публичный`);
+    }
+    if (original.isPublic == true && updated.isPublic == false) {
+      changes.push(`Тест теперь приватный`);
+    }
+
+    if (original.accessToken != null && updated.accessToken == null) {
+      changes.push(`Уникальная ссылка удалена`);
+    }
+    if (original.accessToken == null && updated.accessToken != null) {
+      changes.push(`Уникальная ссылка создана`);
+    }
+    if (original.accessToken != updated.accessToken) {
+      changes.push(`Уникальная ссылка изменена`);
+    }
+
+    if (original.timeLimitSeconds == null && updated.timeLimitSeconds != null) {
+      changes.push(`Добавлено ограничение по времени`);
+    }
+    if (original.timeLimitSeconds != null && updated.timeLimitSeconds == null) {
+      changes.push(`Ограничения по времени больше нет`);
+    }
+    if (original.timeLimitSeconds > updated.timeLimitSeconds) {
+      changes.push(`Ограничение по времени уменьшено`);
+    }
+    if (original.timeLimitSeconds < updated.timeLimitSeconds) {
+      changes.push(`Ограничение по времени увеличено`);
+    }
+
+
     return changes;
   }
 
 
 
   checkTest(test: Test) {
+    if (test.accessToken == '' && test.isPublic == false && test.published) {
+      return "Приватный тест не может быть опубликован без уникальной ссылки";
+    }
+
     for (var i = 0; i < test.questions.length; i++) {
 
       if (test.questions[i].text == "") {
@@ -292,6 +354,10 @@ export class TestService {
   getAuthor(testId: number) {
     return this.http.get<User>(`${this.baseUrl}/getAuthor/${testId}`, { withCredentials: true });
   }
+
+  getAuthorByToken(token: string) {
+    return this.http.get<User>(`${this.baseUrl}/getAuthorByToken/${token}`, { withCredentials: true });
+  }
 }
 
 
@@ -311,6 +377,9 @@ export interface Test {
   coverUrl: string;
   description: string;
   difficult: number;
+  timeLimitSeconds: number;
+  isPublic: boolean;
+  accessToken: string;
 }
 
 
@@ -331,6 +400,7 @@ export interface UserTestDto {
   startedAt: Date;
   isFinished: boolean;
   answers: UserAnswerDto[];
+  timeLimitSeconds: number;
 }
 
 export interface UserAnswerDto {

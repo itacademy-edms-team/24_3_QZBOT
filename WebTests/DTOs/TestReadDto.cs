@@ -14,5 +14,8 @@ namespace WebTests.DTOs
         public bool Published { get; set; }
         public int MinimumSuccessPercent { get; set; }
         public int? Difficult { get; set; }
+        public int? TimeLimitSeconds { get; set; }
+        public string? AccessToken { get; set; }
+        public bool IsPublic { get; set; }
     }
 }

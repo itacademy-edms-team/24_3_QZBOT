@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebTests.Data;
 
@@ -11,9 +12,10 @@ using WebTests.Data;
 namespace WebTests.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260419074234_AddTimer")]
+    partial class AddTimer
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -302,9 +304,6 @@ namespace WebTests.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("AccessToken")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("CoverUrl")
                         .HasColumnType("nvarchar(max)");
 
@@ -322,9 +321,6 @@ namespace WebTests.Migrations
 
                     b.Property<DateTime>("EditTime")
                         .HasColumnType("datetime2");
-
-                    b.Property<bool>("IsPublic")
-                        .HasColumnType("bit");
 
                     b.Property<int>("MinSuccessPercent")
                         .HasColumnType("int");

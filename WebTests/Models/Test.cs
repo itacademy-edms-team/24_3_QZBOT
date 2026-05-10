@@ -20,5 +20,10 @@ namespace WebTests.Models
         public string? Description { get; set; }
         public int? Difficult { get; set; }
         public string? CoverUrl { get; set; }
+        public int? TimeLimitSeconds { get; set; }
+        [JsonIgnore]
+        public bool IsPublic { get; set; } = false;
+        [JsonIgnore]
+        public string? AccessToken { get; set; }
     }
 }

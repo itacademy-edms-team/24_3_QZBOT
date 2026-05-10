@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { TestService, TestType, Test, Question, Option, UserTest, UserTestDto, SubmitAnswerDto, SubmitAnswerResult } from '../../services/test.service';
+import { TestService, TestType, Test, Question, Option, UserTest, UserTestDto, SubmitAnswerDto, SubmitAnswerResult, UserAnswerDto } from '../../services/test.service';
 import { AuthService } from '../../services/auth.service';
 import { Observable, map } from 'rxjs';
 
@@ -25,6 +25,9 @@ export class TestComponent implements OnInit {
     coverUrl: '',
     description: '',
     difficult: 0,
+    timeLimitSeconds: 0,
+    isPublic: false,
+    accessToken: ''
   };
 
   errorMessage = '';
@@ -61,6 +64,9 @@ export class TestComponent implements OnInit {
     coverUrl: '',
     description: '',
     difficult: 0,
+    timeLimitSeconds: 0,
+    isPublic: false,
+    accessToken: ''
   };
 
   try: UserTest | null = {
@@ -89,6 +95,13 @@ export class TestComponent implements OnInit {
     manyTimes: false
   }
 
+  remainingTime: number = 0;
+  private timerId: any;
+  startedAt: Date = new Date(0);
+
+  isGuest: boolean = false;
+  guestKey: string = '';
+
   constructor(
     private testService: TestService,
     private authService: AuthService,
@@ -98,97 +111,144 @@ export class TestComponent implements OnInit {
 
 
   ngOnInit() {
+    this.isGuest = !this.authService.isAuthenticated;
+
     this.route.paramMap.subscribe(params => {
-      const testId = Number(params.get('id'));
-      if (testId) {
-        this.testService.getTestById(testId).subscribe({
-          next: (data) => {
-            this.test = data;
+      const id = Number(params.get('id'));
+      const token = params.get('token');
 
-            this.testService.startTest(testId).subscribe({
-              next: (res) => {
-                this.userTestId = res.userTestId;
+      if (id) {
+        this.isGuest ? this.loadGuestById(id) : this.loadById(id);
+      } else if (token) {
+        this.isGuest ? this.loadGuestByToken(token) : this.loadByToken(token);
+      }
+    })
+  }
 
-                if (res.status == "Finished") {
-                  this.router.navigate(['/results', this.test.id]) // здесь будет страница итогов
-                  return;
-                }
+  private handleTestStart(test: Test, res: any) {
+    this.test = test;
 
-                if (res.status == "Active") {
-                  this.isModalTryOpen = true;
+    this.startedAt = res.startedAt;
+    this.userTestId = res.userTestId;
 
-                  const date = new Date(res.startedAt);
-                  const formattedDate = date.toLocaleDateString('ru', {
-                    timeZone: 'Etc/GMT-14',
-                    day: 'numeric',
-                    month: 'long',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  });
+    if (res.status == "Finished") {
+      this.router.navigate(['/results', this.test.id])
+      return
+    }
 
-                  this.textModal = `Продолжение попытки от ${formattedDate}`
-                }
+    else if (res.status == "Active") {
+      this.isModalTryOpen = true;
 
-                this.savedAnswers = {};
+      const date = new Date(res.startedAt);
+      const formattedDate = date.toLocaleDateString('ru', {
+        timeZone: 'Etc/GMT-14',
+        day: 'numeric',
+        month: 'long',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
 
-                res.answers.forEach(a => {
-                  this.savedAnswers[a.questionId] = a.selectedOptionIds;
-                });
+      this.textModal = `Продолжение попытки от ${formattedDate}`;
+    }
 
-                const firstUnansweredIndex = this.test.questions.findIndex(q => !this.savedAnswers[q.id])
+    this.startTimer();
 
-                if (firstUnansweredIndex !== -1) {
-                  this.loadQuestion(this.test.questions[firstUnansweredIndex]);
-                } else {
-                  this.loadQuestion(this.test.questions[this.test.questions.length - 1]);
-                }
+    this.savedAnswers = {};
+    res.answers.forEach((a: UserAnswerDto) => {
+      this.savedAnswers[a.questionId] = a.selectedOptionIds;
+    })
 
-                data.types.forEach(type => {
-                  if (type === "AuthOnly") {
-                    this.mode.authOnly = true;
-                  } else if (type === "Strict") {
-                    this.mode.strict = true;
-                  } else if (type === "AllowBack") {
-                    this.mode.allowBack = true;
-                  } else if (type === "ShowAfterEach") {
-                    this.mode.showAfterEach = true;
-                  } else if (type === "Shuffle") {
-                    this.mode.shuffle = true;
-                  } else if (type === "ManyTimes") {
-                    this.mode.manyTimes = true;
-                  }
-                })
+    const firstUnansweredIndex = this.test.questions.findIndex(q => !this.savedAnswers[q.id])
 
+    if (firstUnansweredIndex !== -1) {
+      this.loadQuestion(this.test.questions[firstUnansweredIndex]);
+    } else {
+      this.loadQuestion(this.test.questions[this.test.questions.length - 1]);
+    }
 
-                if (this.mode.authOnly) {
-                  if (!this.authService.isAuthenticated) {
-                    this.isUnauth = true;
-                  }
-                }
+    this.applyModes(test);
 
-                if (this.mode.shuffle) {
-                  this.shuffle(this.test.questions);
-                }
+    if (this.mode.authOnly && !this.authService.isAuthenticated) {
+      this.isUnauth = true;
+    }
 
+    if (this.mode.shuffle) {
+      this.shuffle(test.questions);
+    }
 
-                this.authService.currentUserId.subscribe({
-                  next: (data) => {
-                    if (data === this.test.creatorId) {
-                      this.isCreator = true;
-                    }
-                  }
-                })
-              },
-              error: (err) => {
-                this.userTest.userTestId = 0;
-              }
-            })
-          }
-        })
+    this.authService.currentUserId.subscribe(userId => {
+      if (userId === test.creatorId) {
+        this.isCreator = true;
       }
     });
   }
 
+  private loadGuestById(id: number) {
+    this.testService.getTestById(id).subscribe(test => {
+      this.initGuestTest(test);
+    })
+  }
+
+  private loadGuestByToken(token: string) {
+    this.testService.getTestByToken(token).subscribe(test => {
+      this.initGuestTest(test);
+    })
+  }
+
+  private loadById(id: number) {
+    this.testService.getTestById(id).subscribe(test => {
+      this.testService.startTestById(id).subscribe(res => {
+        this.handleTestStart(test, res);
+      })
+    })
+  }
+
+  private loadByToken(token: string) {
+    this.testService.getTestByToken(token).subscribe(test => {
+      this.testService.startTestByToken(token).subscribe(res => {
+        this.handleTestStart(test, res);
+      })
+    })
+  }
+
+  private initGuestTest(test: Test) {
+    this.test = test;
+    this.applyModes(test);
+
+    this.guestKey = `guest_attempt_${test.id}`;
+
+    const saved = localStorage.getItem(this.guestKey);
+
+    if (saved) {
+      const attempt = JSON.parse(saved);
+      this.savedAnswers = {};
+
+      attempt.answers.forEach((a: any) => {
+        this.savedAnswers[a.questionId] = a.optionIds;
+      });
+    } else {
+      const attempt = {
+        testId: test.id,
+        startedAt: new Date().toISOString(),
+        answers: []
+      };
+
+      localStorage.setItem(this.guestKey, JSON.stringify(attempt));
+    }
+
+    this.loadQuestion(test.questions[0]);
+  }
+
+  private applyModes(test: Test) {
+    test.types.forEach(type => {
+      if (type === "AuthOnly") this.mode.authOnly = true;
+      else if (type === "Strict") this.mode.strict = true;
+      else if (type === "AllowBack") this.mode.allowBack = true;
+      else if (type === "ShowAfterEach") this.mode.showAfterEach = true;
+      else if (type === "Shuffle") this.mode.shuffle = true;
+      else if (type === "ManyTimes") this.mode.manyTimes = true;
+    });
+  }
 
   onOptionToggle(option: Option) {
     const isMultiple = this.currentQuestion.isMultiple;
@@ -210,6 +270,11 @@ export class TestComponent implements OnInit {
 
 
   submitAnswer(questionId: number, title: string) {
+    if (this.isGuest) {
+      this.submitGuestAnswer(questionId);
+      return;
+    }
+
     this.testService.submitAnswer({
       userTestId: this.userTestId,
       questionId,
@@ -237,7 +302,33 @@ export class TestComponent implements OnInit {
     this.isSubmited = true;
   }
 
+  submitGuestAnswer(questionId: number) {
+    const raw = localStorage.getItem(this.guestKey);
+    if (!raw) return;
 
+    const attempt = JSON.parse(raw);
+
+    const existing = attempt.answers.find(
+      (a: any) => Number(a.questionId) === Number(questionId)
+    );
+
+    console.log(typeof questionId, questionId);
+    console.log(attempt.answers.map((a: any) => typeof a.questionId));
+
+    if (existing) {
+      existing.optionIds = [...this.selectedOptionIds];
+    } else {
+      attempt.answers.push({
+        questionId,
+        optionIds: [...this.selectedOptionIds]
+      });
+    }
+
+    localStorage.setItem(this.guestKey, JSON.stringify(attempt));
+
+    this.savedAnswers[questionId] = [...this.selectedOptionIds];
+    this.isSubmited = true;
+  }
 
   nextQuestion() {
     const i = this.test.questions.indexOf(this.currentQuestion);
@@ -303,6 +394,11 @@ export class TestComponent implements OnInit {
 
 
   finishTest() {
+    if (this.isGuest) {
+      this.finishGuestTest();
+      return;
+    }
+
     this.testService.finishTest(this.test.id).subscribe({
       next: (res) => {
         if (res.isPassed) {
@@ -314,6 +410,48 @@ export class TestComponent implements OnInit {
         this.isFinishModalOpen = true;
       }
     })
+  }
+
+  finishGuestTest() {
+    this.isUnauthModalOpen = true;
+  }
+
+  startTimer() {
+    if (!this.test.timeLimitSeconds || this.test.timeLimitSeconds <= 0) {
+      return;
+    }
+
+    this.updateRemainingTime();
+
+    this.timerId = setInterval(() => {
+      this.updateRemainingTime();
+
+      if (this.remainingTime <= 0) {
+        clearInterval(this.timerId);
+        this.onTimeExpired();
+      }
+    }, 1000);
+  }
+
+  updateRemainingTime() {
+    const now = new Date().getTime();
+    const start = new Date(this.startedAt).getTime();
+
+    const elapsed = Math.floor((now - start) / 1000);
+    const remaining = this.test.timeLimitSeconds - elapsed;
+
+    this.remainingTime = Math.max(0, remaining)
+  }
+
+  onTimeExpired() {
+    this.finishTest();
+  }
+
+  get formattedTime(): string {
+    const minutes = Math.floor(this.remainingTime / 60);
+    const seconds = this.remainingTime % 60;
+
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
   }
 
   restoreSelection() {

@@ -28,6 +28,9 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     coverUrl: '',
     description: '',
     difficult: 0,
+    timeLimitSeconds: 0,
+    isPublic: false,
+    accessToken: ''
   };
 
   // копия названия для отображения
@@ -48,6 +51,9 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     coverUrl: '',
     description: '',
     difficult: 0,
+    timeLimitSeconds: 0,
+    isPublic: false,
+    accessToken: ''
   };
 
   selectedCoverFile: File | null = null;     // выбранный файл обложки
@@ -64,11 +70,20 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
   changes: string[] = [];                    // список изменений, вычисляется перед подтверждением 
   is_editing_locked: boolean = false;        // блокировка UI до подтверждения
   success_edit: boolean = false;             // флаг успешного сохранения
+  is_customlink_enabled: boolean = false;    // флаг создания кастомной ссылки
+  copied: boolean = false;                   // флаг копирования ссылки
+  private copyTimeout: any;                  // уведомление о копировании
 
   currentUserId: string | null = null;       // userId
 
   isModalDeleting: boolean = false;          // модальное окно удаления теста
   isDeleted: boolean = false;                // информация об удалении теста
+
+  time = {
+    hours: 0,
+    minutes: 0,
+    seconds: 0
+  }
 
   types: TestType[] = [
     { id: 11, name: "Shuffle", description: "вопросы в случайном порядке" },
@@ -100,7 +115,7 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
       }
 
       // загрузка теста по ID 
-      this.testService.getTestById(this.test.id).subscribe({
+      this.testService.getTestForManagementById(this.test.id).subscribe({
         next: (data) => {
           this.test = data;
 
@@ -115,6 +130,12 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
 
           // сохраняем название для заголовка UI
           this.test_title = data.title;
+
+          const total = this.edited_test.timeLimitSeconds || 0;
+
+          this.time.hours = Math.floor(total / 3600);
+          this.time.minutes = Math.floor((total % 3600) / 60);
+          this.time.seconds = total % 60;
         }
       });
     });
@@ -159,6 +180,13 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     }
   }
 
+  // создание кастомной ссылки
+  toggleCustomLink() {
+    if (!this.is_customlink_enabled) {
+      this.edited_test.accessToken = '';
+    }
+  }
+
   // выбор правильного варианта
   toggleCorrectOption(question: any, selectedIndex: number) {
     if (question.isMultiple) {
@@ -168,6 +196,43 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
         o.isCorrect = i === selectedIndex;
       })
     }
+  }
+
+  get fullLink(): string {
+    return this.edited_test.accessToken
+      ? `http://localhost:4200/test/t/${this.edited_test.accessToken}`
+      : '';
+  }
+
+  copyLink() {
+    if (!this.fullLink) return;
+
+    navigator.clipboard.writeText(this.fullLink);
+
+    this.copied = true;
+
+    clearTimeout(this.copyTimeout);
+    this.copyTimeout = setTimeout(() => {
+      this.copied = false;
+    }, 2000);
+  }
+
+  generateLink() {
+    if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+      this.edited_test.accessToken = crypto.randomUUID();
+      return;
+    }
+
+    this.edited_test.accessToken = this.generateUUIDFallback();
+  }
+
+  private generateUUIDFallback(): string {
+    // простой UUID v4-подобный генератор
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
   }
 
   // множественный выбор
@@ -249,6 +314,8 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
         }
       }
     })
+
+    this.confirm_edit = false;
   }
 
   // закрытие модального окна
@@ -363,5 +430,21 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
     this.showCropper = false;
     this.imageChangedEvent = '';
     this.resetInput();
+  }
+
+  get fontSizeClass(): string {
+    const len = this.edited_test.accessToken.length;
+
+    if (len > 20) return 'text-lg';
+    if (len > 30) return 'text-base';
+    return 'text-2xl';
+  }
+
+  updateTimeLimit() {
+    const h = this.time.hours || 0;
+    const m = this.time.minutes || 0;
+    const s = this.time.seconds || 0;
+
+    this.edited_test.timeLimitSeconds = h * 3600 + m * 60 + s;
   }
 }

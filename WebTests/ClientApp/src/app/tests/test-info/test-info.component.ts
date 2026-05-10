@@ -24,6 +24,9 @@ export class TestInfoComponent implements OnInit {
     coverUrl: '',
     description: '',
     difficult: 0,
+    timeLimitSeconds: 0,
+    isPublic: false,
+    accessToken: ''
   };
 
   creator: User = {
@@ -37,6 +40,7 @@ export class TestInfoComponent implements OnInit {
   }
 
   state: string = '';
+  isAuth: boolean = this.authService.isAuthenticated;
 
   constructor(
     private testService: TestService,
@@ -48,6 +52,7 @@ export class TestInfoComponent implements OnInit {
   ngOnInit() {
     this.route.paramMap.subscribe(params => {
       const testId = Number(params.get('id'));
+      const testToken = String(params.get('token'));
       if (testId) {
         this.testService.getTestById(testId).subscribe({
           next: (data) => {
@@ -71,6 +76,38 @@ export class TestInfoComponent implements OnInit {
           }
         })
       }
+
+      else if (testToken) {
+        this.testService.getTestByToken(testToken).subscribe({
+          next: (data) => {
+            this.test = data;
+          },
+          error: (err) => {
+            console.error('Ошибка загрузки: ', err);
+            this.router.navigate(['/tests'])
+          }
+        })
+
+        this.testService.checkTestInfoByToken(testToken).subscribe({
+          next: (data) => {
+            this.state = data;
+          }
+        })
+
+        this.testService.getAuthorByToken(testToken).subscribe({
+          next: (data) => {
+            this.creator = data;
+          }
+        })
+      }
     })
+  }
+
+  getTestLink(test: Test | null | undefined) {
+    if (!test) return ['/test'];
+
+    return test.accessToken
+      ? ['/tests/t', test.accessToken]
+      : ['/tests/id', test.id];
   }
 }
