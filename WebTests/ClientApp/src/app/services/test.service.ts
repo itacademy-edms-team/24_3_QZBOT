@@ -358,6 +358,11 @@ export class TestService {
   getAuthorByToken(token: string) {
     return this.http.get<User>(`${this.baseUrl}/getAuthorByToken/${token}`, { withCredentials: true });
   }
+
+
+  sendAiRequest(aiTest: AiTest) {
+    return this.http.post<Test>(`${this.baseUrl}/generate`, aiTest, { withCredentials: true });
+  }
 }
 
 
@@ -448,4 +453,9 @@ export interface Option {
   id: number;
   text: string;
   isCorrect: boolean;
+}
+
+export interface AiTest {
+  prompt: string;
+  countQuestions: number;
 }

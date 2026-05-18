@@ -11,6 +11,7 @@ using System.Transactions;
 using WebTests.Data;
 using WebTests.DTOs;
 using WebTests.Models;
+using WebTests.Services;
 using WebTests.TestFactory;
 
 namespace WebTests.Controllers
@@ -21,11 +22,13 @@ namespace WebTests.Controllers
     {
         private readonly AppDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly YandexGptService _gpt;
 
-        public TestsController(AppDbContext context, UserManager<ApplicationUser> userManager)
+        public TestsController(AppDbContext context, UserManager<ApplicationUser> userManager, YandexGptService gpt)
         {
             _context = context;
             _userManager = userManager;
+            _gpt = gpt;
         }
 
         [HttpGet("all")]
@@ -1000,6 +1003,15 @@ namespace WebTests.Controllers
             }
 
             return NotFound();
+        }
+
+        [HttpPost("generate")]
+        public async Task<IActionResult> SendAiRequest(AiRequestDto dto)
+        {
+            var result = await _gpt.GenerateTest(dto.Prompt, dto.CountQuestions);
+
+            //return Content(result, "application/json");
+            return Ok(result);
         }
     }
 }
