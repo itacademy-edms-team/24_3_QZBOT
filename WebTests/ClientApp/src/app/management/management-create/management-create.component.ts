@@ -1,7 +1,8 @@
-import { Component, HostListener, OnInit } from '@angular/core';
-import { TestService, Test, Question, TestType } from '../../services/test.service';
+import { Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { TestService, Test, Question, TestType, AiTest } from '../../services/test.service';
 import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ComponentCanDeactivate } from '../../validators/pending-changes.guard';
+import { ImageCroppedEvent } from 'ngx-image-cropper';
 
 @Component({
   selector: 'app-management-create',
@@ -45,10 +46,28 @@ export class ManagementCreateComponent {
   text_error: string = '';              // текст ошибки
   is_editing_locked: boolean = false;   // блокировка всех полей после подтверждения
 
+  selectedCoverFile: File | null = null;     // выбранный файл обложки
+
+  // переменные для обрезки изображения
+  imageChangedEvent: any = '';               // событие изменения изображения для кроппера
+  croppedImageBlob: Blob | null = null;
+  croppedImagePreview: string | null = null;
+  showCropper: boolean = false;              // показывать ли кроппер
+
   // Поля и флаги для JSON-импорта
   json_input: string = '';
   json_error: string[] = [];
   json_add: boolean = false;
+
+  // Поля и флаги для использования ИИ
+  ai_add: boolean = false;
+  ai_prompt: string = '';
+  ai_count_questions: number = 0;
+
+  aiTest: AiTest = {
+    prompt: '',
+    countQuestions: 0
+  }
 
   constructor(
     private testService: TestService
@@ -291,5 +310,107 @@ export class ManagementCreateComponent {
     if (isChanged) {
       $event.returnValue = true;
     }
+  }
+
+  // получение доступа к элементу input для загрузки обложки
+  @ViewChild('coverInput') coverInputVariable!: ElementRef;
+
+  // обработка выбора файла обложки
+  onCoverSelected(event: any) {
+    this.imageChangedEvent = event;
+
+    this.showCropper = true;
+  }
+
+  imageCropped(event: ImageCroppedEvent) {
+    if (event.blob) {
+      this.croppedImageBlob = event.blob;
+
+      this.croppedImagePreview = URL.createObjectURL(event.blob);
+    }
+  }
+
+  // сброс выбранного файла в input после кропа или отмены
+  resetInput() {
+    this.coverInputVariable.nativeElement.value = "";
+  }
+
+  applyCrop() {
+    if (this.croppedImageBlob) {
+      this.selectedCoverFile = new File(
+        [this.croppedImageBlob],
+        "cover.jpg",
+        { type: "image/jpeg" }
+      );
+
+      this.test.coverUrl = this.croppedImagePreview || '';
+
+      this.showCropper = false;
+      this.imageChangedEvent = "";
+
+      this.resetInput();
+    }
+  }
+
+  // отмена обрезки изображения
+  cancelCrop() {
+    this.showCropper = false;
+    this.imageChangedEvent = '';
+    this.resetInput();
+  }
+
+  sendAi() {
+    this.testService.sendAiRequest(this.aiTest).subscribe({
+        next: (data: any) => {
+
+            this.test = {
+                id: 0,
+
+                title: data.title ?? '',
+
+                description: data.description ?? '',
+
+                creatorId: '',
+
+                published: false,
+
+                createdDate: new Date(),
+
+                publishDate: new Date(),
+
+                editDate: new Date(),
+
+                minimumSuccessPercent: 70,
+
+                coverUrl: '',
+
+                difficult: 0,
+
+                timeLimitSeconds: 0,
+
+                isPublic: false,
+
+                accessToken: '',
+
+                types: [],
+
+                questions: (data.questions ?? []).map((q: any) => ({
+                    id: 0,
+
+                    text: q.text ?? '',
+
+                    isMultiple: q.isMultiple,
+
+                    options: (q.options ?? []).map((o: any) => ({
+                        id: 0,
+
+                        text: o.text ?? '',
+
+                        isCorrect: o.isCorrect ?? false
+                    }))
+                }))
+            };
+        }
+    })
   }
 }

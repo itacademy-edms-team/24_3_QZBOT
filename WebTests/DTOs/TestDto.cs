@@ -13,7 +13,7 @@ namespace WebTests.DTOs
         public bool Published { get; set; }
         public DateTime CreatedDate { get; set; }
         public DateTime? PublishDate { get; set; }
-        public DateTime EditTime { get; set; } = DateTime.UtcNow;
+        public DateTime EditDate { get; set; } = DateTime.UtcNow;
         public int MinimumSuccessPercent { get; set; }
         public int Difficult { get; set; }
         public string? AccessToken { get; set; }

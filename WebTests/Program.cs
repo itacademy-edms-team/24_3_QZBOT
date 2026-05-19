@@ -1,10 +1,11 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using WebTests.Data;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using WebTests.Data;
 using WebTests.Models;
+using WebTests.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -60,6 +61,8 @@ builder.Services.AddAuthentication(options =>
 });
 
 builder.Services.AddAuthorization();
+
+builder.Services.AddHttpClient<YandexGptService>();
 
 builder.Services.AddControllers();
 
