@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.Data.Entity;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -152,6 +153,43 @@ namespace WebTests.Controllers
             await _userManager.UpdateAsync(user);
 
             return Ok(true);
+        }
+
+        [Authorize]
+        [HttpPost("{username}/follow")]
+        public async Task<IActionResult> Follow(string username)
+        {
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (currentUserId == null)
+                return Unauthorized();
+
+            var targetUser = await _userManager.FindByNameAsync(username);
+
+            if (targetUser == null)
+                return NotFound();
+
+            if (targetUser.Id == currentUserId)
+                return BadRequest();
+
+            var alreadyFollowing = await _context.UserFollows
+                .AnyAsync(x =>
+                    x.FollowerId == currentUserId &&
+                    x.FollowingId == targetUser.Id);
+
+            if (alreadyFollowing)
+                return BadRequest();
+
+            var follow = new UserFollow
+            {
+                FollowerId = currentUserId,
+                FollowingId = targetUser.Id
+            };
+
+            _context.UserFollows.Add(follow);
+            _context.SaveChanges();
+
+            return Ok();
         }
 
         public string GenerateJwtToken(IdentityUser user)
