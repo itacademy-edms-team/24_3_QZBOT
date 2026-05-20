@@ -10,5 +10,7 @@ namespace WebTests.Models
         public string? AvatarUrl { get; set; }
         public string? Status { get; set; }
         public DateTime? BirthDate { get; set; }
+        public ICollection<UserFollow> Following { get; set; } = new List<UserFollow>();
+        public ICollection<UserFollow> Followers { get; set; } = new List<UserFollow>();
     }
 }

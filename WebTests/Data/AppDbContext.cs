@@ -15,6 +15,7 @@ namespace WebTests.Data
         public DbSet<UserTest> UserTests { get; set; }
         public DbSet<UserTestAnswer> UserTestAnswers { get; set; }
         public DbSet<TestTypes> TestTypes { get; set; }
+        public DbSet<UserFollow> UserFollows { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -49,6 +50,21 @@ namespace WebTests.Data
                 .WithMany(t => t.Answers)
                 .HasForeignKey(a => a.UserTestId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<UserFollow>()
+                .HasKey(x => new { x.FollowerId, x.FollowingId });
+
+            builder.Entity<UserFollow>()
+                .HasOne(x => x.Follower)
+                .WithMany(x => x.Following)
+                .HasForeignKey(x => x.FollowerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<UserFollow>()
+                .HasOne(x => x.Following)
+                .WithMany(x => x.Followers)
+                .HasForeignKey(x => x.FollowingId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }
