@@ -12,7 +12,7 @@ using WebTests.Data;
 namespace WebTests.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260520181112_AddUserFollow")]
+    [Migration("20260523152524_AddUserFollow")]
     partial class AddUserFollow
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
