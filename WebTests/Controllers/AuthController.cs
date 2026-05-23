@@ -220,6 +220,35 @@ namespace WebTests.Controllers
             return Ok();
         }
 
+        [Authorize]
+        [HttpPost("{username}/unfollow")]
+        public async Task<IActionResult> Unfollow(string username)
+        {
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (currentUserId == null)
+                return Unauthorized();
+
+            var targetUser = await _userManager.FindByNameAsync(username);
+
+            if (targetUser == null)
+                return NotFound();
+
+            if (targetUser.Id == currentUserId)
+                return BadRequest();
+
+            var isFollowing = await _context.UserFollows
+                .FirstOrDefaultAsync(x =>
+                    x.FollowerId == currentUserId &&
+                    x.FollowingId == targetUser.Id);
+
+            if (isFollowing != null)
+                _context.UserFollows.Remove(isFollowing);
+
+            _context.SaveChanges();
+            return Ok();
+        }
+
         public string GenerateJwtToken(IdentityUser user)
         {
             var tokenHandler = new JwtSecurityTokenHandler();

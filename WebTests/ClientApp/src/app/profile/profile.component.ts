@@ -27,6 +27,10 @@ export class ProfileComponent implements OnInit {
     isFollowing: false
   }
 
+  followSuccess: boolean = false;
+  isLoadingFollow: boolean = false;
+  showUnfollowModal = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -93,6 +97,10 @@ export class ProfileComponent implements OnInit {
           this.created_tests = data;
         }
       })
+
+      if (this.name_from_url != null) {
+        this.name_for_subscribe = this.name_from_url;
+      }
     });
   }
 
@@ -102,5 +110,49 @@ export class ProfileComponent implements OnInit {
 
   startEdit(user: User) {
     this.router.navigate(['/editprofile', user])
+  }
+
+  follow() {
+    if (this.user.isFollowing) {
+      this.showUnfollowModal = true;
+      return;
+    }
+
+    this.isLoadingFollow = true;
+
+    this.authService.follow(this.name_for_subscribe).subscribe({
+      next: () => {
+        this.followSuccess = true;
+
+        setTimeout(() => {
+          this.user.isFollowing = true;
+          this.followSuccess = false;
+        }, 1200);
+
+        this.isLoadingFollow = false;
+      },
+
+      error: () => {
+        this.isLoadingFollow = false;
+      }
+    })
+  }
+
+  unfollow() {
+    this.isLoadingFollow = true;
+
+    this.authService.unfollow(this.user.username)
+      .subscribe({
+        next: () => {
+
+          this.user.isFollowing = false;
+          this.showUnfollowModal = false;
+          this.isLoadingFollow = false;
+        },
+
+        error: () => {
+          this.isLoadingFollow = false;
+        }
+      });
   }
 }

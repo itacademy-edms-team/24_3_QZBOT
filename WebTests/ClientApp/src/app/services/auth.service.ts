@@ -122,6 +122,22 @@ export class AuthService {
     )
   }
 
+  follow(username: string) {
+    return this.http.post(
+      `${this.apiUrl}/${username}/follow`,
+      username,
+      { withCredentials: true }
+    )
+  }
+
+  unfollow(username: string) {
+    return this.http.post(
+      `${this.apiUrl}/${username}/unfollow`,
+      username,
+      { withCredentials: true }
+    );
+  }
+
 
   get isAuthenticated(): boolean {
     return !!this.currentUserSubject.value;
