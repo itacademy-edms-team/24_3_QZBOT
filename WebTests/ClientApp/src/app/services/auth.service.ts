@@ -33,6 +33,7 @@ export interface User {
   avatarUrl: string;
   birthDate: Date;
   status: string;
+  isFollowing: boolean;
 }
 
 
