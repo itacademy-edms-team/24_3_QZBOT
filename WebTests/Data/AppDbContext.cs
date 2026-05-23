@@ -27,12 +27,6 @@ namespace WebTests.Data
                 .HasForeignKey(t => t.CreatorId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            builder.Entity<Test>()
-                .HasOne(t => t.Creator)
-                .WithMany()
-                .HasForeignKey(t => t.CreatorId)
-                .OnDelete(DeleteBehavior.Restrict);
-
             builder.Entity<UserTest>()
                 .HasOne(ut => ut.User)
                 .WithMany()
