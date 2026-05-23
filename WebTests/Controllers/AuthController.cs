@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using System.Data.Entity;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -124,6 +124,33 @@ namespace WebTests.Controllers
             var user = await _userManager.FindByNameAsync(username);
             if (user == null)
                 return NotFound(new { message = "User not found" });
+            bool isFollowing = false;
+
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (currentUserId != null)
+            {
+                if (currentUserId != null)
+                {
+                    isFollowing = await _context.UserFollows
+                        .AnyAsync(x =>
+                            x.FollowerId == currentUserId &&
+                            x.FollowingId == user.Id);
+                }
+
+                return Ok(new
+                {
+                    id = user.Id,
+                    status = user.Status,
+                    username = user.UserName,
+                    email = user.Email,
+                    phoneNumber = user.PhoneNumber,
+                    avatarUrl = user.AvatarUrl,
+                    birthDate = user.BirthDate,
+                    isFollowing = isFollowing,
+                });
+            }
+
             return Ok(new
             {
                 id = user.Id,
@@ -132,7 +159,8 @@ namespace WebTests.Controllers
                 email = user.Email,
                 phoneNumber = user.PhoneNumber,
                 avatarUrl = user.AvatarUrl,
-                birthDate = user.BirthDate
+                birthDate = user.BirthDate,
+                isFollowing = false,
             });
         }
 
@@ -173,11 +201,11 @@ namespace WebTests.Controllers
                 return BadRequest();
 
             var alreadyFollowing = await _context.UserFollows
-                .AnyAsync(x =>
+                .FirstOrDefaultAsync(x =>
                     x.FollowerId == currentUserId &&
                     x.FollowingId == targetUser.Id);
 
-            if (alreadyFollowing)
+            if (alreadyFollowing != null)
                 return BadRequest();
 
             var follow = new UserFollow
