@@ -36,7 +36,8 @@ export class TestInfoComponent implements OnInit {
     phoneNumber: "",
     avatarUrl: "",
     birthDate: new Date(0),
-    status: ""
+    status: "",
+    isFollowing: false
   }
 
   state: string = '';

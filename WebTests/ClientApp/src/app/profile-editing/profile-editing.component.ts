@@ -18,7 +18,8 @@ export class ProfileEditingComponent implements OnInit {
     phoneNumber: '',
     avatarUrl: '',
     birthDate: new Date(),
-    status: ''
+    status: '',
+    isFollowing: false
   };
   formattedBirthDate: string = "";
 
@@ -29,7 +30,8 @@ export class ProfileEditingComponent implements OnInit {
     phoneNumber: '',
     avatarUrl: '',
     birthDate: new Date(),
-    status: ''
+    status: '',
+    isFollowing: false
   }
   editedFormattedBirthDate: Date = new Date();
 

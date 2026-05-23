@@ -12,6 +12,7 @@ export class ProfileComponent implements OnInit {
   is_user_exists: boolean = false;
   is_owner: boolean = false;
   name_from_url: string | null = '';
+  name_for_subscribe: string = '';
   username: string = '';
   history: UserTest[] = [];
   created_tests: Test[] = [];
@@ -22,7 +23,8 @@ export class ProfileComponent implements OnInit {
     phoneNumber: '',
     avatarUrl: '',
     birthDate: new Date(),
-    status: ''
+    status: '',
+    isFollowing: false
   }
 
   constructor(
