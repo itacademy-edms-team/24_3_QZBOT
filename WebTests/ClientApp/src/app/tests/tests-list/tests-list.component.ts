@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { TestComponent } from '../tests/tests.component';
-import { TestService, Test, Question, Option } from '../../services/test.service';
+import { TestService, Test, Question, Option, TestPreview } from '../../services/test.service';
 import { AuthService } from '../../services/auth.service';
 import { Router, ActivatedRoute } from '@angular/router';
 
@@ -10,8 +10,9 @@ import { Router, ActivatedRoute } from '@angular/router';
   styleUrls: ['./tests-list.component.css']
 })
 export class TestsListComponent {
-  tests: Test[] = [];
-  filteredTests: Test[] = [];
+  //tests: Test[] = [];
+  tests: TestPreview[] = [];
+  filteredTests: TestPreview[] = [];
   searchText: string = '';
   isModalStartOpen: boolean = false;
   selectedTest: Test | null = null;
@@ -26,7 +27,7 @@ export class TestsListComponent {
   ) { }
 
   ngOnInit() {
-    this.testService.getPublishedTests().subscribe({
+    this.testService.getTestList().subscribe({
       next: (data) => {
         if (this.authService.isAuthenticated) {
           this.tests = data;
@@ -74,7 +75,7 @@ export class TestsListComponent {
     this.applySorting();
   }
 
-  getTestLink(test: Test | null | undefined) {
+  getTestLink(test: TestPreview | null | undefined) {
     if (!test) return ['/test'];
 
     return test.accessToken

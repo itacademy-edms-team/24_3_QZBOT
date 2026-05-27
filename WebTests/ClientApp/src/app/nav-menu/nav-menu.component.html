@@ -28,6 +28,12 @@
             <a [routerLink]="['/management']" class="pb-1">Управление</a>
           </li>
 
+          <li class="transition-colors hover:text-black"
+              *ngIf="authService.isAuthenticated"
+              [routerLinkActive]="['text-black', 'border-b-2', 'border-black']">
+            <a [routerLink]="['/saved']" class="pb-1">Избранное</a>
+          </li>
+
           <li class="transition-colors hover:text-black">
             <div *ngIf="authService.isAuthenticated; else loginLink">
               <a [routerLink]="['/profile', currentUserUsername]"

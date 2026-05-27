@@ -104,6 +104,34 @@ namespace WebTests.Controllers
             return Ok(tests);
         }
 
+        [HttpGet("testlist")]
+        public IActionResult GetTestList()
+        {
+            var tests = _context.Tests
+                .Where(t => t.Published == true && t.IsPublic == true && t.isDeleted == false)
+                .Include(t => t.Types)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Title,
+                    Types = t.Types.Select(tt => tt.Name).ToList(),
+                    t.CreatorId,
+                    t.Creator,
+                    t.Published,
+                    t.CreatedDate,
+                    t.PublishDate,
+                    t.EditTime,
+                    t.CoverUrl,
+                    t.Description,
+                    t.Difficult,
+                    t.AccessToken,
+                    likesCount = t.LikedByUsers.Count(),
+                })
+                .ToList();
+
+            return Ok(tests);
+        }
+
         [HttpGet("passed/{username}")]
         public async Task<IActionResult> GetPassedTests(string username)
         {
@@ -222,6 +250,152 @@ namespace WebTests.Controllers
             };
 
             return Ok(dto);
+        }
+
+        [HttpGet("{testId}/testinfoid")]
+        public IActionResult GetTestInfoById(int testId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var test = _context.Tests
+                .Where(t => t.Id == testId && t.isDeleted == false)
+                .FirstOrDefault();
+
+            if (test == null)
+                return BadRequest();
+
+            if (userId == null || userId == test.CreatorId)
+            {
+                var result = _context.Tests
+                .Where(t => t.Id == testId && t.isDeleted == false)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Title,
+                    Types = t.Types.Select(tt => tt.Name).ToList(),
+                    t.Questions,
+                    t.CreatorId,
+                    t.Creator,
+                    t.CreatedDate,
+                    t.PublishDate,
+                    t.EditTime,
+                    minimumSuccessPercent = t.MinSuccessPercent,
+                    t.CoverUrl,
+                    t.Description,
+                    t.Difficult,
+                    t.TimeLimitSeconds,
+                    t.AccessToken,
+                    likesCount = t.LikedByUsers.Count(),
+                    IsLiked = false,
+                    IsSaved = false
+                })
+                .FirstOrDefault();
+
+                return Ok(result);
+            }
+            else
+            {
+                var result = _context.Tests
+                .Where(t => t.Id == testId && t.isDeleted == false)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Title,
+                    Types = t.Types.Select(tt => tt.Name).ToList(),
+                    t.Questions,
+                    t.CreatorId,
+                    t.Creator,
+                    t.CreatedDate,
+                    t.PublishDate,
+                    t.EditTime,
+                    minimumSuccessPercent = t.MinSuccessPercent,
+                    t.CoverUrl,
+                    t.Description,
+                    t.Difficult,
+                    t.TimeLimitSeconds,
+                    t.AccessToken,
+                    likesCount = t.LikedByUsers.Count(),
+                    IsLiked = t.LikedByUsers.Any(x => x.UserId == userId),
+                    IsSaved = t.SavedByUsers.Any(x => x.UserId == userId)
+                })
+                .FirstOrDefault();
+
+                return Ok(result);
+            }
+        }
+
+        [HttpGet("{testToken}/testinfotoken")]
+        public IActionResult GetTestInfoByToken(string testToken)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            var test = _context.Tests
+                .Where(t => t.AccessToken == testToken && t.isDeleted == false)
+                .FirstOrDefault();
+
+            if (test == null)
+                return BadRequest();
+
+            if (userId == null || userId == test.CreatorId)
+            {
+                var result = _context.Tests
+                .Where(t => t.AccessToken == testToken && t.isDeleted == false)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Title,
+                    Types = t.Types.Select(tt => tt.Name).ToList(),
+                    t.Questions,
+                    t.CreatorId,
+                    t.Creator,
+                    t.Published,
+                    t.CreatedDate,
+                    t.PublishDate,
+                    t.EditTime,
+                    minimumSuccessPercent = t.MinSuccessPercent,
+                    t.CoverUrl,
+                    t.Description,
+                    t.Difficult,
+                    t.TimeLimitSeconds,
+                    t.AccessToken,
+                    likesCount = t.LikedByUsers.Count(),
+                    IsLiked = false,
+                    IsSaved = false
+                })
+                .FirstOrDefault();
+
+                return Ok(result);
+            }
+            else
+            {
+                var result = _context.Tests
+                .Where(t => t.AccessToken == testToken && t.isDeleted == false)
+                .Select(t => new
+                {
+                    t.Id,
+                    t.Title,
+                    Types = t.Types.Select(tt => tt.Name).ToList(),
+                    t.Questions,
+                    t.CreatorId,
+                    t.Creator,
+                    t.Published,
+                    t.CreatedDate,
+                    t.PublishDate,
+                    t.EditTime,
+                    minimumSuccessPercent = t.MinSuccessPercent,
+                    t.CoverUrl,
+                    t.Description,
+                    t.Difficult,
+                    t.TimeLimitSeconds,
+                    t.AccessToken,
+                    likesCount = t.LikedByUsers.Count(),
+                    IsLiked = t.LikedByUsers.Any(x => x.UserId == userId),
+                    IsSaved = t.SavedByUsers.Any(x => x.UserId == userId)
+                })
+                .FirstOrDefault();
+
+                return Ok(result);
+            }
         }
 
         [HttpGet("management/id/{id}")]
@@ -1010,8 +1184,183 @@ namespace WebTests.Controllers
         {
             var result = await _gpt.GenerateTest(dto.Prompt, dto.CountQuestions);
 
-            //return Content(result, "application/json");
             return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("{testId}/like")]
+        public async Task<IActionResult> LikeTest(int testId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var test = _context.Tests
+                .FirstOrDefault(t => t.Id == testId);
+
+            if (test == null)
+                return NotFound();
+
+            if (userId == test.CreatorId)
+                return BadRequest();
+
+            var like = new LikedTest
+            {
+                UserId = userId,
+                TestId = testId,
+            };
+
+            _context.LikedTests.Add(like);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("{testId}/unlike")]
+        public async Task<IActionResult> UnlikeTest(int testId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var like = await _context.LikedTests
+                .Where(x => x.UserId == userId && x.TestId == testId)
+                .FirstOrDefaultAsync();
+
+            if (like == null)
+                return BadRequest();
+
+            _context.LikedTests.Remove(like);
+            _context.SaveChanges();
+
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("{testId}/save")]
+        public async Task<IActionResult> SaveTest(int testId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var test = _context.Tests
+                .FirstOrDefault(t => t.Id == testId);
+
+            if (test == null)
+                return NotFound();
+
+            if (userId == test.CreatorId)
+                return BadRequest();
+
+            var save = new SavedTest
+            {
+                UserId = userId,
+                TestId = testId
+            };
+
+            var isExists = _context.SavedTests
+                .FirstOrDefault(s => s.UserId == userId && s.TestId == testId);
+
+            if (isExists != null)
+                return BadRequest();
+
+            _context.SavedTests.Add(save);
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("{testId}/unsave")]
+        public async Task<IActionResult> UnsaveTest(int testId)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var save = await _context.SavedTests
+                .Where(x => x.UserId == userId && x.TestId == testId)
+                .FirstOrDefaultAsync();
+
+            if (save == null)
+                return BadRequest();
+
+            _context.SavedTests.Remove(save);
+            _context.SaveChanges();
+
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpGet("liked")]
+        public IActionResult GetLikedTests()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var tests = _context.LikedTests
+                .Where(x => x.UserId == userId)
+                .Select(t => new
+                {
+                    t.Test.Id,
+                    t.Test.Title,
+                    Types = t.Test.Types.Select(tt => tt.Name).ToList(),
+                    t.Test.CreatorId,
+                    t.Test.Creator,
+                    t.Test.Published,
+                    t.Test.CreatedDate,
+                    t.Test.PublishDate,
+                    t.Test.EditTime,
+                    t.Test.CoverUrl,
+                    t.Test.Description,
+                    t.Test.Difficult,
+                    t.Test.AccessToken,
+                    likesCount = t.Test.LikedByUsers.Count(),
+                })
+                .ToList();
+
+            return Ok(tests);
+        }
+
+        [Authorize]
+        [HttpGet("saved")]
+        public IActionResult GetSavedTests()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (userId == null)
+                return Unauthorized();
+
+            var tests = _context.SavedTests
+                .Where(x => x.UserId == userId)
+                .Select(t => new
+                {
+                    t.Test.Id,
+                    t.Test.Title,
+                    Types = t.Test.Types.Select(tt => tt.Name).ToList(),
+                    t.Test.CreatorId,
+                    t.Test.Creator,
+                    t.Test.Published,
+                    t.Test.CreatedDate,
+                    t.Test.PublishDate,
+                    t.Test.EditTime,
+                    t.Test.CoverUrl,
+                    t.Test.Description,
+                    t.Test.Difficult,
+                    t.Test.AccessToken,
+                    likesCount = t.Test.LikedByUsers.Count(),
+                })
+                .ToList();
+
+            return Ok(tests);
         }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebTests.Data;
 
@@ -11,9 +12,10 @@ using WebTests.Data;
 namespace WebTests.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260525122534_LikesAndSaves")]
+    partial class LikesAndSaves
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -284,7 +286,7 @@ namespace WebTests.Migrations
 
                     b.HasIndex("TestId");
 
-                    b.ToTable("LikedTests");
+                    b.ToTable("LikedTest");
                 });
 
             modelBuilder.Entity("WebTests.Models.Question", b =>
@@ -327,7 +329,7 @@ namespace WebTests.Migrations
 
                     b.HasIndex("TestId");
 
-                    b.ToTable("SavedTests");
+                    b.ToTable("SavedTest");
                 });
 
             modelBuilder.Entity("WebTests.Models.Test", b =>

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Test, TestService } from '../../services/test.service';
+import { Test, TestInfo, TestService } from '../../services/test.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, User } from '../../services/auth.service';
 import { Observable } from 'rxjs';
@@ -10,24 +10,26 @@ import { Observable } from 'rxjs';
   styleUrls: ['./test-info.component.css']
 })
 export class TestInfoComponent implements OnInit {
-  test: Test = {
-    id: 0,
-    title: '',
-    questions: [],
-    types: [],
-    creatorId: '',
-    published: false,
-    publishDate: new Date(0),
-    createdDate: new Date(0),
-    editDate: new Date(0),
-    minimumSuccessPercent: 70,
-    coverUrl: '',
-    description: '',
-    difficult: 0,
-    timeLimitSeconds: 0,
-    isPublic: false,
-    accessToken: ''
-  };
+
+  test: TestInfo = {
+      id: 0,
+      title: '',
+      questions: [],
+      types: [],
+      creatorId: '',
+      publishDate: new Date(0),
+      createdDate: new Date(0),
+      editDate: new Date(0),
+      minimumSuccessPercent: 70,
+      coverUrl: '',
+      description: '',
+      difficult: 0,
+      timeLimitSeconds: 0,
+      accessToken: '',
+      likesCount: 0,
+      isLiked: false,
+      isSaved: false
+  }
 
   creator: User = {
     id: "",
@@ -42,6 +44,7 @@ export class TestInfoComponent implements OnInit {
 
   state: string = '';
   isAuth: boolean = this.authService.isAuthenticated;
+  isOwner: boolean = false;
 
   constructor(
     private testService: TestService,
@@ -55,9 +58,10 @@ export class TestInfoComponent implements OnInit {
       const testId = Number(params.get('id'));
       const testToken = String(params.get('token'));
       if (testId) {
-        this.testService.getTestById(testId).subscribe({
+        this.testService.getTestInfoById(testId).subscribe({
           next: (data) => {
             this.test = data;
+            //this.isOwner = this.test.creatorId === this.authService.currentUserId;
           },
           error: (err) => {
             console.error('Ошибка загрузки: ', err);
@@ -79,7 +83,7 @@ export class TestInfoComponent implements OnInit {
       }
 
       else if (testToken) {
-        this.testService.getTestByToken(testToken).subscribe({
+        this.testService.getTestInfoByToken(testToken).subscribe({
           next: (data) => {
             this.test = data;
           },
@@ -104,11 +108,43 @@ export class TestInfoComponent implements OnInit {
     })
   }
 
-  getTestLink(test: Test | null | undefined) {
+  getTestLink(test: TestInfo | null | undefined) {
     if (!test) return ['/test'];
 
     return test.accessToken
       ? ['/tests/t', test.accessToken]
       : ['/tests/id', test.id];
+  }
+
+  likeTest() {
+    if (!this.test.isLiked) {
+      this.testService.likeTest(this.test.id).subscribe({
+        next: () => {
+          console.log(`Liked test with ID: ${this.test.id}`);
+        }
+      })
+    } else {
+      this.testService.unlikeTest(this.test.id).subscribe({
+        next: () => {
+          console.log(`Unliked test with ID: ${this.test.id}`);
+        }
+      })
+    }
+  }
+
+  saveTest() {
+    if (!this.test.isSaved) {
+      this.testService.saveTest(this.test.id).subscribe({
+        next: () => {
+          console.log(`Saved test with ID: ${this.test.id}`);
+        }
+      })
+    } else {
+      this.testService.unsaveTest(this.test.id).subscribe({
+        next: () => {
+          console.log(`Unsaved test with ID: ${this.test.id}`);
+        }
+      })
+    }
   }
 }

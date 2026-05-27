@@ -12,5 +12,7 @@ namespace WebTests.Models
         public DateTime? BirthDate { get; set; }
         public ICollection<UserFollow> Following { get; set; } = new List<UserFollow>();
         public ICollection<UserFollow> Followers { get; set; } = new List<UserFollow>();
+        public ICollection<LikedTest> LikedTests { get; set; } = new List<LikedTest>();
+        public ICollection<SavedTest> SavedTests { get; set; } = new List<SavedTest>();
     }
 }

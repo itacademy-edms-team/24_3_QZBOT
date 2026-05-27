@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, User } from '../services/auth.service';
-import { Test, TestService, UserTest } from '../services/test.service';
+import { Test, TestPreview, TestService, UserTest } from '../services/test.service';
 
 @Component({
   selector: 'app-profile',
@@ -16,6 +16,7 @@ export class ProfileComponent implements OnInit {
   username: string = '';
   history: UserTest[] = [];
   created_tests: Test[] = [];
+  liked_tests: TestPreview[] = [];
   user: User = {
     id: '',
     username: '',
@@ -95,6 +96,12 @@ export class ProfileComponent implements OnInit {
       this.testService.getMyTestsByUsername(this.name_from_url).subscribe({
         next: (data) => {
           this.created_tests = data;
+        }
+      })
+
+      this.testService.getLikedTests().subscribe({
+        next: (data) => {
+          this.liked_tests = data;
         }
       })
 

@@ -16,6 +16,8 @@ namespace WebTests.Data
         public DbSet<UserTestAnswer> UserTestAnswers { get; set; }
         public DbSet<TestTypes> TestTypes { get; set; }
         public DbSet<UserFollow> UserFollows { get; set; }
+        public DbSet<LikedTest> LikedTests { get; set; }
+        public DbSet<SavedTest> SavedTests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -59,6 +61,12 @@ namespace WebTests.Data
                 .WithMany(x => x.Followers)
                 .HasForeignKey(x => x.FollowingId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<LikedTest>()
+                .HasKey(x => new { x.UserId, x.TestId });
+
+            builder.Entity<SavedTest>()
+                .HasKey(x => new { x.UserId, x.TestId });
         }
     }
 }

@@ -87,12 +87,10 @@
               {{ test.title }}
             </h3>
           </a>
-
-          <!--<button (click)="checkStart(test)" class="text-left group/title">
-            <h3 class="text-2xl font-black text-black truncate max-w-md group-hover/title:text-gray-600 transition-colors">
-              {{ test.title }}
-            </h3>
-          </button>-->
+          <div>
+            <p>Лайков: {{ test.likesCount }}</p>
+            <!--<button (click)="saveTest(test.id)">Save</button>-->
+          </div>
 
           <div class="flex shrink-0 gap-0.5">
             <ng-container *ngFor="let star of [1,2,3,4,5]; let i = index">
@@ -109,14 +107,7 @@
           {{ test.description }}
         </p>
 
-        <!--<div class="mt-auto flex items-center justify-between">
-          <div class="flex items-center gap-2">
-            <div class="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center text-[10px] text-white font-black">
-              {{ (test.creatorId?.substring(0, 2) | uppercase) || 'AN' }}
-            </div>
-            <span class="text-sm font-bold text-black">{{ test.creatorId || 'Anonymous' }}</span>
-          </div>
-        </div>-->
+
       </div>
     </div>
   </div>

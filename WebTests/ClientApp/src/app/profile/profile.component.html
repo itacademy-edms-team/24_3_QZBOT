@@ -73,9 +73,9 @@
       <div class="flex items-center justify-between mb-8 px-6">
         <h2 class="text-3xl font-black tracking-tight text-black">Созданные тесты</h2>
         <!--<a *ngIf="created_tests.length > 0" [routerLink]="['/my-tests']"
-           class="text-xs font-black uppercase tracking-widest text-gray-300 hover:text-black transition-colors">
-          Подробнее →
-        </a>-->
+         class="text-xs font-black uppercase tracking-widest text-gray-300 hover:text-black transition-colors">
+        Подробнее →
+      </a>-->
       </div>
 
       <div *ngIf="created_tests.length > 0; else no_content" class="grid gap-4">
@@ -92,15 +92,17 @@
                 Создан {{ test.createdDate | date:'d MMM yyyy' }}
               </span>
               <!--<span class="w-1 h-1 rounded-full bg-gray-200"></span>
-              <span class="text-[10px] text-gray-400 font-bold italic">{{ test.questions?.length || 0 }} вопроса</span>-->
+      <span class="text-[10px] text-gray-400 font-bold italic">{{ test.questions?.length || 0 }} вопроса</span>-->
             </div>
           </div>
-          <a [routerLink]="['/management/edit', test.id]"
-             class="ml-4 p-4 bg-gray-50 rounded-2xl text-gray-400 hover:bg-black hover:text-white hover:scale-110 transition-all">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-            </svg>
-          </a>
+          <!--<div *ngIf="is_owner">-->
+            <a [routerLink]="['/management/edit', test.id]"
+               class="ml-4 p-4 bg-gray-50 rounded-2xl text-gray-400 hover:bg-black hover:text-white hover:scale-110 transition-all">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+            </a>
+          <!--</div>-->
         </div>
       </div>
     </section>
@@ -134,12 +136,48 @@
       </div>
     </section>
 
+    <div *ngIf="liked_tests.length > 0">
+      <div class="flex items-center justify-between mb-8 px-6">
+        <h2 class="text-3xl font-black tracking-tight text-black">Понравившиеся тесты</h2>
+      </div>
+
+      <div class="grid gap-4">
+        <div *ngFor="let test of liked_tests"
+             class="group flex items-center p-5 bg-white border border-gray-50 rounded-[2.5rem] hover:shadow-xl hover:shadow-gray-100 transition-all duration-300">
+          <div class="w-20 h-20 rounded-3xl bg-gray-50 overflow-hidden shrink-0 border border-gray-100">
+            <img [src]="test.coverUrl || 'covers/default-test-cover.jpg'"
+                 class="w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-500">
+          </div>
+          <div class="ml-6 flex-1 min-w-0">
+            <h4 class="text-xl font-bold text-black truncate group-hover:text-gray-600 transition-colors">{{ test.title }}</h4>
+            <div class="flex items-center gap-3 mt-1">
+              <span class="text-[10px] text-gray-300 font-black uppercase tracking-widest">
+                Создан {{ test.createdDate | date:'d MMM yyyy' }}
+              </span>
+            </div>
+          </div>
+          <a [routerLink]="['/management/edit', test.id]"
+              class="ml-4 p-4 bg-gray-50 rounded-2xl text-gray-400 hover:bg-black hover:text-white hover:scale-110 transition-all">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
 <ng-template #no_content>
   <div class="text-center py-16 bg-gray-50/50 rounded-[3rem] border-2 border-dashed border-gray-100">
-    <p class="text-sm font-black text-gray-300 uppercase tracking-[0.2em]">No records found</p>
+    <p class="text-sm font-black text-gray-300 uppercase tracking-[0.2em]">Нет пройденных тестов</p>
+  </div>
+</ng-template>
+
+<ng-template #no_liked>
+  <div class="text-center py-16 bg-gray-50/50 rounded-[3rem] border-2 border-dashed border-gray-100">
+    <p class="text-sm font-black text-gray-300 uppercase tracking-[0.2em]">Нет пройденных тестов</p>
   </div>
 </ng-template>
 

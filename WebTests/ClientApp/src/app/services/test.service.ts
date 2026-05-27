@@ -69,6 +69,20 @@ export class TestService {
   }
 
 
+  getTestList() {
+    return this.http.get<TestPreview[]>(`${this.baseUrl}/testlist`, { withCredentials: true });
+  }
+
+
+  getTestInfoById(testId: number) {
+    return this.http.get<TestInfo>(`${this.baseUrl}/${testId}/testinfoid`, { withCredentials: true });
+  }
+
+
+  getTestInfoByToken(testToken: string) {
+    return this.http.get<TestInfo>(`${this.baseUrl}/${testToken}/testinfotoken`, { withCredentials: true });
+  }
+
 
   checkTestExists(name: string): Observable<boolean> {
     return this.http.get<boolean>(`${this.baseUrl}/exist/${name}`, { withCredentials: true })
@@ -363,6 +377,36 @@ export class TestService {
   sendAiRequest(aiTest: AiTest) {
     return this.http.post<Test>(`${this.baseUrl}/generate`, aiTest, { withCredentials: true });
   }
+
+
+  likeTest(testId: number) {
+    return this.http.post(`${this.baseUrl}/${testId}/like`, testId, { withCredentials: true });
+  }
+
+
+  unlikeTest(testId: number) {
+    return this.http.post(`${this.baseUrl}/${testId}/unlike`, testId, { withCredentials: true });
+  }
+
+
+  saveTest(testId: number) {
+    return this.http.post(`${this.baseUrl}/${testId}/save`, testId, { withCredentials: true });
+  }
+
+
+  unsaveTest(testId: number) {
+    return this.http.post(`${this.baseUrl}/${testId}/unsave`, testId, { withCredentials: true });
+  }
+
+
+  getLikedTests() {
+    return this.http.get<TestPreview[]>(`${this.baseUrl}/liked`, { withCredentials: true });
+  }
+
+
+  getSavedTests() {
+    return this.http.get<TestPreview[]>(`${this.baseUrl}/saved`, { withCredentials: true });
+  }
 }
 
 
@@ -387,6 +431,42 @@ export interface Test {
   accessToken: string;
 }
 
+
+export interface TestPreview {
+  id: number;
+  title: string;
+  types: string[];
+  creatorId: string;
+  createdDate: Date;
+  publishDate: Date;
+  editDate: Date;
+  coverUrl: string;
+  description: string;
+  difficult: number;
+  accessToken: string;
+  likesCount: number;
+}
+
+
+export interface TestInfo {
+  id: number;
+  title: string;
+  types: string[];
+  questions: Question[];
+  creatorId: string;
+  createdDate: Date;
+  publishDate: Date;
+  editDate: Date;
+  minimumSuccessPercent: number;
+  coverUrl: string;
+  description: string;
+  difficult: number;
+  timeLimitSeconds: number;
+  accessToken: string;
+  likesCount: number;
+  isLiked: boolean;
+  isSaved: boolean;
+}
 
 export interface UserTest {
   id: number;
