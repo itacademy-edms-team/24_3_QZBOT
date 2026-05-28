@@ -184,19 +184,149 @@
     </button>
     <div *ngIf="json_add" class="mt-6 space-y-4">
       <textarea [(ngModel)]="json_input" class="w-full h-48 p-4 bg-gray-50 border-none rounded-2xl font-mono text-xs focus:ring-2 focus:ring-black"></textarea>
-      <button (click)="loadFromJson()" class="bg-gray-100 px-6 py-2 rounded-full font-bold text-sm hover:bg-black hover:text-white transition-colors">Load Data</button>
+      <button (click)="loadFromJson()" class="bg-gray-100 px-6 py-2 rounded-full font-bold text-sm hover:bg-black hover:text-white transition-colors">Загрузить данные</button>
     </div>
   </div>
 
-  <div class="mt-5 pt-5 border-t border-gray-100">
-    <button (click)="ai_add = !ai_add" class="text-gray-400 font-bold text-sm hover:text-black">
-      {{ ai_add ? '− Скрыть' : '+ Использовать ИИ' }}
-    </button>
-    <div *ngIf="ai_add" class="mt-6 space-y-4">
-      <input [(ngModel)]="aiTest.prompt" type="text" class="w-full p-4 bg-white border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-black transition shadow-sm" placeholder="О чем должен быть ваш тест?"/>
-      <input [(ngModel)]="aiTest.countQuestions" type="number" placeholder="Количество вопросов" />
-      <button (click)="sendAi()" class="bg-gray-100 px-6 py-2 rounded-full font-bold text-sm hover:bg-black hover:text-white transition-colors">Отправить запрос</button>
+  <div class="mt-10">
+
+    <div class="rounded-[2.5rem] border border-violet-100 bg-gradient-to-br from-violet-50 via-white to-fuchsia-50 p-8 overflow-hidden relative">
+
+      <div class="absolute top-0 right-0 w-72 h-72 bg-violet-200/20 blur-3xl rounded-full"></div>
+
+      <div class="relative z-10">
+
+        <!-- HEADER -->
+        <div class="flex items-center justify-between mb-8">
+
+          <div class="flex items-center gap-4">
+
+            <div class="w-14 h-14 rounded-2xl bg-black text-white flex items-center justify-center text-2xl shadow-xl">
+              ✦
+            </div>
+
+            <div>
+              <h3 class="text-2xl font-black tracking-tight">
+                Генерация вопросов через ИИ
+              </h3>
+
+              <p class="text-sm text-gray-500 font-medium mt-1">
+                Добавьте вопросы автоматически по описанию темы
+              </p>
+            </div>
+
+          </div>
+
+          <button (click)="ai_add = !ai_add"
+                  class="px-5 py-2 rounded-full bg-white border border-gray-200 font-bold text-sm hover:border-black transition-all">
+
+            {{ ai_add ? 'Скрыть' : 'Открыть' }}
+
+          </button>
+
+        </div>
+
+        <!-- CONTENT -->
+        <div *ngIf="ai_add" class="space-y-6 animate-fade-in">
+
+          <!-- PROMPT -->
+          <div class="space-y-2">
+
+            <label class="text-sm font-black uppercase tracking-widest text-gray-400 px-1">
+              Описание
+            </label>
+
+            <textarea [(ngModel)]="aiTest.prompt"
+                      rows="4"
+                      placeholder="Например: Создай вопросы по ASP.NET Core, JWT, Entity Framework и SignalR..."
+                      class="w-full p-5 bg-white border border-gray-200 rounded-[1.8rem] resize-none focus:outline-none focus:ring-2 focus:ring-black transition shadow-sm text-[15px] font-medium"></textarea>
+
+          </div>
+
+          <!-- SETTINGS -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+            <div class="bg-white rounded-2xl border border-gray-100 p-5">
+
+              <p class="text-xs font-black uppercase tracking-widest text-gray-300 mb-3">
+                Количество вопросов
+              </p>
+
+              <input [(ngModel)]="aiTest.countQuestions"
+                     type="number"
+                     min="1"
+                     max="50"
+                     class="w-full bg-gray-50 border border-gray-100 rounded-xl p-4 text-lg font-bold focus:outline-none focus:ring-2 focus:ring-black" />
+
+            </div>
+
+            <div class="bg-white rounded-2xl border border-gray-100 p-5 flex flex-col justify-center">
+
+              <p class="text-xs font-black uppercase tracking-widest text-gray-300 mb-3">
+                Будет создано
+              </p>
+
+              <div class="flex flex-wrap gap-2">
+
+                <span class="px-3 py-2 rounded-full bg-gray-100 text-sm font-bold text-gray-700">
+                  Вопросы
+                </span>
+
+                <span class="px-3 py-2 rounded-full bg-gray-100 text-sm font-bold text-gray-700">
+                  Варианты ответов
+                </span>
+
+                <span class="px-3 py-2 rounded-full bg-gray-100 text-sm font-bold text-gray-700">
+                  Правильные ответы
+                </span>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- BUTTON -->
+          <button (click)="sendAi()"
+                  [disabled]="is_generating_ai"
+                  class="w-full h-16 rounded-[1.6rem] bg-black text-white font-black text-lg transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3">
+
+            <ng-container *ngIf="!is_generating_ai">
+              <span class="text-xl">✦</span>
+              Сгенерировать вопросы
+            </ng-container>
+
+            <ng-container *ngIf="is_generating_ai">
+              <div class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+              Генерация...
+            </ng-container>
+
+          </button>
+
+          <!-- LOADING -->
+          <div *ngIf="is_generating_ai"
+               class="rounded-[2rem] border border-gray-100 bg-white p-6 animate-pulse space-y-4">
+
+            <div class="h-5 bg-gray-100 rounded-full w-1/3"></div>
+
+            <div class="space-y-3">
+
+              <div class="h-16 rounded-2xl bg-gray-100"></div>
+
+              <div class="h-16 rounded-2xl bg-gray-100"></div>
+
+              <div class="h-16 rounded-2xl bg-gray-100"></div>
+
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
+
   </div>
 
 </div>
