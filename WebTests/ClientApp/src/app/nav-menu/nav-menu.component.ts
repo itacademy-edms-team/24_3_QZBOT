@@ -25,9 +25,20 @@ export class NavMenuComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.authService.currentUser$.subscribe({
-      next: (data) => {
-        this.currentUserUsername = data || '';
+    this.authService.currentUser$.subscribe(async user => {
+      this.currentUserUsername = user || '';
+
+      this.notifications = [];
+
+      this.notificationService.clearNotifications();
+
+      if (user) {
+        await this.notificationService.startConnection();
+
+        this.notificationService.loadNotifications();
+      }
+      else {
+        await this.notificationService.stopConnection();
       }
     })
 
@@ -85,5 +96,11 @@ export class NavMenuComponent implements OnInit {
     return this.notifications
       .filter(n => !n.isRead)
       .length;
+  }
+
+  async ngOnDestroy() {
+    this.notificationSub?.unsubscribe();
+
+    await this.notificationService.stopConnection();
   }
 }

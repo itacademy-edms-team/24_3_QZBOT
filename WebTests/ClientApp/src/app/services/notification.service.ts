@@ -27,7 +27,13 @@ export class NotificationService {
     return this.http.post(`${this.baseUrl}/read/${id}`, {}, { withCredentials: true });
   }
 
-  startConnection() {
+  async startConnection() {
+
+    if (this.hubConnection) {
+
+      await this.hubConnection.stop();
+
+    }
 
     this.hubConnection =
       new signalR.HubConnectionBuilder()
@@ -43,15 +49,6 @@ export class NotificationService {
 
         .build();
 
-    this.hubConnection
-      .start()
-      .then(() => {
-        console.log('SignalR connected');
-      })
-      .catch(err => {
-        console.error(err);
-      });
-
     this.hubConnection.on(
       'ReceiveNotification',
       (notification: Notification) => {
@@ -64,6 +61,10 @@ export class NotificationService {
           ...current
         ]);
       });
+
+    await this.hubConnection.start();
+
+    console.log("SignalR connected")
   }
 
   loadNotifications() {
@@ -74,6 +75,21 @@ export class NotificationService {
         this.notificationsSubject.next(data);
 
       });
+  }
+
+  async stopConnection() {
+
+    if (this.hubConnection) {
+
+      await this.hubConnection.stop();
+
+    }
+  }
+
+  clearNotifications() {
+
+    this.notificationsSubject.next([]);
+
   }
 }
 
