@@ -2,6 +2,7 @@ import { Component, OnInit, HostListener } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
 import { NotificationService, Notification } from '../services/notification.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-nav-menu',
@@ -15,6 +16,7 @@ export class NavMenuComponent implements OnInit {
 
   isNotificationsOpen = false;
   notifications: Notification[] = [];
+  private notificationSub?: Subscription;
 
   constructor(
     public authService: AuthService,
@@ -27,6 +29,14 @@ export class NavMenuComponent implements OnInit {
       next: (data) => {
         this.currentUserUsername = data || '';
       }
+    })
+
+    this.notificationService.startConnection();
+
+    this.notificationService.loadNotifications();
+
+    this.notificationSub = this.notificationService.notification$.subscribe(data => {
+      this.notifications = data;
     })
   }
 
@@ -47,9 +57,9 @@ export class NavMenuComponent implements OnInit {
     this.isNotificationsOpen =
       !this.isNotificationsOpen;
 
-    if (this.isNotificationsOpen) {
-      this.loadNotifications();
-    }
+    //if (this.isNotificationsOpen) {
+    //  this.loadNotifications();
+    //}
   }
 
   loadNotifications() {

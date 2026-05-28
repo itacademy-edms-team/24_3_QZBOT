@@ -2,16 +2,20 @@
 using WebTests.Data;
 using WebTests.Models;
 using WebTests.Services.Interfaces;
+using Microsoft.AspNetCore.SignalR;
+using WebTests.Hubs;
 
 namespace WebTests.Services
 {
     public class NotificationService : INotificationService
     {
         private readonly AppDbContext _context;
+        private readonly IHubContext<NotificationHub> _hubContext;
 
-        public NotificationService(AppDbContext context)
+        public NotificationService(AppDbContext context, IHubContext<NotificationHub> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         public async Task CreateAsync(string userId, string title, string message, string? link = null)
@@ -28,6 +32,12 @@ namespace WebTests.Services
             _context.Notifications.Add(notification);
 
             await _context.SaveChangesAsync();
+
+            await _hubContext.Clients
+                .User(userId)
+                .SendAsync(
+                    "ReceiveNotification",
+                    notification);
         }
 
         public async Task<List<Notification>> GetUserNotificationAsync(string userId)

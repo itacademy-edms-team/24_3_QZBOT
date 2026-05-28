@@ -7,6 +7,7 @@ using WebTests.Data;
 using WebTests.Models;
 using WebTests.Services;
 using WebTests.Services.Interfaces;
+using WebTests.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +62,8 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddSignalR();
+
 builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddAuthorization();
@@ -75,6 +78,8 @@ if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
 }
+
+app.MapHub<NotificationHub>("/notificationHub");
 
 app.UseHttpsRedirection();
 
