@@ -120,15 +120,23 @@ export class TestInfoComponent implements OnInit {
     if (!this.test.isLiked) {
       this.testService.likeTest(this.test.id).subscribe({
         next: () => {
-          console.log(`Liked test with ID: ${this.test.id}`);
+          this.test.isLiked = true;
+          this.test.likesCount++;
+        },
+        error: (err) => {
+          console.error(err);
         }
-      })
+      });
     } else {
       this.testService.unlikeTest(this.test.id).subscribe({
         next: () => {
-          console.log(`Unliked test with ID: ${this.test.id}`);
+          this.test.isLiked = false;
+          this.test.likesCount--;
+        },
+        error: (err) => {
+          console.error(err);
         }
-      })
+      });
     }
   }
 
@@ -136,15 +144,21 @@ export class TestInfoComponent implements OnInit {
     if (!this.test.isSaved) {
       this.testService.saveTest(this.test.id).subscribe({
         next: () => {
-          console.log(`Saved test with ID: ${this.test.id}`);
+          this.test.isSaved = true;
+        },
+        error: (err) => {
+          console.error(err);
         }
-      })
+      });
     } else {
       this.testService.unsaveTest(this.test.id).subscribe({
         next: () => {
-          console.log(`Unsaved test with ID: ${this.test.id}`);
+          this.test.isSaved = false;
+        },
+        error: (err) => {
+          console.error(err);
         }
-      })
+      });
     }
   }
 }
