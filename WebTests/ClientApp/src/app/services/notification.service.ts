@@ -31,8 +31,12 @@ export class NotificationService {
 
     if (this.hubConnection) {
 
+      this.hubConnection.off('ReceiveNotification');
+      this.hubConnection.off('NotificationDeleted');
+
       await this.hubConnection.stop();
 
+      this.hubConnection = undefined;
     }
 
     this.hubConnection =
@@ -41,8 +45,7 @@ export class NotificationService {
         .withUrl(
           'https://localhost:44356/notificationHub',
           {
-            accessTokenFactory: () =>
-              localStorage.getItem('token') || ''
+            withCredentials: true
           })
 
         .withAutomaticReconnect()
@@ -62,9 +65,27 @@ export class NotificationService {
         ]);
       });
 
-    await this.hubConnection.start();
+    this.hubConnection.on(
+      'NotificationDeleted',
+      (id: number) => {
 
-    console.log("SignalR connected")
+        const filtered =
+          this.notificationsSubject.value
+            .filter(n => n.id !== id);
+
+        this.notificationsSubject.next(filtered);
+      });
+
+    try {
+
+      await this.hubConnection.start();
+
+      console.log('SignalR connected');
+
+    } catch (err) {
+
+      console.error(err);
+    }
   }
 
   loadNotifications() {
@@ -72,7 +93,16 @@ export class NotificationService {
     this.getNotifications()
       .subscribe(data => {
 
-        this.notificationsSubject.next(data);
+        const current =
+          this.notificationsSubject.value;
+
+        const merged = [
+          ...data.filter(d =>
+            !current.some(c => c.id === d.id)),
+          ...current
+        ];
+
+        this.notificationsSubject.next(merged);
 
       });
   }

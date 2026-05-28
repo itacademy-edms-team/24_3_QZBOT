@@ -60,5 +60,24 @@ namespace WebTests.Services
 
             await _context.SaveChangesAsync();
         }
+
+        public async Task DeleteAsync(string userId, string title, string message)
+        {
+            var notification = await _context.Notifications
+                .Where(n => n.UserId == userId && n.Title == title && n.Message == message)
+                .FirstOrDefaultAsync();
+
+            if (notification == null) return;
+
+            _context.Notifications.Remove(notification);
+
+            await _context.SaveChangesAsync();
+
+            await _hubContext.Clients
+                .User(userId)
+                .SendAsync(
+                    "NotificationDeleted",
+                    notification.Id);
+        }
     }
 }

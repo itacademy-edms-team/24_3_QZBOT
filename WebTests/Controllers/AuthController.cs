@@ -200,7 +200,7 @@ namespace WebTests.Controllers
             if (currentUserId == null)
                 return Unauthorized();
 
-            var currentUser = _userManager.FindByIdAsync(currentUserId).Result;
+            var currentUser = await _userManager.FindByIdAsync(currentUserId);
 
             var targetUser = await _userManager.FindByNameAsync(username);
 
@@ -225,12 +225,13 @@ namespace WebTests.Controllers
             };
 
             _context.UserFollows.Add(follow);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
 
             await _notificationService.CreateAsync(
                 targetUser.Id,
                 "Новый подписчик",
-                $"Пользователь {currentUser.UserName} подписался на вас");
+                $"Пользователь {currentUser.UserName} подписался на вас",
+                $"/profile/{currentUser.UserName}");
 
             return Ok();
         }
@@ -243,6 +244,8 @@ namespace WebTests.Controllers
 
             if (currentUserId == null)
                 return Unauthorized();
+
+            var currentUser = _userManager.FindByIdAsync(currentUserId).Result;
 
             var targetUser = await _userManager.FindByNameAsync(username);
 
@@ -261,6 +264,12 @@ namespace WebTests.Controllers
                 _context.UserFollows.Remove(isFollowing);
 
             _context.SaveChanges();
+
+            await _notificationService.DeleteAsync(
+                targetUser.Id,
+                "Новый подписчик",
+                $"Пользователь {currentUser.UserName} подписался на вас");
+
             return Ok();
         }
 

@@ -59,7 +59,7 @@
               <div class="max-h-[400px] overflow-y-auto">
 
                 <button *ngFor="let notification of notifications" (click)="openNotification(notification)" [ngClass]="{'bg-gray-50': !notification.isRead}" class="w-full text-left p-4 hover:bg-gray-50 transition border-b border-gray-100">
-
+                  <!--<a [href]="notificationLink + notification.link">-->
                   <div class="text-sm font-semibold">
                     {{ notification.title }}
                   </div>
@@ -67,7 +67,7 @@
                   <div class="text-xs text-gray-500 mt-1">
                     {{ notification.message }}
                   </div>
-
+                  <!--</a>-->
                 </button>
 
               </div>

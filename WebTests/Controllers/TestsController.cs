@@ -14,6 +14,7 @@ using WebTests.Models;
 using WebTests.Services;
 using WebTests.Services.Interfaces;
 using WebTests.TestFactory;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace WebTests.Controllers
 {
@@ -573,14 +574,22 @@ namespace WebTests.Controllers
             _context.Tests.Add(test);
             await _context.SaveChangesAsync();
 
+            var testLink = "";
+
             if (test.Published && test.IsPublic)
             {
+                if (test.AccessToken != null)
+                    testLink = $"test/t/{test.AccessToken}";
+                else
+                    testLink = $"test/id/{test.Id}";
+
                 foreach (var follower in user.Followers)
                 {
                     await _notificationService.CreateAsync(
                         follower.Follower.Id,
                         "Новый тест",
-                        $"Пользователь {user.UserName} опубликовал новый тест {test.Title}");
+                        $"Пользователь {user.UserName} опубликовал новый тест {test.Title}",
+                        testLink);
                 }
             }
 
@@ -638,8 +647,15 @@ namespace WebTests.Controllers
             if (form.Cover != null)
                 updated.CoverUrl = await Help.Image.TestCover(form.Cover, test.CoverUrl);
 
+            var testLink = "";
+
             if (!test.Published && updated.Published && updated.IsPublic)
             {
+                if (test.AccessToken != "")
+                    testLink = $"test/t/{test.AccessToken}";
+                else
+                    testLink = $"test/id/{test.Id}";
+
                 var userFollows = await _context.UserFollows
                     .Where(x => x.FollowingId == userId)
                     .Select(x => x.FollowerId)
@@ -648,6 +664,23 @@ namespace WebTests.Controllers
                 foreach (var follower in userFollows)
                 {
                     await _notificationService.CreateAsync(
+                        follower,
+                        "Новый тест",
+                        $"Пользователь {user.UserName} опубликовал новый тест {test.Title}",
+                        testLink);
+                }
+            }
+
+            if (test.Published && !updated.Published && !updated.Published)
+            {
+                var userFollows = await _context.UserFollows
+                    .Where(x => x.FollowingId == userId)
+                    .Select(x => x.FollowerId)
+                    .ToListAsync();
+
+                foreach (var follower in userFollows)
+                {
+                    await _notificationService.DeleteAsync(
                         follower,
                         "Новый тест",
                         $"Пользователь {user.UserName} опубликовал новый тест {test.Title}");
@@ -1257,7 +1290,8 @@ namespace WebTests.Controllers
             await _notificationService.CreateAsync(
                 test.CreatorId,
                 "Новый лайк",
-                $"Пользователю {user.UserName} понравился ваш тест {test.Title}");
+                $"Пользователю {user.UserName} понравился ваш тест {test.Title}",
+                $"/profile/{user.UserName}");
 
             return Ok();
         }
@@ -1271,6 +1305,8 @@ namespace WebTests.Controllers
             if (userId == null)
                 return Unauthorized();
 
+            var user = _userManager.FindByIdAsync(userId).Result;
+
             var like = await _context.LikedTests
                 .Where(x => x.UserId == userId && x.TestId == testId)
                 .FirstOrDefaultAsync();
@@ -1278,8 +1314,19 @@ namespace WebTests.Controllers
             if (like == null)
                 return BadRequest();
 
+            var test = await _context.Tests
+                .Where(t => t.Id == testId)
+                .FirstOrDefaultAsync();
+
+            if (test == null) return NotFound();
+
             _context.LikedTests.Remove(like);
             _context.SaveChanges();
+
+            await _notificationService.DeleteAsync(
+                test.CreatorId,
+                "Новый лайк",
+                $"Пользователю {user.UserName} понравился ваш тест {test.Title}");
 
             return Ok();
         }

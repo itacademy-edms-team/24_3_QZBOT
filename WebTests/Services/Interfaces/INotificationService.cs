@@ -16,5 +16,10 @@ namespace WebTests.Services.Interfaces
         Task MarkAsReadAsync(
             int notificationId,
             string userId);
+
+        Task DeleteAsync(
+            string userId,
+            string title,
+            string message);
     }
 }

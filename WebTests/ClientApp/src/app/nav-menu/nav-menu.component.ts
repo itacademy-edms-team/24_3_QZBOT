@@ -17,6 +17,8 @@ export class NavMenuComponent implements OnInit {
   isNotificationsOpen = false;
   notifications: Notification[] = [];
   private notificationSub?: Subscription;
+  //notificationLink: string = 'http://localhost:4200';
+  notificationLink: string = '';
 
   constructor(
     public authService: AuthService,
@@ -88,8 +90,13 @@ export class NavMenuComponent implements OnInit {
     if (!notification.isRead) {
       this.notificationService.markAsRead(notification.id).subscribe(() => {
         notification.isRead = true;
+        
       })
     }
+
+    if (!notification.link) return;
+
+    this.router.navigateByUrl(notification.link);
   }
 
   get unreadCount(): number {

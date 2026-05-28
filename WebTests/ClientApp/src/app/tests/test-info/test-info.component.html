@@ -19,7 +19,7 @@
 
     <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-8">
       <div class="flex-1">
-        <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-black mb-2">
+        <h1 class="text-4xl md:text-4xl font-black tracking-tighter text-black mb-2">
           {{ test.title }}
         </h1>
         <p *ngIf="creator.username!=''" class="text-gray-400 font-bold italic tracking-tight">Автор: <a [routerLink]="['/profile', creator.username]">{{ creator.username }}</a></p>
@@ -37,16 +37,40 @@
 
       <div class="flex gap-3 mt-4">
 
-        <button class="w-12 h-12 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-all flex items-center justify-center active:scale-95"
+        <button [class.border-red-100]="test.isLiked" [class.bg-white]="!test.isLiked" class="w-12 h-12 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-all flex items-center justify-center active:scale-95"
                 (click)="likeTest()">
-          
-          ❤️
+
+          <svg xmlns="http://www.w3.org/2000/svg"
+               fill="currentColor"
+               viewBox="0 0 24 24"
+               class="w-6 h-6"
+               [class.text-red-500]="test.isLiked"
+               [class.text-gray-300]="!test.isLiked">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5
+               2 5.42 4.42 3 7.5 3
+               c1.74 0 3.41.81 4.5 2.09
+               C13.09 3.81 14.76 3 16.5 3
+               19.58 3 22 5.42 22 8.5
+               c0 3.78-3.4 6.86-8.55 11.54
+               L12 21.35z" />
+          </svg>
         </button>
 
-        <button class="w-12 h-12 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 transition-all flex items-center justify-center active:scale-95"
-                (click)="saveTest()">
+        <button (click)="saveTest()"
+                class="w-11 h-11 rounded-2xl border border-gray-200 flex items-center justify-center transition-all active:scale-95"
+                [class.border-black]="test.isSaved"
+                [class.bg-white]="!test.isSaved">
 
-          🔖
+          <svg xmlns="http://www.w3.org/2000/svg"
+               fill="currentColor"
+               viewBox="0 0 24 24"
+               class="w-6 h-6 transition-colors"
+               [class.text-black]="test.isSaved"
+               [class.text-gray-300]="!test.isSaved">
+
+            <path d="M6 3C4.9 3 4 3.9 4 5v16l8-4 8 4V5c0-1.1-.9-2-2-2H6z" />
+          </svg>
+
         </button>
 
       </div>
@@ -73,8 +97,12 @@
       </div>
       <div class="text-center border-l border-gray-50 md:block hidden">
         <p class="text-[10px] font-black uppercase text-gray-300 tracking-widest mb-1">Таймер</p>
-        <p *ngIf="test.timeLimitSeconds!=null" class="text-xl font-black">{{ (test.timeLimitSeconds * 1000) | date:'mm:ss' }}</p>
-        <p *ngIf="test.timeLimitSeconds==null" class="text-xl font-black">Нет</p>
+        <p *ngIf="test.timeLimitSeconds==0;else timeLimit" class="text-xl font-black">Нет</p>
+        <ng-template #timeLimit>
+          <p class="text-xl font-black">{{ (test.timeLimitSeconds * 1000) | date:'mm:ss' }}</p>
+        </ng-template>
+        <!--<ng-template #timeLimit class="text-xl font-black">{{ (test.timeLimitSeconds * 1000) | date:'mm:ss' }}</ng-template>-->
+        <!--<p *ngIf="test.timeLimitSeconds!=null" class="text-xl font-black">{{ (test.timeLimitSeconds * 1000) | date:'mm:ss' }}</p>-->
 
       </div>
       <div class="text-center border-l border-gray-50 md:block hidden">
