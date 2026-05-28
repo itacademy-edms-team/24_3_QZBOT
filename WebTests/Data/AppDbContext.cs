@@ -18,6 +18,7 @@ namespace WebTests.Data
         public DbSet<UserFollow> UserFollows { get; set; }
         public DbSet<LikedTest> LikedTests { get; set; }
         public DbSet<SavedTest> SavedTests { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

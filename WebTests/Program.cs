@@ -6,6 +6,7 @@ using System.Text;
 using WebTests.Data;
 using WebTests.Models;
 using WebTests.Services;
+using WebTests.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -59,6 +60,8 @@ builder.Services.AddAuthentication(options =>
         }
     };
 });
+
+builder.Services.AddScoped<INotificationService, NotificationService>();
 
 builder.Services.AddAuthorization();
 

@@ -11,6 +11,8 @@ using System.Text.RegularExpressions;
 using WebTests.Data;
 using WebTests.DTOs;
 using WebTests.Models;
+using WebTests.Services;
+using WebTests.Services.Interfaces;
 
 namespace WebTests.Controllers
 {
@@ -20,13 +22,19 @@ namespace WebTests.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
-        private readonly AppDbContext _context; 
+        private readonly AppDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration, AppDbContext context)
+        public AuthController(
+            UserManager<ApplicationUser> userManager, 
+            IConfiguration configuration, 
+            AppDbContext context,
+            INotificationService notificationService)
         {
             _userManager = userManager;
             _configuration = configuration;
             _context = context;
+            _notificationService = notificationService;
         }
 
         [HttpPost("register")]
@@ -192,6 +200,8 @@ namespace WebTests.Controllers
             if (currentUserId == null)
                 return Unauthorized();
 
+            var currentUser = _userManager.FindByIdAsync(currentUserId).Result;
+
             var targetUser = await _userManager.FindByNameAsync(username);
 
             if (targetUser == null)
@@ -216,6 +226,11 @@ namespace WebTests.Controllers
 
             _context.UserFollows.Add(follow);
             _context.SaveChanges();
+
+            await _notificationService.CreateAsync(
+                targetUser.Id,
+                "Новый подписчик",
+                $"Пользователь {currentUser.UserName} подписался на вас");
 
             return Ok();
         }

@@ -34,6 +34,52 @@
             <a [routerLink]="['/saved']" class="pb-1">Избранное</a>
           </li>
 
+          <li class="relative" *ngIf="authService.isAuthenticated">
+
+            <button (click)="toggleNotifications()"
+                    class="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-gray-100 transition transition-all duration-200">
+
+              🔔
+
+              <span *ngIf="unreadCount > 0" class="absolute -top-1 -right-1 bg-black text-white text-[10px]
+             min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center">
+                {{ unreadCount }}
+              </span>
+
+            </button>
+
+            <div *ngIf="isNotificationsOpen"
+                 class="absolute right-0 mt-3 w-80 bg-white border border-gray-200
+           rounded-2xl shadow-xl overflow-hidden">
+
+              <div class="p-4 border-b border-gray-100 font-bold">
+                Уведомления
+              </div>
+
+              <div class="max-h-[400px] overflow-y-auto">
+
+                <button *ngFor="let notification of notifications" (click)="openNotification(notification)" [ngClass]="{'bg-gray-50': !notification.isRead}" class="w-full text-left p-4 hover:bg-gray-50 transition border-b border-gray-100">
+
+                  <div class="text-sm font-semibold">
+                    {{ notification.title }}
+                  </div>
+
+                  <div class="text-xs text-gray-500 mt-1">
+                    {{ notification.message }}
+                  </div>
+
+                </button>
+
+              </div>
+
+              <div *ngIf="notifications.length === 0" class="p-6 text-sm text-gray-500 text-center">
+                Нет уведомлений
+              </div>
+
+            </div>
+
+          </li>
+
           <li class="transition-colors hover:text-black">
             <div *ngIf="authService.isAuthenticated; else loginLink">
               <a [routerLink]="['/profile', currentUserUsername]"

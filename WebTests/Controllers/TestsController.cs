@@ -12,6 +12,7 @@ using WebTests.Data;
 using WebTests.DTOs;
 using WebTests.Models;
 using WebTests.Services;
+using WebTests.Services.Interfaces;
 using WebTests.TestFactory;
 
 namespace WebTests.Controllers
@@ -23,12 +24,19 @@ namespace WebTests.Controllers
         private readonly AppDbContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly YandexGptService _gpt;
+        private readonly INotificationService _notificationService;
 
-        public TestsController(AppDbContext context, UserManager<ApplicationUser> userManager, YandexGptService gpt)
+        public TestsController(
+            AppDbContext context, 
+            UserManager<ApplicationUser> userManager, 
+            YandexGptService gpt,
+            INotificationService notificationService
+            )
         {
             _context = context;
             _userManager = userManager;
             _gpt = gpt;
+            _notificationService = notificationService;
         }
 
         [HttpGet("all")]
@@ -548,6 +556,7 @@ namespace WebTests.Controllers
                 return Unauthorized();
 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = _userManager.FindByIdAsync(userId).Result;
 
             var test = TestFactory.FromDto.Create(dto, _context);
 
@@ -563,6 +572,17 @@ namespace WebTests.Controllers
 
             _context.Tests.Add(test);
             await _context.SaveChangesAsync();
+
+            //if (test.Published && test.IsPublic)
+            //{
+            //    foreach (var follower in user.Followers)
+            //    {
+            //        await _notificationService.CreateAsync(
+            //            follower.Follower.Id,
+            //            "Новый тест",
+            //            $"Пользователь {user.UserName} опубликовал новый тест {test.Title}");
+            //    }
+            //}
 
             return CreatedAtAction(nameof(GetTestById), new { id = test.Id }, test.Id);
         }
@@ -613,6 +633,8 @@ namespace WebTests.Controllers
             if (userId != test.CreatorId)
                 return Forbid();
 
+            var user = _userManager.FindByIdAsync(userId).Result;
+
             if (form.Cover != null)
                 updated.CoverUrl = await Help.Image.TestCover(form.Cover, test.CoverUrl);
 
@@ -620,6 +642,17 @@ namespace WebTests.Controllers
 
 
             await _context.SaveChangesAsync();
+
+            //if (!test.Published && updated.Published && updated.IsPublic)
+            //{
+            //    foreach (var follower in user.Followers)
+            //    {
+            //        await _notificationService.CreateAsync(
+            //            follower.Follower.Id,
+            //            "Новый тест",
+            //            $"Пользователь {user.UserName} опубликовал новый тест {test.Title}");
+            //    }
+            //}
 
             return Ok(true);
         }
@@ -1196,6 +1229,8 @@ namespace WebTests.Controllers
             if (userId == null)
                 return Unauthorized();
 
+            var user = _userManager.FindByIdAsync(userId).Result;
+
             var test = _context.Tests
                 .FirstOrDefault(t => t.Id == testId);
 
@@ -1213,6 +1248,11 @@ namespace WebTests.Controllers
 
             _context.LikedTests.Add(like);
             await _context.SaveChangesAsync();
+
+            await _notificationService.CreateAsync(
+                test.CreatorId,
+                "Новый лайк",
+                $"Пользователю {user.UserName} понравился ваш тест {test.Title}");
 
             return Ok();
         }

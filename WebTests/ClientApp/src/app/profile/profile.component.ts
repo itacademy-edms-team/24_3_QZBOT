@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, User } from '../services/auth.service';
 import { Test, TestPreview, TestService, UserTest } from '../services/test.service';
+import { NotificationService } from '../services/notification.service';
 
 @Component({
   selector: 'app-profile',
@@ -36,7 +37,8 @@ export class ProfileComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     public authService: AuthService,
-    public testService: TestService
+    public testService: TestService,
+    private notificationService: NotificationService
   ) { }
 
   ngOnInit() {

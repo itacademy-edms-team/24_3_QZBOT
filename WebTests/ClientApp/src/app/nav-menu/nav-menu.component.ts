@@ -1,6 +1,7 @@
 import { Component, OnInit, HostListener } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { Router } from '@angular/router';
+import { NotificationService, Notification } from '../services/notification.service';
 
 @Component({
   selector: 'app-nav-menu',
@@ -12,8 +13,12 @@ export class NavMenuComponent implements OnInit {
   isExpanded = false;
   currentUserUsername: string = '';
 
+  isNotificationsOpen = false;
+  notifications: Notification[] = [];
+
   constructor(
     public authService: AuthService,
+    private notificationService: NotificationService,
     private router: Router,
   ) { }
 
@@ -36,5 +41,39 @@ export class NavMenuComponent implements OnInit {
 
   toggle() {
     this.isExpanded = !this.isExpanded;
+  }
+
+  toggleNotifications() {
+    this.isNotificationsOpen =
+      !this.isNotificationsOpen;
+
+    if (this.isNotificationsOpen) {
+      this.loadNotifications();
+    }
+  }
+
+  loadNotifications() {
+    this.notificationService.getNotifications().subscribe({
+      next: (data) => {
+        this.notifications = data;
+      },
+      error: (err) => {
+        console.error(err);
+      }
+    })
+  }
+
+  openNotification(notification: Notification) {
+    if (!notification.isRead) {
+      this.notificationService.markAsRead(notification.id).subscribe(() => {
+        notification.isRead = true;
+      })
+    }
+  }
+
+  get unreadCount(): number {
+    return this.notifications
+      .filter(n => !n.isRead)
+      .length;
   }
 }
