@@ -102,42 +102,62 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
 
 
   ngOnInit() {
-    // получение userId
-    this.authService.currentUserId.subscribe(id => {
-      this.currentUserId = id;
-    })
+    this.authService.currentUserId.subscribe(userId => {
 
-    // получение ID места из параметров маршрута
-    this.route.paramMap.subscribe(params => {
-      const test_id = Number(params.get('id'));
-      if (test_id) {
-        this.test.id = test_id;
-      }
+      this.currentUserId = userId;
 
-      // загрузка теста по ID 
-      this.testService.getTestForManagementById(this.test.id).subscribe({
-        next: (data) => {
-          this.test = data;
+      this.route.paramMap.subscribe(params => {
+        const test_id = Number(params.get('id'));
 
-          // проверка, что текущий пользователь - автор теста
-          if (data.creatorId !== this.currentUserId) {
-            alert("Вы не можете редактировать чужой тест");
-            this.router.navigate(['/management']);
-          }
-
-          // создание копии объекта
-          this.edited_test = JSON.parse(JSON.stringify(this.test));
-
-          // сохраняем название для заголовка UI
-          this.test_title = data.title;
-
-          const total = this.edited_test.timeLimitSeconds || 0;
-
-          this.time.hours = Math.floor(total / 3600);
-          this.time.minutes = Math.floor((total % 3600) / 60);
-          this.time.seconds = total % 60;
+        if (test_id) {
+          this.test.id = test_id;
         }
+
+        this.testService.getTestForManagementById(this.test.id).subscribe({
+          next: (data) => {
+            data.questions ??= [];
+            data.types ??= [];
+
+            data.accessToken ??= '';
+            data.description ??= '';
+            data.coverUrl ??= '';
+
+            data.timeLimitSeconds ??= 0;
+
+            data.questions.forEach((q: any) => {
+              q.options ??= [];
+            });
+
+            this.test = data;
+
+            if (data.creatorId !== this.currentUserId) {
+              alert("Вы не можете редактировать чужой тест");
+              this.router.navigate(['/management']);
+              return;
+            }
+
+            this.edited_test = structuredClone(this.test);
+
+            this.edited_test.accessToken ??= '';
+            this.edited_test.timeLimitSeconds ??= 0;
+
+            //this.edited_test = data;
+
+            this.test_title = data.title;
+
+            const total = this.edited_test.timeLimitSeconds || 0;
+
+            this.time.hours = Math.floor(total / 3600);
+            this.time.minutes = Math.floor((total % 3600) / 60);
+            this.time.seconds = total % 60;
+          },
+
+          error: (err) => {
+            console.error(err);
+          }
+        });
       });
+
     });
   }
 
@@ -433,10 +453,10 @@ export class ManagementEditComponent implements OnInit, ComponentCanDeactivate {
   }
 
   get fontSizeClass(): string {
-    const len = this.edited_test.accessToken.length;
+    const len = this.edited_test.accessToken?.length || 0;
 
-    if (len > 20) return 'text-lg';
     if (len > 30) return 'text-base';
+    if (len > 20) return 'text-lg';
     return 'text-2xl';
   }
 

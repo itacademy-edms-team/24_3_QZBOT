@@ -573,16 +573,16 @@ namespace WebTests.Controllers
             _context.Tests.Add(test);
             await _context.SaveChangesAsync();
 
-            //if (test.Published && test.IsPublic)
-            //{
-            //    foreach (var follower in user.Followers)
-            //    {
-            //        await _notificationService.CreateAsync(
-            //            follower.Follower.Id,
-            //            "Новый тест",
-            //            $"Пользователь {user.UserName} опубликовал новый тест {test.Title}");
-            //    }
-            //}
+            if (test.Published && test.IsPublic)
+            {
+                foreach (var follower in user.Followers)
+                {
+                    await _notificationService.CreateAsync(
+                        follower.Follower.Id,
+                        "Новый тест",
+                        $"Пользователь {user.UserName} опубликовал новый тест {test.Title}");
+                }
+            }
 
             return CreatedAtAction(nameof(GetTestById), new { id = test.Id }, test.Id);
         }
@@ -638,21 +638,26 @@ namespace WebTests.Controllers
             if (form.Cover != null)
                 updated.CoverUrl = await Help.Image.TestCover(form.Cover, test.CoverUrl);
 
+            if (!test.Published && updated.Published && updated.IsPublic)
+            {
+                var userFollows = await _context.UserFollows
+                    .Where(x => x.FollowingId == userId)
+                    .Select(x => x.FollowerId)
+                    .ToListAsync();
+
+                foreach (var follower in userFollows)
+                {
+                    await _notificationService.CreateAsync(
+                        follower,
+                        "Новый тест",
+                        $"Пользователь {user.UserName} опубликовал новый тест {test.Title}");
+                }
+            }
+
             TestFactory.FromDto.Update(test, updated, _context);
 
 
             await _context.SaveChangesAsync();
-
-            //if (!test.Published && updated.Published && updated.IsPublic)
-            //{
-            //    foreach (var follower in user.Followers)
-            //    {
-            //        await _notificationService.CreateAsync(
-            //            follower.Follower.Id,
-            //            "Новый тест",
-            //            $"Пользователь {user.UserName} опубликовал новый тест {test.Title}");
-            //    }
-            //}
 
             return Ok(true);
         }
