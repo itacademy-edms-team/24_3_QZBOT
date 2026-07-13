@@ -10,7 +10,6 @@ import { Router, ActivatedRoute } from '@angular/router';
   styleUrls: ['./tests-list.component.css']
 })
 export class TestsListComponent {
-  //tests: Test[] = [];
   tests: TestPreview[] = [];
   filteredTests: TestPreview[] = [];
   searchText: string = '';

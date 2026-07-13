@@ -1,48 +1,160 @@
-<div class="mx-auto max-w-5xl pt-24 pb-20 px-6">
-  <div class="mb-16">
-    <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-black mb-2">
+<div class="max-w-5xl mx-auto px-6 pt-24 pb-20">
+
+  <!-- HEADER -->
+  <div class="mb-14">
+
+    <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-black mb-3">
       Сохраненные тесты
     </h1>
+
+    <!--<p class="text-gray-400 text-lg font-medium">
+      Тесты, которые вы сохранили для дальнейшего прохождения
+    </p>-->
+
+  </div>
+
+  <!-- LIST -->
+  <div *ngIf="tests.length > 0; else no_saved_tests"
+       class="space-y-6">
 
     <div *ngFor="let test of tests"
          class="group flex bg-white border border-gray-100 rounded-[40px] overflow-hidden shadow-sm hover:shadow-2xl hover:shadow-gray-200/50 hover:scale-[1.01] transition-all duration-300 h-60">
 
+      <!-- COVER -->
       <div class="w-1/3 min-w-[240px] h-full overflow-hidden border-r border-gray-50">
+
         <img [src]="test.coverUrl || 'covers/default-test-cover.jpg'"
              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
              alt="Test cover">
+
       </div>
 
+      <!-- CONTENT -->
       <div class="flex-1 p-8 flex flex-col">
-        <div class="flex justify-between items-start mb-4">
-          <a [routerLink]="getTestLink(test)">
-            <h3 class="text-2xl font-black text-black truncate max-w-md group-hover/title:text-gray-600 transition-colors">
-              {{ test.title }}
-            </h3>
-          </a>
-          <div>
-            <p>Лайков: {{ test.likesCount }}</p>
-            <!--<button (click)="saveTest(test.id)">Save</button>-->
+
+        <!-- TOP -->
+        <div class="flex justify-between items-start mb-4 gap-6">
+
+          <!-- TITLE -->
+          <div class="min-w-0">
+
+            <a [routerLink]="getTestLink(test)">
+
+              <h3 class="text-2xl font-black text-black truncate max-w-md hover:text-gray-600 transition-colors">
+                {{ test.title }}
+              </h3>
+
+            </a>
+
           </div>
 
-          <div class="flex shrink-0 gap-0.5">
-            <ng-container *ngFor="let star of [1,2,3,4,5]; let i = index">
-              <svg [class]="i < test.difficult ? 'text-black' : 'text-gray-100'"
-                   class="w-6 h-6 fill-current transition-colors"
+          <!-- META -->
+          <div class="flex flex-col items-end gap-3 shrink-0">
+
+            <!-- LIKES -->
+            <div class="flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-100 text-red-500 font-black text-sm shadow-sm">
+
+              <svg xmlns="http://www.w3.org/2000/svg"
+                   class="w-4 h-4 fill-current"
                    viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+
+                <path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" />
+
               </svg>
-            </ng-container>
+
+              <span>{{ test.likesCount }}</span>
+
+            </div>
+
+            <!-- DIFFICULTY -->
+            <div class="flex gap-0.5">
+
+              <ng-container *ngFor="let star of [1,2,3,4,5]; let i = index">
+
+                <svg [class]="i < test.difficult ? 'text-black' : 'text-gray-100'"
+                     class="w-5 h-5 fill-current transition-colors"
+                     viewBox="0 0 20 20">
+
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+
+                </svg>
+
+              </ng-container>
+
+            </div>
+
           </div>
+
         </div>
 
-        <p class="text-gray-400 text-lg font-medium line-clamp-2 mb-6">
+        <!-- DESCRIPTION -->
+        <!--<p class="text-gray-400 text-lg font-medium line-clamp-2 mb-6">
           {{ test.description }}
-        </p>
+        </p>-->
 
+        <!-- BOTTOM -->
+        <!--<div class="mt-auto flex items-center justify-between">
+
+          <a [routerLink]="getTestLink(test)"
+             class="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-black text-white font-black hover:scale-105 transition-transform">
+
+            Открыть тест
+
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 class="w-5 h-5"
+                 fill="none"
+                 viewBox="0 0 24 24"
+                 stroke="currentColor">
+
+              <path stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M9 5l7 7-7 7" />
+
+            </svg>
+
+          </a>
+
+        </div>-->
 
       </div>
+
     </div>
 
   </div>
+
+  <!-- EMPTY -->
+  <ng-template #no_saved_tests>
+
+    <div class="py-24 flex flex-col items-center text-center">
+
+      <div class="w-28 h-28 rounded-full bg-gray-50 flex items-center justify-center mb-8">
+
+        <svg xmlns="http://www.w3.org/2000/svg"
+             class="w-12 h-12 text-gray-300"
+             fill="none"
+             viewBox="0 0 24 24"
+             stroke="currentColor">
+
+          <path stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M5 5v14l7-4 7 4V5a2 2 0 00-2-2H7a2 2 0 00-2 2z" />
+
+        </svg>
+
+      </div>
+
+      <h2 class="text-3xl font-black tracking-tight text-black mb-3">
+        Пока ничего нет
+      </h2>
+
+      <p class="text-gray-400 text-lg font-medium max-w-md">
+        Сохраняйте интересные тесты, чтобы быстро возвращаться к ним позже
+      </p>
+
+    </div>
+
+  </ng-template>
+
 </div>
