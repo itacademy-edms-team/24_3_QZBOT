@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService, User } from '../services/auth.service';
-import { Test, TestService, UserTest } from '../services/test.service';
+import { Test, TestPreview, TestService, UserTest } from '../services/test.service';
+import { NotificationService } from '../services/notification.service';
 
 @Component({
   selector: 'app-profile',
@@ -12,9 +13,11 @@ export class ProfileComponent implements OnInit {
   is_user_exists: boolean = false;
   is_owner: boolean = false;
   name_from_url: string | null = '';
+  name_for_subscribe: string = '';
   username: string = '';
   history: UserTest[] = [];
   created_tests: Test[] = [];
+  liked_tests: TestPreview[] = [];
   user: User = {
     id: '',
     username: '',
@@ -22,14 +25,20 @@ export class ProfileComponent implements OnInit {
     phoneNumber: '',
     avatarUrl: '',
     birthDate: new Date(),
-    status: ''
+    status: '',
+    isFollowing: false
   }
+
+  followSuccess: boolean = false;
+  isLoadingFollow: boolean = false;
+  showUnfollowModal = false;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     public authService: AuthService,
-    public testService: TestService
+    public testService: TestService,
+    private notificationService: NotificationService
   ) { }
 
   ngOnInit() {
@@ -91,6 +100,16 @@ export class ProfileComponent implements OnInit {
           this.created_tests = data;
         }
       })
+
+      this.testService.getLikedTests().subscribe({
+        next: (data) => {
+          this.liked_tests = data;
+        }
+      })
+
+      if (this.name_from_url != null) {
+        this.name_for_subscribe = this.name_from_url;
+      }
     });
   }
 
@@ -100,5 +119,49 @@ export class ProfileComponent implements OnInit {
 
   startEdit(user: User) {
     this.router.navigate(['/editprofile', user])
+  }
+
+  follow() {
+    if (this.user.isFollowing) {
+      this.showUnfollowModal = true;
+      return;
+    }
+
+    this.isLoadingFollow = true;
+
+    this.authService.follow(this.name_for_subscribe).subscribe({
+      next: () => {
+        this.followSuccess = true;
+
+        setTimeout(() => {
+          this.user.isFollowing = true;
+          this.followSuccess = false;
+        }, 1200);
+
+        this.isLoadingFollow = false;
+      },
+
+      error: () => {
+        this.isLoadingFollow = false;
+      }
+    })
+  }
+
+  unfollow() {
+    this.isLoadingFollow = true;
+
+    this.authService.unfollow(this.user.username)
+      .subscribe({
+        next: () => {
+
+          this.user.isFollowing = false;
+          this.showUnfollowModal = false;
+          this.isLoadingFollow = false;
+        },
+
+        error: () => {
+          this.isLoadingFollow = false;
+        }
+      });
   }
 }

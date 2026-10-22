@@ -63,6 +63,7 @@ export class ManagementCreateComponent {
   ai_add: boolean = false;
   ai_prompt: string = '';
   ai_count_questions: number = 0;
+  is_generating_ai: boolean = false;
 
   aiTest: AiTest = {
     prompt: '',

@@ -33,6 +33,7 @@ export interface User {
   avatarUrl: string;
   birthDate: Date;
   status: string;
+  isFollowing: boolean;
 }
 
 
@@ -119,6 +120,22 @@ export class AuthService {
       formData,
       { withCredentials: true }
     )
+  }
+
+  follow(username: string) {
+    return this.http.post(
+      `${this.apiUrl}/${username}/follow`,
+      username,
+      { withCredentials: true }
+    )
+  }
+
+  unfollow(username: string) {
+    return this.http.post(
+      `${this.apiUrl}/${username}/unfollow`,
+      username,
+      { withCredentials: true }
+    );
   }
 
 

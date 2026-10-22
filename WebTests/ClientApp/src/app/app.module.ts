@@ -25,6 +25,7 @@ import { pendingChangesGuard } from './validators/pending-changes.guard';
 import { ImageCropperModule } from 'ngx-image-cropper';
 import { CommonModule } from '@angular/common';
 import { TestInfoComponent } from './tests/test-info/test-info.component';
+import { SavedTestsComponent } from './tests/saved-tests/saved-tests.component';
 
 @NgModule({
   declarations: [
@@ -44,6 +45,7 @@ import { TestInfoComponent } from './tests/test-info/test-info.component';
     MyTestsComponent,
     ResultsComponent,
     ProfileEditingComponent,
+    SavedTestsComponent
   ],
   imports: [
     CommonModule,
@@ -77,6 +79,7 @@ import { TestInfoComponent } from './tests/test-info/test-info.component';
       { path: 'editprofile', component: ProfileEditingComponent, canActivate: [authGuard], canDeactivate: [pendingChangesGuard] },
 
       { path: 'my-tests', component: MyTestsComponent, canActivate: [authGuard] },
+      { path: 'saved', component: SavedTestsComponent, canActivate: [authGuard] },
 
       { path: 'results/:id', component: ResultsComponent, canActivate: [authGuard] }
     ]),

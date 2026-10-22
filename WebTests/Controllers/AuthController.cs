@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -10,6 +11,8 @@ using System.Text.RegularExpressions;
 using WebTests.Data;
 using WebTests.DTOs;
 using WebTests.Models;
+using WebTests.Services;
+using WebTests.Services.Interfaces;
 
 namespace WebTests.Controllers
 {
@@ -19,13 +22,19 @@ namespace WebTests.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
-        private readonly AppDbContext _context; 
+        private readonly AppDbContext _context;
+        private readonly INotificationService _notificationService;
 
-        public AuthController(UserManager<ApplicationUser> userManager, IConfiguration configuration, AppDbContext context)
+        public AuthController(
+            UserManager<ApplicationUser> userManager, 
+            IConfiguration configuration, 
+            AppDbContext context,
+            INotificationService notificationService)
         {
             _userManager = userManager;
             _configuration = configuration;
             _context = context;
+            _notificationService = notificationService;
         }
 
         [HttpPost("register")]
@@ -123,6 +132,33 @@ namespace WebTests.Controllers
             var user = await _userManager.FindByNameAsync(username);
             if (user == null)
                 return NotFound(new { message = "User not found" });
+            bool isFollowing = false;
+
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (currentUserId != null)
+            {
+                if (currentUserId != null)
+                {
+                    isFollowing = await _context.UserFollows
+                        .AnyAsync(x =>
+                            x.FollowerId == currentUserId &&
+                            x.FollowingId == user.Id);
+                }
+
+                return Ok(new
+                {
+                    id = user.Id,
+                    status = user.Status,
+                    username = user.UserName,
+                    email = user.Email,
+                    phoneNumber = user.PhoneNumber,
+                    avatarUrl = user.AvatarUrl,
+                    birthDate = user.BirthDate,
+                    isFollowing = isFollowing,
+                });
+            }
+
             return Ok(new
             {
                 id = user.Id,
@@ -131,7 +167,8 @@ namespace WebTests.Controllers
                 email = user.Email,
                 phoneNumber = user.PhoneNumber,
                 avatarUrl = user.AvatarUrl,
-                birthDate = user.BirthDate
+                birthDate = user.BirthDate,
+                isFollowing = false,
             });
         }
 
@@ -152,6 +189,88 @@ namespace WebTests.Controllers
             await _userManager.UpdateAsync(user);
 
             return Ok(true);
+        }
+
+        [Authorize]
+        [HttpPost("{username}/follow")]
+        public async Task<IActionResult> Follow(string username)
+        {
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (currentUserId == null)
+                return Unauthorized();
+
+            var currentUser = await _userManager.FindByIdAsync(currentUserId);
+
+            var targetUser = await _userManager.FindByNameAsync(username);
+
+            if (targetUser == null)
+                return NotFound();
+
+            if (targetUser.Id == currentUserId)
+                return BadRequest();
+
+            var alreadyFollowing = await _context.UserFollows
+                .FirstOrDefaultAsync(x =>
+                    x.FollowerId == currentUserId &&
+                    x.FollowingId == targetUser.Id);
+
+            if (alreadyFollowing != null)
+                return BadRequest();
+
+            var follow = new UserFollow
+            {
+                FollowerId = currentUserId,
+                FollowingId = targetUser.Id
+            };
+
+            _context.UserFollows.Add(follow);
+            await _context.SaveChangesAsync();
+
+            await _notificationService.CreateAsync(
+                targetUser.Id,
+                "Новый подписчик",
+                $"Пользователь {currentUser.UserName} подписался на вас",
+                $"/profile/{currentUser.UserName}");
+
+            return Ok();
+        }
+
+        [Authorize]
+        [HttpPost("{username}/unfollow")]
+        public async Task<IActionResult> Unfollow(string username)
+        {
+            var currentUserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (currentUserId == null)
+                return Unauthorized();
+
+            var currentUser = _userManager.FindByIdAsync(currentUserId).Result;
+
+            var targetUser = await _userManager.FindByNameAsync(username);
+
+            if (targetUser == null)
+                return NotFound();
+
+            if (targetUser.Id == currentUserId)
+                return BadRequest();
+
+            var isFollowing = await _context.UserFollows
+                .FirstOrDefaultAsync(x =>
+                    x.FollowerId == currentUserId &&
+                    x.FollowingId == targetUser.Id);
+
+            if (isFollowing != null)
+                _context.UserFollows.Remove(isFollowing);
+
+            _context.SaveChanges();
+
+            await _notificationService.DeleteAsync(
+                targetUser.Id,
+                "Новый подписчик",
+                $"Пользователь {currentUser.UserName} подписался на вас");
+
+            return Ok();
         }
 
         public string GenerateJwtToken(IdentityUser user)

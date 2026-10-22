@@ -15,16 +15,14 @@ namespace WebTests.Data
         public DbSet<UserTest> UserTests { get; set; }
         public DbSet<UserTestAnswer> UserTestAnswers { get; set; }
         public DbSet<TestTypes> TestTypes { get; set; }
+        public DbSet<UserFollow> UserFollows { get; set; }
+        public DbSet<LikedTest> LikedTests { get; set; }
+        public DbSet<SavedTest> SavedTests { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
-
-            builder.Entity<Test>()
-                .HasOne(t => t.Creator)
-                .WithMany()
-                .HasForeignKey(t => t.CreatorId)
-                .OnDelete(DeleteBehavior.Restrict);
 
             builder.Entity<Test>()
                 .HasOne(t => t.Creator)
@@ -49,6 +47,27 @@ namespace WebTests.Data
                 .WithMany(t => t.Answers)
                 .HasForeignKey(a => a.UserTestId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<UserFollow>()
+                .HasKey(x => new { x.FollowerId, x.FollowingId });
+
+            builder.Entity<UserFollow>()
+                .HasOne(x => x.Follower)
+                .WithMany(x => x.Following)
+                .HasForeignKey(x => x.FollowerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<UserFollow>()
+                .HasOne(x => x.Following)
+                .WithMany(x => x.Followers)
+                .HasForeignKey(x => x.FollowingId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.Entity<LikedTest>()
+                .HasKey(x => new { x.UserId, x.TestId });
+
+            builder.Entity<SavedTest>()
+                .HasKey(x => new { x.UserId, x.TestId });
         }
     }
 }

@@ -1,86 +1,206 @@
-<div class="max-w-4xl mx-auto px-6 pt-24 pb-24 relative z-10">
+<div class="max-w-4xl mx-auto px-6 pt-24 pb-24">
 
-  <div *ngIf="userTests.length !== 0; else no_attempts">
+  <!-- Итог -->
+  <div class="bg-white rounded-[3rem] p-10 shadow-2xl shadow-gray-200/50 border border-gray-50 mb-10">
 
-    <div class="mb-12 text-center">
-      <h1 class="text-4xl md:text-5xl font-black tracking-tighter text-black mb-2">
-        История прохождений
+    <div class="text-center mb-10">
+
+      <span class="inline-block px-6 py-3 rounded-2xl bg-green-50 text-green-600 font-black uppercase tracking-widest text-xs">
+        Тест пройден
+      </span>
+
+      <h1 class="mt-6 text-5xl font-black tracking-tight">
+        8<span class="text-gray-300">/10</span>
       </h1>
-      <p class="text-gray-400 font-bold italic tracking-tight">{{ userTests[0].test.title }}</p>
+
+      <p class="text-gray-400 font-bold mt-2">
+        Вы ответили правильно на 80% вопросов
+      </p>
+
     </div>
 
-    <div *ngIf="userTests[0].test.types.includes('ManyTimes'); else no_manytimes">
-      <div class="bg-white rounded-[3rem] p-8 shadow-2xl shadow-gray-200/50 border border-gray-50">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left border-collapse">
-            <thead>
-              <tr class="border-b border-gray-100">
-                <th class="py-4 px-2 text-[10px] font-black uppercase tracking-widest text-gray-300">Начало</th>
-                <th class="py-4 px-2 text-[10px] font-black uppercase tracking-widest text-gray-300">Продолжительность</th>
-                <th class="py-4 px-2 text-right text-[10px] font-black uppercase tracking-widest text-gray-300">Балл</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let ut of userTests" class="group hover:bg-gray-50 transition-all">
-                <td class="py-5 px-2">
-                  <p class="font-bold text-gray-800">{{ ut.startedAt | date:'d MMM yyyy' }}</p>
-                  <p class="text-xs text-gray-400 font-bold">{{ ut.startedAt | date:'HH:mm' }}</p>
-                </td>
-                <td class="py-5 px-2 text-gray-500 font-medium">
-                  {{ ut.finishedAt | date:'HH:mm' }}
-                </td>
-                <td class="py-5 px-2 text-right">
-                  <span class="inline-block px-4 py-2 bg-black text-white rounded-2xl font-black text-sm">
-                    {{ ut.score }} / {{ ut.test.questions.length }}
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 py-6 border-y border-gray-100">
+
+      <div class="text-center">
+        <p class="text-[10px] uppercase tracking-widest font-black text-gray-300">
+          Начало
+        </p>
+        <p class="text-xl font-black mt-2">18:42</p>
       </div>
+
+      <div class="text-center md:border-l border-gray-100">
+        <p class="text-[10px] uppercase tracking-widest font-black text-gray-300">
+          Время
+        </p>
+        <p class="text-xl font-black mt-2">03:27</p>
+      </div>
+
+      <div class="text-center md:border-l border-gray-100">
+        <p class="text-[10px] uppercase tracking-widest font-black text-gray-300">
+          Балл
+        </p>
+        <p class="text-xl font-black mt-2">8 / 10</p>
+      </div>
+
+      <div class="text-center md:border-l border-gray-100">
+        <p class="text-[10px] uppercase tracking-widest font-black text-gray-300">
+          Статус
+        </p>
+        <p class="text-xl font-black text-green-600 mt-2">
+          Успешно
+        </p>
+      </div>
+
     </div>
 
-    <ng-template #no_manytimes>
-      <div class="bg-white rounded-[3rem] p-10 shadow-2xl shadow-gray-200/50 border border-gray-50 text-center">
-
-        <div class="inline-block mb-8 px-6 py-3 rounded-2xl font-black uppercase tracking-widest text-xs"
-             [ngClass]="userTests[0].isPassed ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'">
-          {{ userTests[0].isPassed ? 'Тест пройден' : 'Тест не пройден' }}
-        </div>
-
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-8 mb-10 py-8 border-y border-gray-50">
-          <div>
-            <p class="text-[10px] font-black uppercase text-gray-300 tracking-widest mb-1">Начало</p>
-            <p class="text-lg font-black">{{ userTests[0].startedAt | date:'HH:mm' }}</p>
-            <p class="text-[10px] font-bold text-gray-400">{{ userTests[0].startedAt | date:'d MMM yyyy' }}</p>
-          </div>
-          <div>
-            <p class="text-[10px] font-black uppercase text-gray-300 tracking-widest mb-1">Ваш балл</p>
-            <p class="text-3xl font-black" [class.text-green-600]="userTests[0].isPassed">
-              {{ userTests[0].score }}<span class="text-gray-200 text-xl">/{{ userTests[0].test.questions.length }}</span>
-            </p>
-          </div>
-          <div class="col-span-2 md:col-span-1">
-            <!--<p class="text-[10px] font-black uppercase text-gray-300 tracking-widest mb-1">Вердикт</p>-->
-            <p class="text-lg font-black">{{ userTests[0].isPassed ? 'Успешно' : 'Провал' }}</p>
-          </div>
-        </div>
-
-        <div *ngIf="userTests[0].score / userTests[0].test.questions.length > 0.5"
-             class="text-4xl font-black tracking-tighter text-black italic">
-          Замечательно!
-        </div>
-      </div>
-    </ng-template>
   </div>
+
+
+
+  <h2 class="text-3xl font-black tracking-tight mb-8">
+    Ответы
+  </h2>
+
+
+
+  <!-- Вопрос -->
+
+  <div class="bg-white rounded-[2rem] border border-gray-100 shadow-lg shadow-gray-100/50 p-8 mb-8">
+
+    <div class="flex justify-between items-center mb-6">
+
+      <h3 class="text-xl font-black">
+        Вопрос 1
+      </h3>
+
+      <span class="px-4 py-2 rounded-xl bg-green-50 text-green-600 text-xs font-black uppercase tracking-widest">
+        Верно
+      </span>
+
+    </div>
+
+    <p class="text-xl font-medium mb-8">
+      Какой транспорт изображён на фотографии?
+    </p>
+
+    <div class="space-y-4">
+
+      <!-- правильный выбранный -->
+
+      <div class="border-2 border-green-300 bg-green-50 rounded-2xl px-5 py-4">
+
+        <div class="flex justify-between items-center">
+
+          <span class="font-bold">
+            Автобус
+          </span>
+
+          <span class="text-green-600 font-black text-sm">
+            ✓ Ваш ответ
+          </span>
+
+        </div>
+
+      </div>
+
+      <!-- обычный -->
+
+      <div class="border border-gray-200 rounded-2xl px-5 py-4">
+
+        Самолёт
+
+      </div>
+
+      <div class="border border-gray-200 rounded-2xl px-5 py-4">
+
+        Поезд
+
+      </div>
+
+      <div class="border border-gray-200 rounded-2xl px-5 py-4">
+
+        Корабль
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- Вопрос с ошибкой -->
+
+  <div class="bg-white rounded-[2rem] border border-gray-100 shadow-lg shadow-gray-100/50 p-8 mb-8">
+
+    <div class="flex justify-between items-center mb-6">
+
+      <h3 class="text-xl font-black">
+        Вопрос 2
+      </h3>
+
+      <span class="px-4 py-2 rounded-xl bg-red-50 text-red-600 text-xs font-black uppercase tracking-widest">
+        Ошибка
+      </span>
+
+    </div>
+
+    <p class="text-xl font-medium mb-8">
+      Сколько колёс у автобуса?
+    </p>
+
+    <div class="space-y-4">
+
+      <!-- выбран неправильный -->
+
+      <div class="border-2 border-red-300 bg-red-50 rounded-2xl px-5 py-4">
+
+        <div class="flex justify-between">
+
+          <span>
+            6
+          </span>
+
+          <span class="text-red-600 font-black text-sm">
+            Ваш ответ
+          </span>
+
+        </div>
+
+      </div>
+
+      <!-- правильный -->
+
+      <div class="border-2 border-green-300 bg-green-50 rounded-2xl px-5 py-4">
+
+        <div class="flex justify-between">
+
+          <span>
+            4
+          </span>
+
+          <span class="text-green-600 font-black text-sm">
+            Правильный ответ
+          </span>
+
+        </div>
+
+      </div>
+
+      <div class="border border-gray-200 rounded-2xl px-5 py-4">
+
+        8
+
+      </div>
+
+      <div class="border border-gray-200 rounded-2xl px-5 py-4">
+
+        2
+
+      </div>
+
+    </div>
+
+  </div>
+
 </div>
-
-<ng-template #no_attempts>
-  <div class="max-w-4xl mx-auto px-6 pt-24 text-center">
-    <div class="bg-gray-50 rounded-[3rem] p-20 border-2 border-dashed border-gray-200">
-      <p class="text-3xl font-black tracking-tighter text-gray-300">Данные не найдены</p>
-      <a routerLink="/" class="mt-6 inline-block font-bold text-black border-b-2 border-black">Вернуться на главную</a>
-    </div>
-  </div>
-</ng-template>

@@ -25,5 +25,7 @@ namespace WebTests.Models
         public bool IsPublic { get; set; } = false;
         [JsonIgnore]
         public string? AccessToken { get; set; }
+        public ICollection<LikedTest> LikedByUsers { get; set; }
+        public ICollection<SavedTest> SavedByUsers { get; set; }
     }
 }

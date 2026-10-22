@@ -269,6 +269,60 @@ namespace WebTests.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("WebTests.Models.LikedTest", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("TestId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "TestId");
+
+                    b.HasIndex("TestId");
+
+                    b.ToTable("LikedTests");
+                });
+
+            modelBuilder.Entity("WebTests.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Link")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Notifications");
+                });
+
             modelBuilder.Entity("WebTests.Models.Question", b =>
                 {
                     b.Property<int>("Id")
@@ -292,6 +346,24 @@ namespace WebTests.Migrations
                     b.HasIndex("TestId");
 
                     b.ToTable("Questions");
+                });
+
+            modelBuilder.Entity("WebTests.Models.SavedTest", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("TestId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("UserId", "TestId");
+
+                    b.HasIndex("TestId");
+
+                    b.ToTable("SavedTests");
                 });
 
             modelBuilder.Entity("WebTests.Models.Test", b =>
@@ -371,6 +443,24 @@ namespace WebTests.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("TestTypes");
+                });
+
+            modelBuilder.Entity("WebTests.Models.UserFollow", b =>
+                {
+                    b.Property<string>("FollowerId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("FollowingId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("FollowerId", "FollowingId");
+
+                    b.HasIndex("FollowingId");
+
+                    b.ToTable("UserFollows");
                 });
 
             modelBuilder.Entity("WebTests.Models.UserTest", b =>
@@ -520,6 +610,36 @@ namespace WebTests.Migrations
                     b.Navigation("Question");
                 });
 
+            modelBuilder.Entity("WebTests.Models.LikedTest", b =>
+                {
+                    b.HasOne("WebTests.Models.Test", "Test")
+                        .WithMany("LikedByUsers")
+                        .HasForeignKey("TestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebTests.Models.ApplicationUser", "User")
+                        .WithMany("LikedTests")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Test");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WebTests.Models.Notification", b =>
+                {
+                    b.HasOne("WebTests.Models.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("WebTests.Models.Question", b =>
                 {
                     b.HasOne("WebTests.Models.Test", "Test")
@@ -531,6 +651,25 @@ namespace WebTests.Migrations
                     b.Navigation("Test");
                 });
 
+            modelBuilder.Entity("WebTests.Models.SavedTest", b =>
+                {
+                    b.HasOne("WebTests.Models.Test", "Test")
+                        .WithMany("SavedByUsers")
+                        .HasForeignKey("TestId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WebTests.Models.ApplicationUser", "User")
+                        .WithMany("SavedTests")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Test");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("WebTests.Models.Test", b =>
                 {
                     b.HasOne("WebTests.Models.ApplicationUser", "Creator")
@@ -539,6 +678,25 @@ namespace WebTests.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Creator");
+                });
+
+            modelBuilder.Entity("WebTests.Models.UserFollow", b =>
+                {
+                    b.HasOne("WebTests.Models.ApplicationUser", "Follower")
+                        .WithMany("Following")
+                        .HasForeignKey("FollowerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("WebTests.Models.ApplicationUser", "Following")
+                        .WithMany("Followers")
+                        .HasForeignKey("FollowingId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Follower");
+
+                    b.Navigation("Following");
                 });
 
             modelBuilder.Entity("WebTests.Models.UserTest", b =>
@@ -571,6 +729,17 @@ namespace WebTests.Migrations
                     b.Navigation("UserTest");
                 });
 
+            modelBuilder.Entity("WebTests.Models.ApplicationUser", b =>
+                {
+                    b.Navigation("Followers");
+
+                    b.Navigation("Following");
+
+                    b.Navigation("LikedTests");
+
+                    b.Navigation("SavedTests");
+                });
+
             modelBuilder.Entity("WebTests.Models.Question", b =>
                 {
                     b.Navigation("Options");
@@ -578,7 +747,11 @@ namespace WebTests.Migrations
 
             modelBuilder.Entity("WebTests.Models.Test", b =>
                 {
+                    b.Navigation("LikedByUsers");
+
                     b.Navigation("Questions");
+
+                    b.Navigation("SavedByUsers");
                 });
 
             modelBuilder.Entity("WebTests.Models.UserTest", b =>
