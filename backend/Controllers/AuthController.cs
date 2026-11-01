@@ -21,6 +21,20 @@ public sealed class AuthController(
         Response.Headers.CacheControl = "no-store";
         return Ok(new { token = tokens.RequestToken });
     }
+
+    [HttpGet("session")]
+    public async Task<IActionResult> Session()
+    {
+        if (User.Identity?.IsAuthenticated != true)
+            return Ok(new { authenticated = false, user = (object?)null });
+
+        var user = await userManager.GetUserAsync(User);
+        if (user is null)
+            return Ok(new { authenticated = false, user = (object?)null });
+
+        return Ok(new { authenticated = true, user = (object)new { user.Id, user.Email } });
+    }
+
     [HttpPost("register")]
     public async Task<IActionResult> Register(RegisterRequest request)
     {
@@ -39,3 +53,35 @@ public sealed class AuthController(
 
         return StatusCode(StatusCodes.Status201Created, new { user.Id, user.Email });
     }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(LoginRequest request)
+    {
+        var user = await userManager.FindByEmailAsync(request.Email.Trim());
+        if (user is null)
+            return Unauthorized(new { error = "Invalid email or password." });
+
+        var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
+        if (!result.Succeeded)
+            return Unauthorized(new { error = "Invalid email or password." });
+
+        await signInManager.SignInAsync(user, isPersistent: false);
+        return Ok(new { user.Id, user.Email });
+    }
+
+    [Authorize]
+    [HttpGet("me")]
+    public async Task<IActionResult> Me()
+    {
+        var user = await userManager.GetUserAsync(User);
+        return user is null ? Unauthorized() : Ok(new { user.Id, user.Email });
+    }
+
+    [Authorize]
+    [HttpPost("logout")]
+    public async Task<IActionResult> Logout()
+    {
+        await signInManager.SignOutAsync();
+        return NoContent();
+    }
+}
