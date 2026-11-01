@@ -1,6 +1,36 @@
 @backend_HostAddress = http://localhost:5012
 
-GET {{backend_HostAddress}}/weatherforecast/
-Accept: application/json
+GET {{backend_HostAddress}}/api/auth/csrf
+
+###
+
+POST {{backend_HostAddress}}/api/auth/register
+Content-Type: application/json
+X-XSRF-TOKEN: <token from GET /api/auth/csrf>
+
+{
+  "email": "demo@example.test",
+  "password": "DemoPass123"
+}
+
+###
+
+POST {{backend_HostAddress}}/api/auth/login
+Content-Type: application/json
+X-XSRF-TOKEN: <token from GET /api/auth/csrf>
+
+{
+  "email": "demo@example.test",
+  "password": "DemoPass123"
+}
+
+###
+
+GET {{backend_HostAddress}}/api/auth/me
+
+###
+
+POST {{backend_HostAddress}}/api/auth/logout
+X-XSRF-TOKEN: <new token from GET /api/auth/csrf after login>
 
 ###
