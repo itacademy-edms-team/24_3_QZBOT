@@ -1,4 +1,6 @@
 using backend.Contracts;
+using backend.Errors;
+using backend.Filters;
 using backend.Models;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
@@ -9,6 +11,7 @@ namespace backend.Controllers;
 
 [ApiController]
 [Route("api/auth")]
+[TypeFilter(typeof(AuthExceptionFilter))]
 public sealed class AuthController(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
@@ -47,13 +50,7 @@ public sealed class AuthController(
         var result = await userManager.CreateAsync(user, request.Password);
 
         if (!result.Succeeded)
-        {
-            var errors = result.Errors.Select(error => new { error.Code, error.Description }).ToArray();
-            if (result.Errors.Any(error => error.Code is "DuplicateUserName" or "DuplicateEmail"))
-                return Conflict(new { errors });
-
-            return BadRequest(new { errors });
-        }
+            throw new IdentityValidationException(result.Errors);
 
         return StatusCode(StatusCodes.Status201Created, new { user.Id, user.Email });
     }
@@ -63,11 +60,11 @@ public sealed class AuthController(
     {
         var user = await userManager.FindByEmailAsync(request.Email.Trim());
         if (user is null)
-            return Unauthorized(new { error = "Invalid email or password." });
+            throw new InvalidCredentialsException();
 
         var result = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
         if (!result.Succeeded)
-            return Unauthorized(new { error = "Invalid email or password." });
+            throw new InvalidCredentialsException();
 
         await signInManager.SignInAsync(user, isPersistent: false);
         return Ok(new { user.Id, user.Email });
