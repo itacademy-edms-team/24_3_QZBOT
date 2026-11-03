@@ -1,8 +1,8 @@
 using backend.Data;
 using backend.Models;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,7 +10,9 @@ var builder = WebApplication.CreateBuilder(args);
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Set ConnectionStrings__DefaultConnection before starting the API.");
 
-builder.Services.AddControllers();
+// The MVC antiforgery filter requires the ViewFeatures services registered here.
+builder.Services.AddControllersWithViews(options =>
+    options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 builder.Services.AddIdentityCore<ApplicationUser>(options =>
@@ -72,28 +74,6 @@ if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
 app.UseAuthentication();
-app.Use(async (context, next) =>
-{
-    if (context.Request.Path.StartsWithSegments("/api") &&
-        !HttpMethods.IsGet(context.Request.Method) &&
-        !HttpMethods.IsHead(context.Request.Method) &&
-        !HttpMethods.IsOptions(context.Request.Method))
-    {
-        var antiforgery = context.RequestServices.GetRequiredService<IAntiforgery>();
-        try
-        {
-            await antiforgery.ValidateRequestAsync(context);
-        }
-        catch (AntiforgeryValidationException)
-        {
-            context.Response.StatusCode = StatusCodes.Status400BadRequest;
-            await context.Response.WriteAsJsonAsync(new { error = "Invalid or missing antiforgery token." });
-            return;
-        }
-    }
-
-    await next(context);
-});
 app.UseAuthorization();
 
 app.MapControllers();
