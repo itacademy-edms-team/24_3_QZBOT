@@ -15,10 +15,10 @@ public sealed class AuthController(
     IAntiforgery antiforgery) : ControllerBase
 {
     [HttpGet("csrf")]
+    [ResponseCache(NoStore = true)]
     public IActionResult Csrf()
     {
         var tokens = antiforgery.GetAndStoreTokens(HttpContext);
-        Response.Headers.CacheControl = "no-store";
         return Ok(new { token = tokens.RequestToken });
     }
 
