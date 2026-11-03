@@ -26,13 +26,17 @@ public sealed class AuthController(
     public async Task<IActionResult> Session()
     {
         if (User.Identity?.IsAuthenticated != true)
-            return Ok(new { authenticated = false, user = (object?)null });
+            return Ok(new SessionResponse { Authenticated = false });
 
         var user = await userManager.GetUserAsync(User);
         if (user is null)
-            return Ok(new { authenticated = false, user = (object?)null });
+            return Ok(new SessionResponse { Authenticated = false });
 
-        return Ok(new { authenticated = true, user = (object)new { user.Id, user.Email } });
+        return Ok(new SessionResponse
+        {
+            Authenticated = true,
+            User = new SessionUserResponse { Id = user.Id, Email = user.Email ?? string.Empty }
+        });
     }
 
     [HttpPost("register")]
