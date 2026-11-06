@@ -19,6 +19,8 @@ public sealed class DocumentsController(
 {
     private const int MaxDocumentBytes = 10 * 1024 * 1024;
     private const int MaxAudioBytes = 25 * 1024 * 1024;
+    private const int MaxArchiveEntries = 20;
+    private const long MaxExpandedBytes = 100L * 1024 * 1024;
 
     [HttpGet]
     public async Task<ActionResult<List<DocumentResponse>>> List(CancellationToken cancellationToken)
@@ -138,6 +140,99 @@ public sealed class DocumentsController(
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
 
+        return StatusCode(StatusCodes.Status201Created,
+            await SaveDocumentAsync(ownerId, originalName, extension, buffer, cancellationToken));
+    }
+
+    [HttpPost("archive")]
+    [Consumes("multipart/form-data")]
+    [RequestSizeLimit(27 * 1024 * 1024)]
+    public async Task<IActionResult> UploadArchive([FromForm] IFormFile? file, CancellationToken cancellationToken)
+    {
+        if (file is null || file.Length is <= 0 or > MaxAudioBytes ||
+            !string.Equals(Path.GetExtension(file.FileName), ".zip", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { error = "Select a ZIP archive up to 25 MB." });
+
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
+
+        await using var source = file.OpenReadStream();
+        using var archiveBuffer = new MemoryStream((int)file.Length);
+        await source.CopyToAsync(archiveBuffer, cancellationToken);
+        if (archiveBuffer.Length != file.Length || archiveBuffer.Length > MaxAudioBytes)
+            return BadRequest(new { error = "Invalid archive size." });
+
+        try
+        {
+            archiveBuffer.Position = 0;
+            using var archive = new ZipArchive(archiveBuffer, ZipArchiveMode.Read, leaveOpen: true);
+            if (archive.Entries.Count == 0 || archive.Entries.Count > MaxArchiveEntries)
+                return BadRequest(new { error = "ZIP must contain 1 to 20 entries." });
+
+            var result = new ArchiveUploadResponse();
+            long expandedBytes = 0;
+            foreach (var entry in archive.Entries)
+            {
+                var name = entry.FullName;
+                if (name.Length > 255 || name.Contains('/') || name.Contains('\\') ||
+                    name.Contains(':') || name is "." or ".." || string.IsNullOrWhiteSpace(name))
+                {
+                    result.Rejected.Add(new RejectedArchiveFile { FileName = name, Reason = "Nested or unsafe path." });
+                    continue;
+                }
+
+                var extension = Path.GetExtension(name).ToLowerInvariant();
+                if (extension is not (".pdf" or ".docx"))
+                {
+                    result.Rejected.Add(new RejectedArchiveFile { FileName = name, Reason = "Only PDF and DOCX are allowed in ZIP." });
+                    continue;
+                }
+
+                if (entry.Length is <= 0 or > MaxDocumentBytes ||
+                    expandedBytes + entry.Length > MaxExpandedBytes)
+                {
+                    result.Rejected.Add(new RejectedArchiveFile { FileName = name, Reason = "Expanded size limit exceeded." });
+                    continue;
+                }
+
+                try
+                {
+                    using var content = new MemoryStream((int)entry.Length);
+                    await using var entryStream = entry.Open();
+                    var chunk = new byte[81920];
+                    int read;
+                    while ((read = await entryStream.ReadAsync(chunk, cancellationToken)) > 0)
+                    {
+                        if (content.Length + read > MaxDocumentBytes ||
+                            expandedBytes + content.Length + read > MaxExpandedBytes)
+                            throw new InvalidDataException("Expanded size limit exceeded.");
+                        await content.WriteAsync(chunk.AsMemory(0, read), cancellationToken);
+                    }
+
+                    if (content.Length != entry.Length || !HasExpectedFormat(content, extension))
+                        throw new InvalidDataException("File content does not match its extension.");
+
+                    expandedBytes += content.Length;
+                    result.Uploaded.Add(await SaveDocumentAsync(ownerId, name, extension, content, cancellationToken));
+                }
+                catch (InvalidDataException exception)
+                {
+                    result.Rejected.Add(new RejectedArchiveFile { FileName = name, Reason = exception.Message });
+                }
+            }
+
+            return Ok(result);
+        }
+        catch (InvalidDataException)
+        {
+            return BadRequest(new { error = "Invalid ZIP archive." });
+        }
+    }
+
+    private async Task<DocumentResponse> SaveDocumentAsync(
+        string ownerId, string originalName, string extension, MemoryStream buffer,
+        CancellationToken cancellationToken)
+    {
         var document = new Document
         {
             OwnerId = ownerId,
@@ -169,7 +264,7 @@ public sealed class DocumentsController(
             throw;
         }
 
-        return StatusCode(StatusCodes.Status201Created, new DocumentResponse
+        return new DocumentResponse
         {
             Id = document.Id,
             OriginalFileName = document.OriginalFileName,
@@ -177,7 +272,7 @@ public sealed class DocumentsController(
             SizeBytes = document.SizeBytes,
             Sha256 = document.Sha256,
             UploadedAt = document.UploadedAt
-        });
+        };
     }
 
     private static bool HasExpectedFormat(MemoryStream buffer, string extension)

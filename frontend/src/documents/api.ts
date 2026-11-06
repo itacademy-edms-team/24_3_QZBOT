@@ -9,6 +9,11 @@ export type DocumentItem = {
   uploadedAt: string
 }
 
+export type ArchiveUploadReport = {
+  uploaded: DocumentItem[]
+  rejected: { fileName: string; reason: string }[]
+}
+
 const endpoint = '/api/documents'
 
 async function requireSuccess(response: Response) {
@@ -31,6 +36,19 @@ export async function uploadDocument(file: File): Promise<void> {
   })
   if (response.status === 400 || response.status === 413) throw new Error('Допустимы PDF/DOCX до 10 МБ и MP3/WAV/M4A до 25 МБ. Проверьте файл.')
   await requireSuccess(response)
+}
+
+export async function uploadArchive(file: File): Promise<ArchiveUploadReport> {
+  const token = await csrfToken()
+  const form = new FormData()
+  form.append('file', file)
+  const response = await fetch(`${endpoint}/archive`, {
+    method: 'POST', credentials: 'same-origin', headers: { 'X-XSRF-TOKEN': token }, body: form,
+  })
+  if (response.status === 400 || response.status === 413)
+    throw new Error('Нужен ZIP до 25 МБ с максимум 20 файлами PDF/DOCX.')
+  await requireSuccess(response)
+  return response.json()
 }
 
 export async function downloadDocument(item: DocumentItem): Promise<void> {

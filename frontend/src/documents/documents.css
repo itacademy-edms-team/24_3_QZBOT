@@ -1,5 +1,6 @@
 .visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
 .document-error { margin-bottom: 16px; padding: 12px; border-radius: 7px; background: #fff1f0; color: #a4322d; font-size: 12px; }
+.document-report { margin-bottom: 16px; padding: 12px; border-radius: 7px; background: #eaf5ec; color: #315e3e; font-size: 12px; overflow-wrap: anywhere; }
 .document-empty { color: #8794a3; font-size: 12px; }
 .document-list { padding: 8px 20px; }
 .document-list-head, .document-list-row { display: grid; grid-template-columns: 2fr .6fr .8fr 1fr; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid #eef1f4; font-size: 11px; }
