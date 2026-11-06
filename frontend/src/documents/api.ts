@@ -34,7 +34,7 @@ export async function uploadDocument(file: File): Promise<void> {
   const response = await fetch(endpoint, {
     method: 'POST', credentials: 'same-origin', headers: { 'X-XSRF-TOKEN': token }, body: form,
   })
-  if (response.status === 400 || response.status === 413) throw new Error('Допустимы PDF/DOCX до 10 МБ и MP3/WAV/M4A до 25 МБ. Проверьте файл.')
+  if (response.status === 400 || response.status === 413) throw new Error('Допустимы PDF/DOCX/JPEG/PNG до 10 МБ и MP3/WAV/M4A до 25 МБ. Проверьте файл.')
   await requireSuccess(response)
 }
 

@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.IO.Compression;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -117,17 +118,18 @@ public sealed class DocumentsController(
     public async Task<IActionResult> Upload([FromForm] IFormFile? file, CancellationToken cancellationToken)
     {
         if (file is null || file.Length <= 0)
-            return BadRequest(new { error = "Select a non-empty PDF, DOCX, MP3, WAV or M4A file." });
+            return BadRequest(new { error = "Select a non-empty PDF, DOCX, JPEG, PNG, MP3, WAV or M4A file." });
 
         var originalName = file.FileName.Replace('\\', '/').Split('/').LastOrDefault();
         if (string.IsNullOrWhiteSpace(originalName) || originalName.Length > 255)
             return BadRequest(new { error = "Invalid file name." });
 
         var extension = Path.GetExtension(originalName).ToLowerInvariant();
-        if (extension is not (".pdf" or ".docx" or ".mp3" or ".wav" or ".m4a"))
-            return BadRequest(new { error = "Only PDF, DOCX, MP3, WAV and M4A files are supported." });
+        if (extension is not (".pdf" or ".docx" or ".jpg" or ".jpeg" or ".png" or ".mp3" or ".wav" or ".m4a"))
+            return BadRequest(new { error = "Only PDF, DOCX, JPEG, PNG, MP3, WAV and M4A files are supported." });
 
-        var maxFileBytes = extension is ".pdf" or ".docx" ? MaxDocumentBytes : MaxAudioBytes;
+        var maxFileBytes = extension is ".pdf" or ".docx" or ".jpg" or ".jpeg" or ".png"
+            ? MaxDocumentBytes : MaxAudioBytes;
         if (file.Length > maxFileBytes)
             return BadRequest(new { error = $"File exceeds the {maxFileBytes / 1024 / 1024} MB limit." });
 
@@ -241,6 +243,8 @@ public sealed class DocumentsController(
             {
                 ".pdf" => "application/pdf",
                 ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".jpg" or ".jpeg" => "image/jpeg",
+                ".png" => "image/png",
                 ".mp3" => "audio/mpeg",
                 ".wav" => "audio/wav",
                 _ => "audio/mp4"
@@ -280,6 +284,18 @@ public sealed class DocumentsController(
         var bytes = buffer.GetBuffer().AsSpan(0, (int)buffer.Length);
         if (extension == ".pdf")
             return bytes.StartsWith("%PDF-"u8);
+
+        if (extension is ".jpg" or ".jpeg")
+            return bytes.Length >= 4 && bytes[0] == 0xFF && bytes[1] == 0xD8 &&
+                   bytes[^2] == 0xFF && bytes[^1] == 0xD9;
+
+        if (extension == ".png")
+            return bytes.Length >= 45 && bytes[..8].SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }) &&
+                   BinaryPrimitives.ReadUInt32BigEndian(bytes[8..12]) == 13 &&
+                   bytes[12..].StartsWith("IHDR"u8) &&
+                   BinaryPrimitives.ReadUInt32BigEndian(bytes[16..20]) > 0 &&
+                   BinaryPrimitives.ReadUInt32BigEndian(bytes[20..24]) > 0 &&
+                   bytes[^8..].StartsWith("IEND"u8);
 
         if (extension == ".mp3")
             return bytes.Length >= 10 && bytes.StartsWith("ID3"u8) ||
