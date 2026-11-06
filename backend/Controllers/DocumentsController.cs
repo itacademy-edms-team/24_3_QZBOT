@@ -17,7 +17,8 @@ namespace backend.Controllers;
 public sealed class DocumentsController(
     ApplicationDbContext db, IFileStorageService storage, ILogger<DocumentsController> logger) : ControllerBase
 {
-    private const int MaxFileBytes = 10 * 1024 * 1024;
+    private const int MaxDocumentBytes = 10 * 1024 * 1024;
+    private const int MaxAudioBytes = 25 * 1024 * 1024;
 
     [HttpGet]
     public async Task<ActionResult<List<DocumentResponse>>> List(CancellationToken cancellationToken)
@@ -110,25 +111,29 @@ public sealed class DocumentsController(
 
     [HttpPost]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(12 * 1024 * 1024)]
+    [RequestSizeLimit(27 * 1024 * 1024)]
     public async Task<IActionResult> Upload([FromForm] IFormFile? file, CancellationToken cancellationToken)
     {
-        if (file is null || file.Length is <= 0 or > MaxFileBytes)
-            return BadRequest(new { error = "Select a non-empty PDF or DOCX file up to 10 MB." });
+        if (file is null || file.Length <= 0)
+            return BadRequest(new { error = "Select a non-empty PDF, DOCX, MP3, WAV or M4A file." });
 
         var originalName = file.FileName.Replace('\\', '/').Split('/').LastOrDefault();
         if (string.IsNullOrWhiteSpace(originalName) || originalName.Length > 255)
             return BadRequest(new { error = "Invalid file name." });
 
         var extension = Path.GetExtension(originalName).ToLowerInvariant();
-        if (extension is not (".pdf" or ".docx"))
-            return BadRequest(new { error = "Only PDF and DOCX files are supported." });
+        if (extension is not (".pdf" or ".docx" or ".mp3" or ".wav" or ".m4a"))
+            return BadRequest(new { error = "Only PDF, DOCX, MP3, WAV and M4A files are supported." });
+
+        var maxFileBytes = extension is ".pdf" or ".docx" ? MaxDocumentBytes : MaxAudioBytes;
+        if (file.Length > maxFileBytes)
+            return BadRequest(new { error = $"File exceeds the {maxFileBytes / 1024 / 1024} MB limit." });
 
         await using var input = file.OpenReadStream();
         using var buffer = new MemoryStream((int)file.Length);
         await input.CopyToAsync(buffer, cancellationToken);
-        if (buffer.Length != file.Length || buffer.Length > MaxFileBytes || !HasExpectedFormat(buffer, extension))
-            return BadRequest(new { error = "File content does not match its PDF or DOCX extension." });
+        if (buffer.Length != file.Length || buffer.Length > maxFileBytes || !HasExpectedFormat(buffer, extension))
+            return BadRequest(new { error = "File content does not match its extension." });
 
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
@@ -137,9 +142,14 @@ public sealed class DocumentsController(
         {
             OwnerId = ownerId,
             OriginalFileName = originalName,
-            ContentType = extension == ".pdf"
-                ? "application/pdf"
-                : "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ContentType = extension switch
+            {
+                ".pdf" => "application/pdf",
+                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                ".mp3" => "audio/mpeg",
+                ".wav" => "audio/wav",
+                _ => "audio/mp4"
+            },
             SizeBytes = buffer.Length,
             Sha256 = Convert.ToHexString(SHA256.HashData(buffer.GetBuffer().AsSpan(0, (int)buffer.Length)))
                 .ToLowerInvariant(),
@@ -175,6 +185,19 @@ public sealed class DocumentsController(
         var bytes = buffer.GetBuffer().AsSpan(0, (int)buffer.Length);
         if (extension == ".pdf")
             return bytes.StartsWith("%PDF-"u8);
+
+        if (extension == ".mp3")
+            return bytes.Length >= 10 && bytes.StartsWith("ID3"u8) ||
+                   bytes.Length >= 4 && bytes[0] == 0xFF && (bytes[1] & 0xE0) == 0xE0;
+
+        if (extension == ".wav")
+            return bytes.Length >= 44 && bytes.StartsWith("RIFF"u8) &&
+                   bytes[8..].StartsWith("WAVE"u8);
+
+        if (extension == ".m4a")
+            return bytes.Length >= 12 && bytes[4..].StartsWith("ftyp"u8) &&
+                   (bytes[8..].StartsWith("M4A "u8) || bytes[8..].StartsWith("isom"u8) ||
+                    bytes[8..].StartsWith("mp41"u8) || bytes[8..].StartsWith("mp42"u8));
 
         if (!bytes.StartsWith("PK\x03\x04"u8)) return false;
         try
