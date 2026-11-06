@@ -1,0 +1,15 @@
+.visually-hidden { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; }
+.document-error { margin-bottom: 16px; padding: 12px; border-radius: 7px; background: #fff1f0; color: #a4322d; font-size: 12px; }
+.document-empty { color: #8794a3; font-size: 12px; }
+.document-list { padding: 8px 20px; }
+.document-list-head, .document-list-row { display: grid; grid-template-columns: 2fr .6fr .8fr 1fr; gap: 14px; align-items: center; padding: 14px 0; border-bottom: 1px solid #eef1f4; font-size: 11px; }
+.document-list-head { color: #99a7b6; font-size: 9px; font-weight: 800; }
+.document-list-row:last-child { border-bottom: 0; }
+.document-link, .document-list-row button, .document-details button { border: 0; background: none; color: #315f8c; text-align: left; font-size: 11px; font-weight: 700; }
+.document-list-row > div { display: flex; gap: 12px; }
+.document-list-row button:disabled { opacity: .5; }
+.document-details { margin-top: 18px; }
+.document-details > div { display: flex; justify-content: space-between; align-items: center; }
+.document-details h2 { margin: 0 0 12px; font-size: 15px; }
+.document-details p { overflow-wrap: anywhere; }
+@media (max-width: 700px) { .document-list { overflow-x: auto; } .document-list-head, .document-list-row { min-width: 610px; } }

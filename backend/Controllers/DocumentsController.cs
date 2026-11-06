@@ -7,15 +7,106 @@ using backend.Models;
 using backend.Storage;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers;
 
 [ApiController]
 [Authorize]
 [Route("api/documents")]
-public sealed class DocumentsController(ApplicationDbContext db, IFileStorageService storage) : ControllerBase
+public sealed class DocumentsController(
+    ApplicationDbContext db, IFileStorageService storage, ILogger<DocumentsController> logger) : ControllerBase
 {
     private const int MaxFileBytes = 10 * 1024 * 1024;
+
+    [HttpGet]
+    public async Task<ActionResult<List<DocumentResponse>>> List(CancellationToken cancellationToken)
+    {
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
+
+        return await db.Documents.AsNoTracking()
+            .Where(document => document.OwnerId == ownerId)
+            .OrderByDescending(document => document.UploadedAt)
+            .Select(document => new DocumentResponse
+            {
+                Id = document.Id,
+                OriginalFileName = document.OriginalFileName,
+                ContentType = document.ContentType,
+                SizeBytes = document.SizeBytes,
+                Sha256 = document.Sha256,
+                UploadedAt = document.UploadedAt
+            })
+            .ToListAsync(cancellationToken);
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<ActionResult<DocumentResponse>> Get(Guid id, CancellationToken cancellationToken)
+    {
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
+
+        var document = await db.Documents.AsNoTracking()
+            .Where(item => item.Id == id && item.OwnerId == ownerId)
+            .Select(item => new DocumentResponse
+            {
+                Id = item.Id,
+                OriginalFileName = item.OriginalFileName,
+                ContentType = item.ContentType,
+                SizeBytes = item.SizeBytes,
+                Sha256 = item.Sha256,
+                UploadedAt = item.UploadedAt
+            })
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return document is null ? NotFound() : document;
+    }
+
+    [HttpGet("{id:guid}/download")]
+    public async Task<IActionResult> Download(Guid id, CancellationToken cancellationToken)
+    {
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
+
+        var document = await db.Documents.AsNoTracking()
+            .SingleOrDefaultAsync(item => item.Id == id && item.OwnerId == ownerId, cancellationToken);
+        if (document is null) return NotFound();
+
+        try
+        {
+            var stream = storage.OpenRead(document.StorageKey);
+            return File(stream, document.ContentType, document.OriginalFileName);
+        }
+        catch (FileNotFoundException)
+        {
+            logger.LogError("Stored file missing for document {DocumentId}", id);
+            return NotFound();
+        }
+    }
+
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
+
+        var document = await db.Documents
+            .SingleOrDefaultAsync(item => item.Id == id && item.OwnerId == ownerId, cancellationToken);
+        if (document is null) return NotFound();
+
+        db.Documents.Remove(document);
+        await db.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await storage.DeleteAsync(document.StorageKey, CancellationToken.None);
+        }
+        catch (IOException exception)
+        {
+            logger.LogError(exception, "Could not remove stored file for document {DocumentId}", id);
+        }
+
+        return NoContent();
+    }
 
     [HttpPost]
     [Consumes("multipart/form-data")]
