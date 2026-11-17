@@ -1,4 +1,3 @@
-using System.IO.Compression;
 using System.Security.Claims;
 using backend.Contracts;
 using backend.Services;
@@ -11,11 +10,9 @@ namespace backend.Controllers;
 [Authorize]
 [Route("api/documents")]
 public sealed class DocumentsController(
-    DocumentService documents, DocumentFormatValidator formats) : ControllerBase
+    DocumentService documents, DocumentFormatValidator formats, ArchiveUploadService archives) : ControllerBase
 {
     private const int MaxRequestBytes = 27 * 1024 * 1024;
-    private const int MaxArchiveEntries = 20;
-    private const long MaxExpandedBytes = 100L * 1024 * 1024;
 
     [HttpGet]
     public async Task<ActionResult<List<DocumentResponse>>> List(CancellationToken cancellationToken)
@@ -97,77 +94,7 @@ public sealed class DocumentsController(
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
 
-        await using var source = file.OpenReadStream();
-        using var archiveBuffer = new MemoryStream((int)file.Length);
-        await source.CopyToAsync(archiveBuffer, cancellationToken);
-        if (archiveBuffer.Length != file.Length || archiveBuffer.Length > DocumentFormatValidator.MaxAudioBytes)
-            return BadRequest(new { error = "Invalid archive size." });
-
-        try
-        {
-            archiveBuffer.Position = 0;
-            using var archive = new ZipArchive(archiveBuffer, ZipArchiveMode.Read, leaveOpen: true);
-            if (archive.Entries.Count == 0 || archive.Entries.Count > MaxArchiveEntries)
-                return BadRequest(new { error = "ZIP must contain 1 to 20 entries." });
-
-            var result = new ArchiveUploadResponse();
-            long expandedBytes = 0;
-            foreach (var entry in archive.Entries)
-            {
-                var name = entry.FullName;
-                if (name.Length > 255 || name.Contains('/') || name.Contains('\\') ||
-                    name.Contains(':') || name is "." or ".." || string.IsNullOrWhiteSpace(name))
-                {
-                    result.Rejected.Add(new RejectedArchiveFile { FileName = name, Reason = "Nested or unsafe path." });
-                    continue;
-                }
-
-                var extension = Path.GetExtension(name).ToLowerInvariant();
-                if (!formats.IsAllowedInArchive(extension))
-                {
-                    result.Rejected.Add(new RejectedArchiveFile { FileName = name, Reason = "Only PDF and DOCX are allowed in ZIP." });
-                    continue;
-                }
-
-                if (entry.Length is <= 0 or > DocumentFormatValidator.MaxDocumentBytes ||
-                    expandedBytes + entry.Length > MaxExpandedBytes)
-                {
-                    result.Rejected.Add(new RejectedArchiveFile { FileName = name, Reason = "Expanded size limit exceeded." });
-                    continue;
-                }
-
-                try
-                {
-                    using var content = new MemoryStream((int)entry.Length);
-                    await using var entryStream = entry.Open();
-                    var chunk = new byte[81920];
-                    int read;
-                    while ((read = await entryStream.ReadAsync(chunk, cancellationToken)) > 0)
-                    {
-                        if (content.Length + read > DocumentFormatValidator.MaxDocumentBytes ||
-                            expandedBytes + content.Length + read > MaxExpandedBytes)
-                            throw new InvalidDataException("Expanded size limit exceeded.");
-                        await content.WriteAsync(chunk.AsMemory(0, read), cancellationToken);
-                    }
-
-                    if (content.Length != entry.Length || !formats.HasExpectedFormat(content, extension))
-                        throw new InvalidDataException("File content does not match its extension.");
-
-                    expandedBytes += content.Length;
-                    result.Uploaded.Add(await documents.SaveAsync(ownerId, name, extension, content, cancellationToken));
-                }
-                catch (InvalidDataException exception)
-                {
-                    result.Rejected.Add(new RejectedArchiveFile { FileName = name, Reason = exception.Message });
-                }
-            }
-
-            return Ok(result);
-        }
-        catch (InvalidDataException)
-        {
-            return BadRequest(new { error = "Invalid ZIP archive." });
-        }
+        var (result, error) = await archives.UploadAsync(ownerId, file, cancellationToken);
+        return error is null ? Ok(result) : BadRequest(new { error });
     }
-
 }
