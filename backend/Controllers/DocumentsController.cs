@@ -22,6 +22,9 @@ public sealed class DocumentsController(
     private const int MaxAudioBytes = 25 * 1024 * 1024;
     private const int MaxArchiveEntries = 20;
     private const long MaxExpandedBytes = 100L * 1024 * 1024;
+    private const int MaxRequestBytes = 27 * 1024 * 1024;
+    private static readonly List<string> AllowedExtensions =
+        [".pdf", ".docx", ".jpg", ".jpeg", ".png", ".mp3", ".wav", ".m4a"];
 
     [HttpGet]
     public async Task<ActionResult<List<DocumentResponse>>> List(CancellationToken cancellationToken)
@@ -116,7 +119,7 @@ public sealed class DocumentsController(
 
     [HttpPost]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(27 * 1024 * 1024)]
+    [RequestSizeLimit(MaxRequestBytes)]
     public async Task<IActionResult> Upload([FromForm] IFormFile? file, CancellationToken cancellationToken)
     {
         if (file is null || file.Length <= 0)
@@ -127,7 +130,7 @@ public sealed class DocumentsController(
             return BadRequest(new { error = "Invalid file name." });
 
         var extension = Path.GetExtension(originalName).ToLowerInvariant();
-        if (extension is not (".pdf" or ".docx" or ".jpg" or ".jpeg" or ".png" or ".mp3" or ".wav" or ".m4a"))
+        if (!AllowedExtensions.Contains(extension))
             return BadRequest(new { error = "Only PDF, DOCX, JPEG, PNG, MP3, WAV and M4A files are supported." });
 
         var maxFileBytes = extension is ".pdf" or ".docx" or ".jpg" or ".jpeg" or ".png"
@@ -150,7 +153,7 @@ public sealed class DocumentsController(
 
     [HttpPost("archive")]
     [Consumes("multipart/form-data")]
-    [RequestSizeLimit(27 * 1024 * 1024)]
+    [RequestSizeLimit(MaxRequestBytes)]
     public async Task<IActionResult> UploadArchive([FromForm] IFormFile? file, CancellationToken cancellationToken)
     {
         if (file is null || file.Length is <= 0 or > MaxAudioBytes ||
