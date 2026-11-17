@@ -98,16 +98,18 @@ public sealed class DocumentsController(
             .SingleOrDefaultAsync(item => item.Id == id && item.OwnerId == ownerId, cancellationToken);
         if (document is null) return NotFound();
 
-        db.Documents.Remove(document);
-        await db.SaveChangesAsync(cancellationToken);
         try
         {
-            await storage.DeleteAsync(document.StorageKey, CancellationToken.None);
+            await storage.DeleteAsync(document.StorageKey, cancellationToken);
         }
-        catch (IOException exception)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             logger.LogError(exception, "Could not remove stored file for document {DocumentId}", id);
+            return Problem("Could not remove the stored file. Please retry.", statusCode: StatusCodes.Status500InternalServerError);
         }
+
+        db.Documents.Remove(document);
+        await db.SaveChangesAsync(cancellationToken);
 
         return NoContent();
     }
