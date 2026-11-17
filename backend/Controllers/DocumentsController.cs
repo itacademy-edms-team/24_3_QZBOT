@@ -1,14 +1,9 @@
-using System.Buffers.Binary;
 using System.IO.Compression;
 using System.Security.Claims;
-using System.Security.Cryptography;
 using backend.Contracts;
-using backend.Data;
-using backend.Models;
-using backend.Storage;
+using backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers;
 
@@ -16,35 +11,17 @@ namespace backend.Controllers;
 [Authorize]
 [Route("api/documents")]
 public sealed class DocumentsController(
-    ApplicationDbContext db, IFileStorageService storage, ILogger<DocumentsController> logger) : ControllerBase
+    DocumentService documents, DocumentFormatValidator formats) : ControllerBase
 {
-    private const int MaxDocumentBytes = 10 * 1024 * 1024;
-    private const int MaxAudioBytes = 25 * 1024 * 1024;
+    private const int MaxRequestBytes = 27 * 1024 * 1024;
     private const int MaxArchiveEntries = 20;
     private const long MaxExpandedBytes = 100L * 1024 * 1024;
-    private const int MaxRequestBytes = 27 * 1024 * 1024;
-    private static readonly List<string> AllowedExtensions =
-        [".pdf", ".docx", ".jpg", ".jpeg", ".png", ".mp3", ".wav", ".m4a"];
 
     [HttpGet]
     public async Task<ActionResult<List<DocumentResponse>>> List(CancellationToken cancellationToken)
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
-
-        return await db.Documents.AsNoTracking()
-            .Where(document => document.OwnerId == ownerId)
-            .OrderByDescending(document => document.UploadedAt)
-            .Select(document => new DocumentResponse
-            {
-                Id = document.Id,
-                OriginalFileName = document.OriginalFileName,
-                ContentType = document.ContentType,
-                SizeBytes = document.SizeBytes,
-                Sha256 = document.Sha256,
-                UploadedAt = document.UploadedAt
-            })
-            .ToListAsync(cancellationToken);
+        return string.IsNullOrEmpty(ownerId) ? Unauthorized() : await documents.ListAsync(ownerId, cancellationToken);
     }
 
     [HttpGet("{id:guid}")]
@@ -52,21 +29,7 @@ public sealed class DocumentsController(
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
-
-        var document = await db.Documents.AsNoTracking()
-            .Where(item => item.Id == id && item.OwnerId == ownerId)
-            .Select(item => new DocumentResponse
-            {
-                Id = item.Id,
-                OriginalFileName = item.OriginalFileName,
-                ContentType = item.ContentType,
-                SizeBytes = item.SizeBytes,
-                Sha256 = item.Sha256,
-                UploadedAt = item.UploadedAt
-            })
-            .SingleOrDefaultAsync(cancellationToken);
-
-        return document is null ? NotFound() : document;
+        return await documents.GetAsync(ownerId, id, cancellationToken) is { } document ? document : NotFound();
     }
 
     [HttpGet("{id:guid}/download")]
@@ -74,21 +37,8 @@ public sealed class DocumentsController(
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
-
-        var document = await db.Documents.AsNoTracking()
-            .SingleOrDefaultAsync(item => item.Id == id && item.OwnerId == ownerId, cancellationToken);
-        if (document is null) return NotFound();
-
-        try
-        {
-            var stream = storage.OpenRead(document.StorageKey);
-            return File(stream, document.ContentType, document.OriginalFileName);
-        }
-        catch (FileNotFoundException)
-        {
-            logger.LogError("Stored file missing for document {DocumentId}", id);
-            return NotFound();
-        }
+        var download = await documents.OpenDownloadAsync(ownerId, id, cancellationToken);
+        return download is null ? NotFound() : File(download.Value.Stream, download.Value.ContentType, download.Value.FileName);
     }
 
     [HttpDelete("{id:guid}")]
@@ -96,25 +46,13 @@ public sealed class DocumentsController(
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
-
-        var document = await db.Documents
-            .SingleOrDefaultAsync(item => item.Id == id && item.OwnerId == ownerId, cancellationToken);
-        if (document is null) return NotFound();
-
-        try
+        return await documents.DeleteAsync(ownerId, id, cancellationToken) switch
         {
-            await storage.DeleteAsync(document.StorageKey, cancellationToken);
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            logger.LogError(exception, "Could not remove stored file for document {DocumentId}", id);
-            return Problem("Could not remove the stored file. Please retry.", statusCode: StatusCodes.Status500InternalServerError);
-        }
-
-        db.Documents.Remove(document);
-        await db.SaveChangesAsync(cancellationToken);
-
-        return NoContent();
+            DeleteDocumentResult.NotFound => NotFound(),
+            DeleteDocumentResult.StorageError => Problem("Could not remove the stored file. Please retry.",
+                statusCode: StatusCodes.Status500InternalServerError),
+            _ => NoContent()
+        };
     }
 
     [HttpPost]
@@ -125,30 +63,26 @@ public sealed class DocumentsController(
         if (file is null || file.Length <= 0)
             return BadRequest(new { error = "Select a non-empty PDF, DOCX, JPEG, PNG, MP3, WAV or M4A file." });
 
-        var originalName = file.FileName.Replace('\\', '/').Split('/').LastOrDefault();
+        var originalName = DocumentFormatValidator.FileName(file.FileName);
         if (string.IsNullOrWhiteSpace(originalName) || originalName.Length > 255)
             return BadRequest(new { error = "Invalid file name." });
-
         var extension = Path.GetExtension(originalName).ToLowerInvariant();
-        if (!AllowedExtensions.Contains(extension))
+        if (!formats.IsAllowed(extension))
             return BadRequest(new { error = "Only PDF, DOCX, JPEG, PNG, MP3, WAV and M4A files are supported." });
-
-        var maxFileBytes = extension is ".pdf" or ".docx" or ".jpg" or ".jpeg" or ".png"
-            ? MaxDocumentBytes : MaxAudioBytes;
+        var maxFileBytes = formats.MaxBytes(extension);
         if (file.Length > maxFileBytes)
             return BadRequest(new { error = $"File exceeds the {maxFileBytes / 1024 / 1024} MB limit." });
 
         await using var input = file.OpenReadStream();
         using var buffer = new MemoryStream((int)file.Length);
         await input.CopyToAsync(buffer, cancellationToken);
-        if (buffer.Length != file.Length || buffer.Length > maxFileBytes || !HasExpectedFormat(buffer, extension))
+        if (buffer.Length != file.Length || buffer.Length > maxFileBytes || !formats.HasExpectedFormat(buffer, extension))
             return BadRequest(new { error = "File content does not match its extension." });
 
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
-
         return StatusCode(StatusCodes.Status201Created,
-            await SaveDocumentAsync(ownerId, originalName, extension, buffer, cancellationToken));
+            await documents.SaveAsync(ownerId, originalName, extension, buffer, cancellationToken));
     }
 
     [HttpPost("archive")]
@@ -156,7 +90,7 @@ public sealed class DocumentsController(
     [RequestSizeLimit(MaxRequestBytes)]
     public async Task<IActionResult> UploadArchive([FromForm] IFormFile? file, CancellationToken cancellationToken)
     {
-        if (file is null || file.Length is <= 0 or > MaxAudioBytes ||
+        if (file is null || file.Length is <= 0 or > DocumentFormatValidator.MaxAudioBytes ||
             !string.Equals(Path.GetExtension(file.FileName), ".zip", StringComparison.OrdinalIgnoreCase))
             return BadRequest(new { error = "Select a ZIP archive up to 25 MB." });
 
@@ -166,7 +100,7 @@ public sealed class DocumentsController(
         await using var source = file.OpenReadStream();
         using var archiveBuffer = new MemoryStream((int)file.Length);
         await source.CopyToAsync(archiveBuffer, cancellationToken);
-        if (archiveBuffer.Length != file.Length || archiveBuffer.Length > MaxAudioBytes)
+        if (archiveBuffer.Length != file.Length || archiveBuffer.Length > DocumentFormatValidator.MaxAudioBytes)
             return BadRequest(new { error = "Invalid archive size." });
 
         try
@@ -189,13 +123,13 @@ public sealed class DocumentsController(
                 }
 
                 var extension = Path.GetExtension(name).ToLowerInvariant();
-                if (extension is not (".pdf" or ".docx"))
+                if (!formats.IsAllowedInArchive(extension))
                 {
                     result.Rejected.Add(new RejectedArchiveFile { FileName = name, Reason = "Only PDF and DOCX are allowed in ZIP." });
                     continue;
                 }
 
-                if (entry.Length is <= 0 or > MaxDocumentBytes ||
+                if (entry.Length is <= 0 or > DocumentFormatValidator.MaxDocumentBytes ||
                     expandedBytes + entry.Length > MaxExpandedBytes)
                 {
                     result.Rejected.Add(new RejectedArchiveFile { FileName = name, Reason = "Expanded size limit exceeded." });
@@ -210,17 +144,17 @@ public sealed class DocumentsController(
                     int read;
                     while ((read = await entryStream.ReadAsync(chunk, cancellationToken)) > 0)
                     {
-                        if (content.Length + read > MaxDocumentBytes ||
+                        if (content.Length + read > DocumentFormatValidator.MaxDocumentBytes ||
                             expandedBytes + content.Length + read > MaxExpandedBytes)
                             throw new InvalidDataException("Expanded size limit exceeded.");
                         await content.WriteAsync(chunk.AsMemory(0, read), cancellationToken);
                     }
 
-                    if (content.Length != entry.Length || !HasExpectedFormat(content, extension))
+                    if (content.Length != entry.Length || !formats.HasExpectedFormat(content, extension))
                         throw new InvalidDataException("File content does not match its extension.");
 
                     expandedBytes += content.Length;
-                    result.Uploaded.Add(await SaveDocumentAsync(ownerId, name, extension, content, cancellationToken));
+                    result.Uploaded.Add(await documents.SaveAsync(ownerId, name, extension, content, cancellationToken));
                 }
                 catch (InvalidDataException exception)
                 {
@@ -236,97 +170,4 @@ public sealed class DocumentsController(
         }
     }
 
-    private async Task<DocumentResponse> SaveDocumentAsync(
-        string ownerId, string originalName, string extension, MemoryStream buffer,
-        CancellationToken cancellationToken)
-    {
-        var document = new Document
-        {
-            OwnerId = ownerId,
-            OriginalFileName = originalName,
-            ContentType = extension switch
-            {
-                ".pdf" => "application/pdf",
-                ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                ".jpg" or ".jpeg" => "image/jpeg",
-                ".png" => "image/png",
-                ".mp3" => "audio/mpeg",
-                ".wav" => "audio/wav",
-                _ => "audio/mp4"
-            },
-            SizeBytes = buffer.Length,
-            Sha256 = Convert.ToHexString(SHA256.HashData(buffer.GetBuffer().AsSpan(0, (int)buffer.Length)))
-                .ToLowerInvariant(),
-            StorageKey = string.Empty
-        };
-
-        buffer.Position = 0;
-        document.StorageKey = await storage.SaveAsync(buffer, cancellationToken);
-        try
-        {
-            db.Documents.Add(document);
-            await db.SaveChangesAsync(cancellationToken);
-        }
-        catch
-        {
-            await storage.DeleteAsync(document.StorageKey, CancellationToken.None);
-            throw;
-        }
-
-        return new DocumentResponse
-        {
-            Id = document.Id,
-            OriginalFileName = document.OriginalFileName,
-            ContentType = document.ContentType,
-            SizeBytes = document.SizeBytes,
-            Sha256 = document.Sha256,
-            UploadedAt = document.UploadedAt
-        };
-    }
-
-    private static bool HasExpectedFormat(MemoryStream buffer, string extension)
-    {
-        var bytes = buffer.GetBuffer().AsSpan(0, (int)buffer.Length);
-        if (extension == ".pdf")
-            return bytes.StartsWith("%PDF-"u8);
-
-        if (extension is ".jpg" or ".jpeg")
-            return bytes.Length >= 4 && bytes[0] == 0xFF && bytes[1] == 0xD8 &&
-                   bytes[^2] == 0xFF && bytes[^1] == 0xD9;
-
-        if (extension == ".png")
-            return bytes.Length >= 45 && bytes[..8].SequenceEqual(new byte[] { 137, 80, 78, 71, 13, 10, 26, 10 }) &&
-                   BinaryPrimitives.ReadUInt32BigEndian(bytes[8..12]) == 13 &&
-                   bytes[12..].StartsWith("IHDR"u8) &&
-                   BinaryPrimitives.ReadUInt32BigEndian(bytes[16..20]) > 0 &&
-                   BinaryPrimitives.ReadUInt32BigEndian(bytes[20..24]) > 0 &&
-                   bytes[^8..].StartsWith("IEND"u8);
-
-        if (extension == ".mp3")
-            return bytes.Length >= 10 && bytes.StartsWith("ID3"u8) ||
-                   bytes.Length >= 4 && bytes[0] == 0xFF && (bytes[1] & 0xE0) == 0xE0;
-
-        if (extension == ".wav")
-            return bytes.Length >= 44 && bytes.StartsWith("RIFF"u8) &&
-                   bytes[8..].StartsWith("WAVE"u8);
-
-        if (extension == ".m4a")
-            return bytes.Length >= 12 && bytes[4..].StartsWith("ftyp"u8) &&
-                   (bytes[8..].StartsWith("M4A "u8) || bytes[8..].StartsWith("isom"u8) ||
-                    bytes[8..].StartsWith("mp41"u8) || bytes[8..].StartsWith("mp42"u8));
-
-        if (!bytes.StartsWith("PK\x03\x04"u8)) return false;
-        try
-        {
-            buffer.Position = 0;
-            using var archive = new ZipArchive(buffer, ZipArchiveMode.Read, leaveOpen: true);
-            if (archive.Entries.Count > 1000) return false;
-            return archive.GetEntry("[Content_Types].xml") is not null &&
-                   archive.GetEntry("word/document.xml") is not null;
-        }
-        catch (InvalidDataException)
-        {
-            return false;
-        }
-    }
 }
