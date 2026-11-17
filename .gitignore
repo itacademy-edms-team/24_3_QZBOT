@@ -9,3 +9,5 @@ node_modules
 *sln.DotSettings.user
 *csproj.user
 dotnet-tools.json
+.env
+.DS_Store
