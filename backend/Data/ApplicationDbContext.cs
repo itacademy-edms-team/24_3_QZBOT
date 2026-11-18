@@ -8,11 +8,22 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     : IdentityUserContext<ApplicationUser>(options)
 {
     public DbSet<Document> Documents => Set<Document>();
+    public DbSet<CourtCase> CourtCases => Set<CourtCase>();
     public DbSet<HttpRequestLog> HttpRequestLogs => Set<HttpRequestLog>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.Entity<CourtCase>(entity =>
+        {
+            entity.Property(item => item.Title).HasMaxLength(255);
+            entity.HasIndex(item => new { item.OwnerId, item.CreatedAt });
+            entity.HasOne(item => item.Owner)
+                .WithMany()
+                .HasForeignKey(item => item.OwnerId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
 
         builder.Entity<HttpRequestLog>(entity =>
         {
@@ -41,6 +52,10 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             entity.HasIndex(document => document.StorageKey).IsUnique();
             entity.HasIndex(document => new { document.OwnerId, document.UploadedAt });
             entity.HasIndex(document => document.CaseId);
+            entity.HasOne(document => document.Case)
+                .WithMany(item => item.Documents)
+                .HasForeignKey(document => document.CaseId)
+                .OnDelete(DeleteBehavior.Restrict);
             entity.ToTable(table => table.HasCheckConstraint("CK_Documents_SizeBytes", "[SizeBytes] > 0"));
         });
     }
