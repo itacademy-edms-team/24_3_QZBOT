@@ -10,6 +10,8 @@ public sealed class Document
 
     public Guid? CaseId { get; set; }
 
+    public CourtCase? Case { get; set; }
+
     public required string OriginalFileName { get; set; }
 
     public required string StorageKey { get; set; }
