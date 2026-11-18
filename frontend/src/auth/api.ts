@@ -2,7 +2,7 @@ export type CurrentUser = { id: string; email: string }
 
 const base = '/api/auth'
 
-async function csrfToken(): Promise<string> {
+export async function csrfToken(): Promise<string> {
   const response = await fetch(`${base}/csrf`, { credentials: 'same-origin', cache: 'no-store' })
   if (!response.ok) throw new Error('Не удалось получить защитный токен. Проверьте запуск API.')
   const data: { token: string } = await response.json()
