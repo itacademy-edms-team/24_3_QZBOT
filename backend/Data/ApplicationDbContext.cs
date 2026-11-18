@@ -8,10 +8,20 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     : IdentityUserContext<ApplicationUser>(options)
 {
     public DbSet<Document> Documents => Set<Document>();
+    public DbSet<HttpRequestLog> HttpRequestLogs => Set<HttpRequestLog>();
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        builder.Entity<HttpRequestLog>(entity =>
+        {
+            entity.Property(log => log.Method).HasMaxLength(32);
+            entity.Property(log => log.RouteTemplate).HasMaxLength(512);
+            entity.Property(log => log.TraceId).HasMaxLength(128);
+            entity.Property(log => log.UserId).HasMaxLength(450);
+            entity.HasIndex(log => log.StartedAtUtc);
+        });
 
         builder.Entity<Document>(entity =>
         {
