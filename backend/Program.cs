@@ -1,4 +1,5 @@
 using backend.Data;
+using backend.Middleware;
 using backend.Models;
 using backend.Services;
 using backend.Storage;
@@ -79,6 +80,8 @@ if (app.Environment.IsDevelopment())
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
+app.UseRouting();
+app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 
