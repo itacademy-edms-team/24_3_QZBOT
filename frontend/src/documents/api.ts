@@ -7,6 +7,7 @@ export type DocumentItem = {
   sizeBytes: number
   sha256: string
   uploadedAt: string
+  caseId?: string | null
   note?: string | null
   archiveUploadId?: string | null
 }

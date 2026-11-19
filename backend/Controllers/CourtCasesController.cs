@@ -72,6 +72,7 @@ public sealed class CourtCasesController(ApplicationDbContext db) : ControllerBa
                     Id = document.Id,
                     Note = document.Note ?? (document.ArchiveUpload == null ? null : document.ArchiveUpload.Note),
                     ArchiveUploadId = document.ArchiveUploadId,
+                    CaseId = document.CaseId,
                     OriginalFileName = document.OriginalFileName,
                     ContentType = document.ContentType,
                     SizeBytes = document.SizeBytes,
