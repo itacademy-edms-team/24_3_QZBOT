@@ -10,9 +10,11 @@ namespace Backend.Controllers;
 
 [ApiController]
 [Authorize]
-[Route("api/cases")]
-public sealed class CourtCasesController(ApplicationDbContext db) : ControllerBase
+[Route(BaseRoute)]
+public sealed class CasesController(ApplicationDbContext db) : ControllerBase
 {
+    private const string BaseRoute = "api/cases";
+
     [HttpPost]
     public async Task<ActionResult<CourtCaseResponse>> Create(
         CreateCourtCaseRequest request, CancellationToken cancellationToken)
@@ -25,11 +27,11 @@ public sealed class CourtCasesController(ApplicationDbContext db) : ControllerBa
         await db.SaveChangesAsync(cancellationToken);
 
         var response = new CourtCaseResponse(courtCase.Id, courtCase.Title, courtCase.CreatedAt);
-        return CreatedAtAction(nameof(Get), new { id = courtCase.Id }, response);
+        return Created($"/{BaseRoute}/{courtCase.Id}", response);
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<CourtCaseResponse>>> List(CancellationToken cancellationToken)
+    public async Task<ActionResult<List<CourtCaseResponse>>> Get(CancellationToken cancellationToken)
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
@@ -42,7 +44,7 @@ public sealed class CourtCasesController(ApplicationDbContext db) : ControllerBa
     }
 
     [HttpGet("{id:guid}")]
-    public async Task<ActionResult<CourtCaseResponse>> Get(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<CourtCaseResponse>> GetById(Guid id, CancellationToken cancellationToken)
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
@@ -50,13 +52,13 @@ public sealed class CourtCasesController(ApplicationDbContext db) : ControllerBa
         var courtCase = await OwnedCases(ownerId)
             .Where(item => item.Id == id)
             .Select(item => new CourtCaseResponse(item.Id, item.Title, item.CreatedAt))
-            .SingleOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
 
         return courtCase is null ? NotFound() : courtCase;
     }
 
     [HttpGet("{id:guid}/documents")]
-    public async Task<ActionResult<List<DocumentResponse>>> ListDocuments(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<List<DocumentResponse>>> GetDocuments(Guid id, CancellationToken cancellationToken)
     {
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
@@ -79,7 +81,7 @@ public sealed class CourtCasesController(ApplicationDbContext db) : ControllerBa
                     Sha256 = document.Sha256,
                     UploadedAt = document.UploadedAt
                 }).ToList())
-            .SingleOrDefaultAsync(cancellationToken);
+            .FirstOrDefaultAsync(cancellationToken);
 
         return documents is null ? NotFound() : documents;
     }
