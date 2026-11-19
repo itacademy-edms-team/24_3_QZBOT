@@ -2,6 +2,12 @@ namespace backend.Models;
 
 public sealed class Document
 {
+    public const int MaxNoteLength = 4000;
+
+    public string? Note { get; set; }
+    public Guid? ArchiveUploadId { get; set; }
+    public ArchiveUpload? ArchiveUpload { get; set; }
+
     public Guid Id { get; set; } = Guid.NewGuid();
 
     public required string OwnerId { get; set; }

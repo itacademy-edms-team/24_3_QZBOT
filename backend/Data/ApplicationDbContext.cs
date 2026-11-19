@@ -15,6 +15,12 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
     {
         base.OnModelCreating(builder);
 
+        builder.Entity<ArchiveUpload>(entity =>
+        {
+            entity.ToTable("ArchiveUploads");
+            entity.Property(upload => upload.Note).HasMaxLength(Document.MaxNoteLength);
+        });
+
         builder.Entity<CourtCase>(entity =>
         {
             entity.Property(item => item.Title).HasMaxLength(255);
@@ -36,6 +42,11 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
 
         builder.Entity<Document>(entity =>
         {
+            entity.Property(document => document.Note).HasMaxLength(Document.MaxNoteLength);
+            entity.HasOne(document => document.ArchiveUpload)
+                .WithMany()
+                .HasForeignKey(document => document.ArchiveUploadId)
+                .OnDelete(DeleteBehavior.Restrict);
             entity.HasKey(document => document.Id);
             entity.Property(document => document.OwnerId).IsRequired();
             entity.Property(document => document.OriginalFileName).HasMaxLength(255).IsRequired();

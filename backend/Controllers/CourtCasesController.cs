@@ -70,6 +70,8 @@ public sealed class CourtCasesController(ApplicationDbContext db) : ControllerBa
                 .Select(document => new DocumentResponse
                 {
                     Id = document.Id,
+                    Note = document.Note ?? (document.ArchiveUpload == null ? null : document.ArchiveUpload.Note),
+                    ArchiveUploadId = document.ArchiveUploadId,
                     OriginalFileName = document.OriginalFileName,
                     ContentType = document.ContentType,
                     SizeBytes = document.SizeBytes,

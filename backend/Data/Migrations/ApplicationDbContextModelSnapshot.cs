@@ -153,6 +153,22 @@ namespace backend.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("backend.Models.ArchiveUpload", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Note")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ArchiveUploads", (string)null);
+                });
+
             modelBuilder.Entity("backend.Models.CourtCase", b =>
                 {
                     b.Property<Guid>("Id")
@@ -184,6 +200,9 @@ namespace backend.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<Guid?>("ArchiveUploadId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid?>("CaseId")
                         .HasColumnType("uniqueidentifier");
 
@@ -191,6 +210,10 @@ namespace backend.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(4000)
+                        .HasColumnType("nvarchar(4000)");
 
                     b.Property<string>("OriginalFileName")
                         .IsRequired()
@@ -218,6 +241,8 @@ namespace backend.Data.Migrations
                         .HasColumnType("datetimeoffset");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ArchiveUploadId");
 
                     b.HasIndex("CaseId");
 
@@ -314,6 +339,11 @@ namespace backend.Data.Migrations
 
             modelBuilder.Entity("backend.Models.Document", b =>
                 {
+                    b.HasOne("backend.Models.ArchiveUpload", "ArchiveUpload")
+                        .WithMany()
+                        .HasForeignKey("ArchiveUploadId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("backend.Models.CourtCase", "Case")
                         .WithMany("Documents")
                         .HasForeignKey("CaseId")
@@ -324,6 +354,8 @@ namespace backend.Data.Migrations
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("ArchiveUpload");
 
                     b.Navigation("Case");
 
