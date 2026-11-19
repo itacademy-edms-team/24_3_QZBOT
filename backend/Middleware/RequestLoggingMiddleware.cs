@@ -1,12 +1,12 @@
 using System.Diagnostics;
 using System.Security.Claims;
-using Backend.Data;
 using Backend.Models;
+using Backend.Services;
 
 namespace Backend.Middleware;
 
 public sealed class RequestLoggingMiddleware(
-    RequestDelegate next, IServiceScopeFactory scopeFactory, ILogger<RequestLoggingMiddleware> logger)
+    RequestDelegate next, RequestLogQueue queue, ILogger<RequestLoggingMiddleware> logger)
 {
     public async Task InvokeAsync(HttpContext context)
     {
@@ -36,31 +36,21 @@ public sealed class RequestLoggingMiddleware(
                 ? StatusCodes.Status500InternalServerError
                 : context.Response.StatusCode;
 
-            try
+            var entry = new HttpRequestLog
             {
-                await using var scope = scopeFactory.CreateAsyncScope();
-                var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                db.HttpRequestLogs.Add(new HttpRequestLog
-                {
-                    StartedAtUtc = startedAtUtc,
-                    Method = Limit(context.Request.Method, 32)!,
-                    RouteTemplate = Limit(route, 512),
-                    StatusCode = statusCode,
-                    DurationMilliseconds = duration.TotalMilliseconds,
-                    TraceId = Limit(Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier, 128)!,
-                    UserId = context.User.Identity?.IsAuthenticated == true
-                        ? Limit(context.User.FindFirstValue(ClaimTypes.NameIdentifier), 450)
-                        : null
-                });
+                StartedAtUtc = startedAtUtc,
+                Method = Limit(context.Request.Method, 32)!,
+                RouteTemplate = Limit(route, 512),
+                StatusCode = statusCode,
+                DurationMilliseconds = duration.TotalMilliseconds,
+                TraceId = Limit(Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier, 128)!,
+                UserId = context.User.Identity?.IsAuthenticated == true
+                    ? Limit(context.User.FindFirstValue(ClaimTypes.NameIdentifier), 450)
+                    : null
+            };
 
-                // Give logging its own deadline even if the client disconnected.
-                using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(2));
-                await db.SaveChangesAsync(timeout.Token);
-            }
-            catch (Exception exception)
-            {
-                logger.LogWarning(exception, "Could not save HTTP request log");
-            }
+            if (!queue.TryEnqueue(entry))
+                logger.LogWarning("HTTP request log {TraceId} was dropped because the queue could not accept it", entry.TraceId);
         }
     }
 
