@@ -1,11 +1,11 @@
 using System.Security.Cryptography;
-using backend.Contracts;
-using backend.Data;
-using backend.Models;
-using backend.Storage;
+using Backend.Contracts;
+using Backend.Data;
+using Backend.Models;
+using Backend.Storage;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend.Services;
+namespace Backend.Services;
 
 public enum DeleteDocumentResult { Deleted, NotFound, StorageError }
 

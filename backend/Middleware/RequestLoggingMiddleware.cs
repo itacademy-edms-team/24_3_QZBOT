@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Security.Claims;
-using backend.Data;
-using backend.Models;
+using Backend.Data;
+using Backend.Models;
 
-namespace backend.Middleware;
+namespace Backend.Middleware;
 
 public sealed class RequestLoggingMiddleware(
     RequestDelegate next, IServiceScopeFactory scopeFactory, ILogger<RequestLoggingMiddleware> logger)

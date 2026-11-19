@@ -1,4 +1,4 @@
-namespace backend.Models;
+namespace Backend.Models;
 
 public sealed class Document
 {

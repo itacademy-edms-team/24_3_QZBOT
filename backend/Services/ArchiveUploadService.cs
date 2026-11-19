@@ -1,8 +1,8 @@
 using System.IO.Compression;
-using backend.Contracts;
-using backend.Models;
+using Backend.Contracts;
+using Backend.Models;
 
-namespace backend.Services;
+namespace Backend.Services;
 
 public sealed class ArchiveUploadService(DocumentService documents, DocumentFormatValidator formats)
 {

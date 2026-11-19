@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace backend.Data.Migrations
+namespace Backend.Data.Migrations
 {
     /// <inheritdoc />
     public partial class AddCourtCases : Migration

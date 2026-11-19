@@ -1,4 +1,4 @@
-namespace backend.Contracts;
+namespace Backend.Contracts;
 
 public sealed class DocumentResponse
 {

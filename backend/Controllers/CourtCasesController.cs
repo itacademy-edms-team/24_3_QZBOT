@@ -1,12 +1,12 @@
 using System.Security.Claims;
-using backend.Contracts;
-using backend.Data;
-using backend.Models;
+using Backend.Contracts;
+using Backend.Data;
+using Backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend.Controllers;
+namespace Backend.Controllers;
 
 [ApiController]
 [Authorize]

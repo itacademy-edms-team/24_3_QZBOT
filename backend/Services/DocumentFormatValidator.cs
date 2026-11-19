@@ -1,7 +1,7 @@
 using System.Buffers.Binary;
 using System.IO.Compression;
 
-namespace backend.Services;
+namespace Backend.Services;
 
 public sealed class DocumentFormatValidator
 {

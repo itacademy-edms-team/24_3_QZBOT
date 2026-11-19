@@ -1,8 +1,8 @@
-using backend.Models;
+using Backend.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend.Data;
+namespace Backend.Data;
 
 public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
     : IdentityUserContext<ApplicationUser>(options)

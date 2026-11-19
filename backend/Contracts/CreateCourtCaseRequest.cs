@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace backend.Contracts;
+namespace Backend.Contracts;
 
 public sealed record CreateCourtCaseRequest([Required, StringLength(255)] string Title);

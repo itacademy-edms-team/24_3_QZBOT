@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
-using backend.Models;
+using Backend.Models;
 using System.Security.Claims;
-using backend.Contracts;
-using backend.Services;
+using Backend.Contracts;
+using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace backend.Controllers;
+namespace Backend.Controllers;
 
 [ApiController]
 [Authorize]

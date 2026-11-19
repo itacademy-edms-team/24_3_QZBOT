@@ -5,11 +5,11 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using backend.Data;
+using Backend.Data;
 
 #nullable disable
 
-namespace backend.Data.Migrations
+namespace Backend.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20261119075236_AddUploadNotes")]
@@ -91,7 +91,7 @@ namespace backend.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("backend.Models.ApplicationUser", b =>
+            modelBuilder.Entity("Backend.Models.ApplicationUser", b =>
                 {
                     b.Property<string>("Id")
                         .HasColumnType("nvarchar(450)");
@@ -156,7 +156,7 @@ namespace backend.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("backend.Models.ArchiveUpload", b =>
+            modelBuilder.Entity("Backend.Models.ArchiveUpload", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -172,7 +172,7 @@ namespace backend.Data.Migrations
                     b.ToTable("ArchiveUploads", (string)null);
                 });
 
-            modelBuilder.Entity("backend.Models.CourtCase", b =>
+            modelBuilder.Entity("Backend.Models.CourtCase", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -197,7 +197,7 @@ namespace backend.Data.Migrations
                     b.ToTable("CourtCases");
                 });
 
-            modelBuilder.Entity("backend.Models.Document", b =>
+            modelBuilder.Entity("Backend.Models.Document", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -260,7 +260,7 @@ namespace backend.Data.Migrations
                         });
                 });
 
-            modelBuilder.Entity("backend.Models.HttpRequestLog", b =>
+            modelBuilder.Entity("Backend.Models.HttpRequestLog", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -304,7 +304,7 @@ namespace backend.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
-                    b.HasOne("backend.Models.ApplicationUser", null)
+                    b.HasOne("Backend.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -313,7 +313,7 @@ namespace backend.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("backend.Models.ApplicationUser", null)
+                    b.HasOne("Backend.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -322,16 +322,16 @@ namespace backend.Data.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
-                    b.HasOne("backend.Models.ApplicationUser", null)
+                    b.HasOne("Backend.Models.ApplicationUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("backend.Models.CourtCase", b =>
+            modelBuilder.Entity("Backend.Models.CourtCase", b =>
                 {
-                    b.HasOne("backend.Models.ApplicationUser", "Owner")
+                    b.HasOne("Backend.Models.ApplicationUser", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -340,19 +340,19 @@ namespace backend.Data.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("backend.Models.Document", b =>
+            modelBuilder.Entity("Backend.Models.Document", b =>
                 {
-                    b.HasOne("backend.Models.ArchiveUpload", "ArchiveUpload")
+                    b.HasOne("Backend.Models.ArchiveUpload", "ArchiveUpload")
                         .WithMany()
                         .HasForeignKey("ArchiveUploadId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("backend.Models.CourtCase", "Case")
+                    b.HasOne("Backend.Models.CourtCase", "Case")
                         .WithMany("Documents")
                         .HasForeignKey("CaseId")
                         .OnDelete(DeleteBehavior.Restrict);
 
-                    b.HasOne("backend.Models.ApplicationUser", "Owner")
+                    b.HasOne("Backend.Models.ApplicationUser", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Restrict)
@@ -365,7 +365,7 @@ namespace backend.Data.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("backend.Models.CourtCase", b =>
+            modelBuilder.Entity("Backend.Models.CourtCase", b =>
                 {
                     b.Navigation("Documents");
                 });

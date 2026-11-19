@@ -1,8 +1,8 @@
-using backend.Errors;
+using Backend.Errors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace backend.Filters;
+namespace Backend.Filters;
 
 public sealed class AuthExceptionFilter : IExceptionFilter
 {
