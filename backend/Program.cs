@@ -1,7 +1,8 @@
-using backend.Data;
-using backend.Models;
-using backend.Services;
-using backend.Storage;
+using Backend.Data;
+using Backend.Middleware;
+using Backend.Models;
+using Backend.Services;
+using Backend.Storage;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -17,6 +18,8 @@ builder.Services.AddControllersWithViews(options =>
     options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute()));
 builder.Services.AddOpenApi();
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+builder.Services.AddSingleton<RequestLogQueue>();
+builder.Services.AddHostedService<RequestLogWriter>();
 builder.Services.AddSingleton<IFileStorageService, LocalFileStorageService>();
 builder.Services.AddSingleton<DocumentFormatValidator>();
 builder.Services.AddScoped<DocumentService>();
@@ -76,6 +79,8 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseRouting();
+app.UseMiddleware<RequestLoggingMiddleware>();
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 

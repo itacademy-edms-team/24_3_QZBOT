@@ -14,3 +14,8 @@
 .document-details h2 { margin: 0 0 12px; font-size: 15px; }
 .document-details p { overflow-wrap: anywhere; }
 @media (max-width: 700px) { .document-list { overflow-x: auto; } .document-list-head, .document-list-row { min-width: 610px; } }
+
+.document-upload-note { display: grid; gap: 10px; margin-bottom: 16px; }
+.document-upload-note textarea { width: 100%; box-sizing: border-box; resize: vertical; font: inherit; }
+.document-upload-note button { justify-self: start; }
+.document-note { white-space: pre-wrap; }

@@ -1,7 +1,13 @@
-namespace backend.Models;
+namespace Backend.Models;
 
 public sealed class Document
 {
+    public const int MaxNoteLength = 4000;
+
+    public string? Note { get; set; }
+    public Guid? ArchiveUploadId { get; set; }
+    public ArchiveUpload? ArchiveUpload { get; set; }
+
     public Guid Id { get; set; } = Guid.NewGuid();
 
     public required string OwnerId { get; set; }
@@ -9,6 +15,8 @@ public sealed class Document
     public ApplicationUser? Owner { get; set; }
 
     public Guid? CaseId { get; set; }
+
+    public CourtCase? Case { get; set; }
 
     public required string OriginalFileName { get; set; }
 

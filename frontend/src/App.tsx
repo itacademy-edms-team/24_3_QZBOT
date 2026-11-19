@@ -1,13 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import './App.css'
 import DocumentsPage from './documents/DocumentsPage'
+import CaseDetails from './cases/CaseDetails'
+import { createCase, listCases, type CourtCase } from './cases/api'
 
 type Page = 'overview' | 'cases' | 'documents' | 'analysis'
-const cases = [
-  { id: 1, number: '1-247/2026', title: 'Материалы по делу Иванова', files: 3, date: '28 окт 2026', status: 'Документы загружены' },
-  { id: 2, number: '1-183/2026', title: 'Проект приговора · Петров', files: 2, date: '24 окт 2026', status: 'Ожидает проверки' },
-  { id: 3, number: '1-096/2026', title: 'Материалы по делу Сидорова', files: 1, date: '19 окт 2026', status: 'Черновик' },
-]
 const navigation: { id: Page; icon: string; title: string }[] = [
   { id: 'overview', icon: '▦', title: 'Обзор' }, { id: 'cases', icon: '▤', title: 'Судебные дела' },
   { id: 'documents', icon: '▧', title: 'Документы' }, { id: 'analysis', icon: '◇', title: 'Анализ' },
@@ -15,23 +12,101 @@ const navigation: { id: Page; icon: string; title: string }[] = [
 
 function App({ email, onLogout, loggingOut }: { email: string; onLogout: () => void; loggingOut: boolean }) {
   const [page, setPage] = useState<Page>('overview')
-  const [selected, setSelected] = useState<number | null>(null)
+  const [selected, setSelected] = useState<CourtCase | null>(null)
+  const [cases, setCases] = useState<CourtCase[]>([])
   const [query, setQuery] = useState('')
-  const [notice, setNotice] = useState('')
-  const currentCase = cases.find(item => item.id === selected)
-  const title = currentCase?.title ?? navigation.find(item => item.id === page)?.title ?? ''
-  function goTo(next: Page) { setPage(next); setSelected(null); setQuery(''); setNotice('') }
-  function placeholder(feature: string) { setNotice(`${feature} появится после подключения API. Сейчас открыт демонстрационный макет.`) }
-  function openCase(id: number) { setPage('cases'); setSelected(id); setNotice('') }
-  const caseCards = (items: typeof cases) => <div className="case-grid">{items.map(item => <button className="case-card" key={item.id} onClick={() => openCase(item.id)}><div className="card-top"><span className="case-icon">▤</span><span>↗</span></div><small>Дело № {item.number}</small><h3>{item.title}</h3><span className={`status ${item.id === 2 ? 'amber' : item.id === 3 ? 'gray' : ''}`}>{item.status}</span><div className="card-footer"><span>▧ {item.files} документа</span><span>{item.date}</span></div></button>)}</div>
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [creating, setCreating] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [newTitle, setNewTitle] = useState('')
+  const title = selected?.title ?? navigation.find(item => item.id === page)?.title ?? ''
+
+  useEffect(() => {
+    let active = true
+    listCases()
+      .then(items => { if (active) setCases(items) })
+      .catch((cause: Error) => { if (active) setError(cause.message) })
+      .finally(() => { if (active) setLoading(false) })
+    return () => { active = false }
+  }, [])
+
+  function goTo(next: Page) {
+    if (saving) return
+    setPage(next)
+    setSelected(null)
+    setQuery('')
+    setCreating(false)
+  }
+
+  function showCreate() {
+    if (saving) return
+    goTo('cases')
+    setNewTitle('')
+    setCreating(true)
+  }
+
+  async function saveCase() {
+    if (!newTitle.trim() || saving || loading) return
+    setSaving(true)
+    setError('')
+    try {
+      const item = await createCase(newTitle.trim())
+      setCases(current => [item, ...current])
+      setCreating(false)
+      setSelected(item)
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Не удалось создать дело.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  function caseCards(items: CourtCase[]) {
+    if (loading) return <p role="status">Загружаем дела…</p>
+    if (!items.length) return <p>{query ? 'Дела не найдены.' : 'Дел пока нет.'}</p>
+    return <div className="case-grid">{items.map(item => (
+      <button className="case-card" key={item.id} onClick={() => {
+        setPage('cases')
+        setCreating(false)
+        setSelected(item)
+      }}>
+        <div className="card-top"><span className="case-icon">▤</span><span>↗</span></div>
+        <h3>{item.title}</h3>
+        <div className="card-footer"><span>{new Date(item.createdAt).toLocaleDateString('ru-RU')}</span></div>
+      </button>
+    ))}</div>
+  }
 
   return <div className="app-shell">
-    <aside className="sidebar"><button className="brand" onClick={() => goTo('overview')}><span className="brand-icon">§</span><span><strong>Второе мнение</strong><small>Алгоритм правосудия</small></span></button><div className="nav-caption">РАБОЧЕЕ ПРОСТРАНСТВО</div><nav aria-label="Основная навигация">{navigation.map(item => <button key={item.id} onClick={() => goTo(item.id)} className={page === item.id ? 'active' : ''}><span>{item.icon}</span>{item.title}</button>)}</nav><div className="sidebar-bottom"><div className="privacy"><b>✦ Важное напоминание</b><p>Используйте в макете только синтетические или обезличенные данные.</p></div><div className="profile"><span>{email.charAt(0).toUpperCase()}</span><div><b title={email}>{email}</b><small>Демонстрационный интерфейс</small></div></div><button className="logout-button" onClick={onLogout} disabled={loggingOut}>{loggingOut ? 'Выход...' : 'Выйти из аккаунта'}</button></div></aside>
-    <div className="main-area"><header className="topbar"><span>Рабочее пространство <i>/</i> {title}</span><div><span className="demo-badge">● Демонстрационные данные</span><span className="avatar">Д</span></div></header><main className="content">
-      {notice && <div role="status" className="notice">{notice}<button onClick={() => setNotice('')} aria-label="Закрыть">×</button></div>}
-      {page === 'overview' && <><div className="heading"><div><div className="eyebrow">РАБОЧЕЕ ПРОСТРАНСТВО</div><h1>Добро пожаловать</h1><p>Рабочее пространство для проверки проектов судебных актов.</p></div><button className="primary" onClick={() => placeholder('Создание дела')}>＋ Создать дело</button></div><section className="hero"><div><small>ПОДДЕРЖКА ПРИНЯТИЯ РЕШЕНИЙ</small><h2>Внимание к деталям.<br/>Решение — за человеком.</h2><p>Система поможет организовать материалы дела и покажет вопросы, требующие дополнительной проверки. Она не принимает судебные решения.</p><button onClick={() => goTo('analysis')}>Посмотреть рабочую область ↗</button></div><div className="hero-art" aria-hidden="true"><div className="paper"><i/><i/><i/><span>§</span></div></div></section><div className="section-heading"><div><h2>Недавние дела</h2><p>Быстрый доступ к материалам, с которыми вы работали</p></div><button onClick={() => goTo('cases')}>Все дела →</button></div>{caseCards(cases)}<div className="quick-grid"><button onClick={() => goTo('documents')}><span>▧</span><div><b>Ваши документы</b><small>Материалы, прикрепленные к делам</small></div>→</button><button onClick={() => goTo('analysis')}><span>◇</span><div><b>Рабочая область анализа</b><small>Предварительный вид результатов</small></div>→</button></div></>}
-      {page === 'cases' && !currentCase && <><div className="heading"><div><div className="eyebrow">УПРАВЛЕНИЕ МАТЕРИАЛАМИ</div><h1>Судебные дела</h1><p>Создавайте дела и храните связанные с ними документы.</p></div><button className="primary" onClick={() => placeholder('Создание дела')}>＋ Создать дело</button></div><div className="toolbar"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Поиск по названию или номеру дела" aria-label="Поиск дел"/><span>{cases.filter(item => `${item.title} ${item.number}`.toLowerCase().includes(query.toLowerCase())).length} дела</span></div>{caseCards(cases.filter(item => `${item.title} ${item.number}`.toLowerCase().includes(query.toLowerCase())))}</>}
-      {page === 'cases' && currentCase && <><button className="back" onClick={() => setSelected(null)}>← Все дела</button><div className="heading"><div><div className="eyebrow">ДЕЛО № {currentCase.number}</div><h1>{currentCase.title}</h1><p>Последнее изменение: {currentCase.date}</p></div><span className="status">{currentCase.status}</span></div><div className="detail-grid"><section className="panel"><h2>О деле</h2><div className="detail-line"><span>Номер дела</span><b>{currentCase.number}</b></div><div className="detail-line"><span>Документов</span><b>{currentCase.files}</b></div><div className="detail-line"><span>Статус</span><b>{currentCase.status}</b></div></section><section className="panel"><h2>Документы дела</h2><p>Показаны примерные материалы. Подключение загрузки и скачивания входит в первый спринт.</p><button className="outline" onClick={() => placeholder('Загрузка документа')}>＋ Добавить документ</button></section></div></>}
+    <aside className="sidebar"><button className="brand" onClick={() => goTo('overview')}><span className="brand-icon">§</span><span><strong>Второе мнение</strong><small>Алгоритм правосудия</small></span></button><div className="nav-caption">РАБОЧЕЕ ПРОСТРАНСТВО</div><nav aria-label="Основная навигация">{navigation.map(item => <button key={item.id} onClick={() => goTo(item.id)} className={page === item.id ? 'active' : ''}><span>{item.icon}</span>{item.title}</button>)}</nav><div className="sidebar-bottom"><div className="privacy"><b>✦ Важное напоминание</b><p>Используйте в макете только синтетические или обезличенные данные.</p></div><div className="profile"><span>{email.charAt(0).toUpperCase()}</span><div><b title={email}>{email}</b></div></div><button className="logout-button" onClick={onLogout} disabled={loggingOut}>{loggingOut ? 'Выход...' : 'Выйти из аккаунта'}</button></div></aside>
+    <div className="main-area"><header className="topbar"><span>Рабочее пространство <i>/</i> {title}</span><div><span className="avatar">Д</span></div></header><main className="content">
+      {error && (page === 'overview' || page === 'cases') &&
+        <p className="document-error" role="alert">{error}</p>}
+      {page === 'overview' && <><div className="heading"><div><div className="eyebrow">РАБОЧЕЕ ПРОСТРАНСТВО</div><h1>Добро пожаловать</h1><p>Рабочее пространство для проверки проектов судебных актов.</p></div><button className="primary" onClick={showCreate}>＋ Создать дело</button></div><section className="hero"><div><small>ПОДДЕРЖКА ПРИНЯТИЯ РЕШЕНИЙ</small><h2>Внимание к деталям.<br/>Решение — за человеком.</h2><p>Система поможет организовать материалы дела и покажет вопросы, требующие дополнительной проверки. Она не принимает судебные решения.</p><button onClick={() => goTo('analysis')}>Посмотреть рабочую область ↗</button></div><div className="hero-art" aria-hidden="true"><div className="paper"><i/><i/><i/><span>§</span></div></div></section><div className="section-heading"><div><h2>Недавние дела</h2><p>Быстрый доступ к материалам, с которыми вы работали</p></div><button onClick={() => goTo('cases')}>Все дела →</button></div>{caseCards(cases.slice(0, 3))}<div className="quick-grid"><button onClick={() => goTo('documents')}><span>▧</span><div><b>Ваши документы</b><small>Материалы, прикрепленные к делам</small></div>→</button><button onClick={() => goTo('analysis')}><span>◇</span><div><b>Рабочая область анализа</b><small>Предварительный вид результатов</small></div>→</button></div></>}
+      {page === 'cases' && !selected && <>
+        <div className="heading">
+          <div><h1>Судебные дела</h1><p>Создавайте дела и храните связанные с ними документы.</p></div>
+          <button className="primary" onClick={showCreate} disabled={saving}>＋ Создать дело</button>
+        </div>
+        {creating && <form className="panel case-form" onSubmit={event => {
+          event.preventDefault()
+          void saveCase()
+        }}>
+          <label htmlFor="case-title">Название дела</label>
+          <input id="case-title" value={newTitle} maxLength={255} required disabled={saving}
+            onChange={event => setNewTitle(event.target.value)} />
+          <div className="case-actions">
+            <button className="primary" disabled={saving || loading || !newTitle.trim()}>Сохранить дело</button>
+            <button className="outline" type="button" disabled={saving} onClick={() => setCreating(false)}>Отмена</button>
+          </div>
+        </form>}
+        <div className="toolbar"><input value={query} onChange={event => setQuery(event.target.value)}
+          placeholder="Поиск по названию" aria-label="Поиск дел" /></div>
+        {caseCards(cases.filter(item => item.title.toLowerCase().includes(query.trim().toLowerCase())))}
+      </>}
+      {page === 'cases' && selected && <CaseDetails key={selected.id} item={selected}
+        onBack={() => goTo('cases')} onFiles={() => goTo('documents')} />}
       {page === 'documents' && <DocumentsPage />}
       {page === 'analysis' && <><div className="heading"><div><div className="eyebrow">РАБОЧАЯ ОБЛАСТЬ</div><h1>Анализ документа</h1><p>Предварительный макет будущего просмотра результатов проверки.</p></div><span className="status gray">Функция в разработке</span></div><div className="analysis-grid"><section className="panel"><div className="panel-head"><b>Исходный документ</b><small>Предпросмотр появится позже</small></div><div className="empty"><span>▤</span><h3>Документ не выбран</h3><p>После загрузки здесь будет доступен проект судебного акта.</p><button className="outline" onClick={() => goTo('documents')}>Перейти к документам</button></div></section><section className="panel"><div className="panel-head"><b>Результаты проверки</b><span className="status gray">Нет анализа</span></div><div className="empty"><span>✧</span><h3>Здесь появятся замечания</h3><p>После подключения отдельного ИИ-сервиса появятся извлеченные поля, основания и фрагменты документа. Выводы проверяет человек.</p><div className="steps"><div>01 Извлеченные сведения</div><div>02 Вопросы для проверки</div><div>03 Источники и версии</div></div></div></section></div></>}
     </main></div>

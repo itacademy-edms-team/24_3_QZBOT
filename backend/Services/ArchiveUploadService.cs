@@ -1,7 +1,8 @@
 using System.IO.Compression;
-using backend.Contracts;
+using Backend.Contracts;
+using Backend.Models;
 
-namespace backend.Services;
+namespace Backend.Services;
 
 public sealed class ArchiveUploadService(DocumentService documents, DocumentFormatValidator formats)
 {
@@ -9,7 +10,7 @@ public sealed class ArchiveUploadService(DocumentService documents, DocumentForm
     private const long MaxExpandedBytes = 100L * 1024 * 1024;
 
     public async Task<(ArchiveUploadResponse? Result, string? Error)> UploadAsync(
-        string ownerId, IFormFile file, CancellationToken cancellationToken)
+        string ownerId, IFormFile file, string? note, CancellationToken cancellationToken)
     {
         await using var source = file.OpenReadStream();
         using var archiveBuffer = new MemoryStream((int)file.Length);
@@ -23,7 +24,7 @@ public sealed class ArchiveUploadService(DocumentService documents, DocumentForm
             using var archive = new ZipArchive(archiveBuffer, ZipArchiveMode.Read, leaveOpen: true);
             if (archive.Entries.Count is < 1 or > MaxArchiveEntries)
                 return (null, "ZIP must contain 1 to 20 entries.");
-            return (await ProcessEntriesAsync(ownerId, archive, cancellationToken), null);
+            return (await ProcessEntriesAsync(ownerId, archive, note, cancellationToken), null);
         }
         catch (InvalidDataException)
         {
@@ -32,9 +33,10 @@ public sealed class ArchiveUploadService(DocumentService documents, DocumentForm
     }
 
     private async Task<ArchiveUploadResponse> ProcessEntriesAsync(
-        string ownerId, ZipArchive archive, CancellationToken cancellationToken)
+        string ownerId, ZipArchive archive, string? note, CancellationToken cancellationToken)
     {
         var result = new ArchiveUploadResponse();
+        var upload = string.IsNullOrEmpty(note) ? null : new ArchiveUpload { Note = note };
         long expandedBytes = 0;
         foreach (var entry in archive.Entries)
         {
@@ -53,7 +55,7 @@ public sealed class ArchiveUploadService(DocumentService documents, DocumentForm
                     throw new InvalidDataException("File content does not match its extension.");
                 expandedBytes += content.Length;
                 result.Uploaded.Add(await documents.SaveAsync(
-                    ownerId, entry.FullName, extension, content, cancellationToken));
+                    ownerId, entry.FullName, extension, content, cancellationToken, archiveUpload: upload));
             }
             catch (InvalidDataException exception)
             {

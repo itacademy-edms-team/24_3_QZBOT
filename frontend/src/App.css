@@ -854,3 +854,10 @@
     min-width: 650px;
   }
 }
+
+.case-form { display: grid; gap: 10px; margin-bottom: 16px; }
+.case-form input, .case-form select { width: 100%; font: inherit; padding: 8px; }
+.case-form > button { justify-self: start; }
+.case-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.case-document { padding: 12px 0; border-bottom: 1px solid #e2e8f0; overflow-wrap: anywhere; }
+.case-documents > .case-form { margin: 16px 0 0; }
