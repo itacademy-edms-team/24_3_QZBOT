@@ -55,6 +55,67 @@ public sealed class CourtCasesController(ApplicationDbContext db) : ControllerBa
         return courtCase is null ? NotFound() : courtCase;
     }
 
+    [HttpGet("{id:guid}/documents")]
+    public async Task<ActionResult<List<DocumentResponse>>> ListDocuments(Guid id, CancellationToken cancellationToken)
+    {
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
+
+        var documents = await OwnedCases(ownerId)
+            .Where(item => item.Id == id)
+            .Select(item => item.Documents
+                .Where(document => document.OwnerId == ownerId)
+                .OrderByDescending(document => document.UploadedAt)
+                .ThenBy(document => document.Id)
+                .Select(document => new DocumentResponse
+                {
+                    Id = document.Id,
+                    OriginalFileName = document.OriginalFileName,
+                    ContentType = document.ContentType,
+                    SizeBytes = document.SizeBytes,
+                    Sha256 = document.Sha256,
+                    UploadedAt = document.UploadedAt
+                }).ToList())
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return documents is null ? NotFound() : documents;
+    }
+
+    [HttpPut("{id:guid}/documents/{documentId:guid}")]
+    public async Task<IActionResult> AttachDocument(Guid id, Guid documentId, CancellationToken cancellationToken)
+    {
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
+
+        var documents = DocumentsForOwnedCase(ownerId, id, documentId);
+        var updated = await documents.Where(document => document.CaseId == null || document.CaseId == id)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(document => document.CaseId, (Guid?)id),
+                cancellationToken);
+        if (updated > 0) return NoContent();
+
+        return await documents.AnyAsync(cancellationToken)
+            ? Conflict(new { error = "Document is already attached to another case." })
+            : NotFound();
+    }
+
+    [HttpDelete("{id:guid}/documents/{documentId:guid}")]
+    public async Task<IActionResult> DetachDocument(Guid id, Guid documentId, CancellationToken cancellationToken)
+    {
+        var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
+
+        var updated = await DocumentsForOwnedCase(ownerId, id, documentId)
+            .Where(document => document.CaseId == id)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(document => document.CaseId, (Guid?)null),
+                cancellationToken);
+
+        return updated > 0 ? NoContent() : NotFound();
+    }
+
+    private IQueryable<Document> DocumentsForOwnedCase(string ownerId, Guid caseId, Guid documentId) =>
+        db.Documents.Where(document => document.Id == documentId && document.OwnerId == ownerId &&
+            db.CourtCases.Any(item => item.Id == caseId && item.OwnerId == ownerId));
+
     private IQueryable<CourtCase> OwnedCases(string ownerId) =>
         db.CourtCases.AsNoTracking().Where(item => item.OwnerId == ownerId);
 }
