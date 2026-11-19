@@ -79,11 +79,11 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseRouting();
+app.UseMiddleware<RequestLoggingMiddleware>();
 if (!app.Environment.IsDevelopment())
     app.UseHttpsRedirection();
 
-app.UseRouting();
-app.UseMiddleware<RequestLoggingMiddleware>();
 app.UseAuthentication();
 app.UseAuthorization();
 

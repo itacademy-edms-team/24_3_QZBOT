@@ -10,15 +10,10 @@ public sealed class RequestLoggingMiddleware(
 {
     public async Task InvokeAsync(HttpContext context)
     {
-        if (!context.Request.Path.StartsWithSegments("/api"))
-        {
-            await next(context);
-            return;
-        }
-
         var startedAtUtc = DateTimeOffset.UtcNow;
         var timestamp = Stopwatch.GetTimestamp();
         var route = (context.GetEndpoint() as RouteEndpoint)?.RoutePattern.RawText;
+        var capture = new RequestLogCapture(context.Request);
         var failed = false;
         try
         {
@@ -44,6 +39,8 @@ public sealed class RequestLoggingMiddleware(
                 StatusCode = statusCode,
                 DurationMilliseconds = duration.TotalMilliseconds,
                 TraceId = Limit(Activity.Current?.TraceId.ToString() ?? context.TraceIdentifier, 128)!,
+                RequestHeaders = capture.Headers,
+                RequestBody = await capture.DescribeBodyAsync(),
                 UserId = context.User.Identity?.IsAuthenticated == true
                     ? Limit(context.User.FindFirstValue(ClaimTypes.NameIdentifier), 450)
                     : null

@@ -36,6 +36,8 @@ public sealed class ApplicationDbContext(DbContextOptions<ApplicationDbContext> 
             entity.Property(log => log.Method).HasMaxLength(32);
             entity.Property(log => log.RouteTemplate).HasMaxLength(512);
             entity.Property(log => log.TraceId).HasMaxLength(128);
+            entity.Property(log => log.RequestHeaders).HasMaxLength(2048);
+            entity.Property(log => log.RequestBody).HasMaxLength(2048);
             entity.Property(log => log.UserId).HasMaxLength(450);
             entity.HasIndex(log => log.StartedAtUtc);
         });

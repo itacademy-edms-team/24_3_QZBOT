@@ -10,4 +10,6 @@ public sealed class HttpRequestLog
     public double DurationMilliseconds { get; init; }
     public required string TraceId { get; init; }
     public string? UserId { get; init; }
+    public string? RequestHeaders { get; init; }
+    public string? RequestBody { get; init; }
 }
