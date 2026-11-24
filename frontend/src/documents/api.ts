@@ -7,6 +7,9 @@ export type DocumentItem = {
   sizeBytes: number
   sha256: string
   uploadedAt: string
+  caseId?: string | null
+  note?: string | null
+  archiveUploadId?: string | null
 }
 
 export type ArchiveUploadReport = {
@@ -27,10 +30,11 @@ export async function listDocuments(): Promise<DocumentItem[]> {
   return response.json()
 }
 
-export async function uploadDocument(file: File): Promise<void> {
+export async function uploadDocument(file: File, note = ''): Promise<void> {
   const token = await csrfToken()
   const form = new FormData()
   form.append('file', file)
+  if (note.trim()) form.append('note', note.trim())
   const response = await fetch(endpoint, {
     method: 'POST', credentials: 'same-origin', headers: { 'X-XSRF-TOKEN': token }, body: form,
   })
@@ -38,10 +42,11 @@ export async function uploadDocument(file: File): Promise<void> {
   await requireSuccess(response)
 }
 
-export async function uploadArchive(file: File): Promise<ArchiveUploadReport> {
+export async function uploadArchive(file: File, note = ''): Promise<ArchiveUploadReport> {
   const token = await csrfToken()
   const form = new FormData()
   form.append('file', file)
+  if (note.trim()) form.append('note', note.trim())
   const response = await fetch(`${endpoint}/archive`, {
     method: 'POST', credentials: 'same-origin', headers: { 'X-XSRF-TOKEN': token }, body: form,
   })

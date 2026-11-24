@@ -1,13 +1,13 @@
-using backend.Contracts;
-using backend.Errors;
-using backend.Filters;
-using backend.Models;
+using Backend.Contracts;
+using Backend.Errors;
+using Backend.Filters;
+using Backend.Models;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
-namespace backend.Controllers;
+namespace Backend.Controllers;
 
 [ApiController]
 [Route("api/auth")]

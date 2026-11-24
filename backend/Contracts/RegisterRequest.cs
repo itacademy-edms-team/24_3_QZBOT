@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace backend.Contracts;
+namespace Backend.Contracts;
 
 public sealed class RegisterRequest
 {

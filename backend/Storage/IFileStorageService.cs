@@ -1,4 +1,4 @@
-namespace backend.Storage;
+namespace Backend.Storage;
 
 public interface IFileStorageService
 {

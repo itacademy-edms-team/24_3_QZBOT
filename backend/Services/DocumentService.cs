@@ -1,11 +1,11 @@
 using System.Security.Cryptography;
-using backend.Contracts;
-using backend.Data;
-using backend.Models;
-using backend.Storage;
+using Backend.Contracts;
+using Backend.Data;
+using Backend.Models;
+using Backend.Storage;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend.Services;
+namespace Backend.Services;
 
 public enum DeleteDocumentResult { Deleted, NotFound, StorageError }
 
@@ -20,6 +20,9 @@ public sealed class DocumentService(
             .Select(document => new DocumentResponse
             {
                 Id = document.Id,
+                Note = document.Note ?? (document.ArchiveUpload == null ? null : document.ArchiveUpload.Note),
+                ArchiveUploadId = document.ArchiveUploadId,
+                CaseId = document.CaseId,
                 OriginalFileName = document.OriginalFileName,
                 ContentType = document.ContentType,
                 SizeBytes = document.SizeBytes,
@@ -34,6 +37,9 @@ public sealed class DocumentService(
             .Select(document => new DocumentResponse
             {
                 Id = document.Id,
+                Note = document.Note ?? (document.ArchiveUpload == null ? null : document.ArchiveUpload.Note),
+                ArchiveUploadId = document.ArchiveUploadId,
+                CaseId = document.CaseId,
                 OriginalFileName = document.OriginalFileName,
                 ContentType = document.ContentType,
                 SizeBytes = document.SizeBytes,
@@ -82,11 +88,13 @@ public sealed class DocumentService(
 
     public async Task<DocumentResponse> SaveAsync(
         string ownerId, string originalName, string extension, MemoryStream buffer,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, string? note = null, ArchiveUpload? archiveUpload = null)
     {
         var document = new Document
         {
             OwnerId = ownerId,
+            Note = note,
+            ArchiveUpload = archiveUpload,
             OriginalFileName = originalName,
             ContentType = formats.ContentType(extension),
             SizeBytes = buffer.Length,
@@ -111,6 +119,9 @@ public sealed class DocumentService(
         return new DocumentResponse
         {
             Id = document.Id,
+            Note = document.Note ?? archiveUpload?.Note,
+            ArchiveUploadId = document.ArchiveUploadId,
+            CaseId = document.CaseId,
             OriginalFileName = document.OriginalFileName,
             ContentType = document.ContentType,
             SizeBytes = document.SizeBytes,

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Identity;
 
-namespace backend.Models;
+namespace Backend.Models;
 
 public sealed class ApplicationUser : IdentityUser;

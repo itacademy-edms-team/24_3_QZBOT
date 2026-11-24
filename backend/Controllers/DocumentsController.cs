@@ -1,10 +1,12 @@
+using System.ComponentModel.DataAnnotations;
+using Backend.Models;
 using System.Security.Claims;
-using backend.Contracts;
-using backend.Services;
+using Backend.Contracts;
+using Backend.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
-namespace backend.Controllers;
+namespace Backend.Controllers;
 
 [ApiController]
 [Authorize]
@@ -55,7 +57,8 @@ public sealed class DocumentsController(
     [HttpPost]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(MaxRequestBytes)]
-    public async Task<IActionResult> Upload([FromForm] IFormFile? file, CancellationToken cancellationToken)
+    public async Task<IActionResult> Upload([FromForm] IFormFile? file,
+        [FromForm, StringLength(Document.MaxNoteLength)] string? note, CancellationToken cancellationToken)
     {
         if (file is null || file.Length <= 0)
             return BadRequest(new { error = "Select a non-empty PDF, DOCX, JPEG, PNG, MP3, WAV or M4A file." });
@@ -79,13 +82,14 @@ public sealed class DocumentsController(
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
         return StatusCode(StatusCodes.Status201Created,
-            await documents.SaveAsync(ownerId, originalName, extension, buffer, cancellationToken));
+            await documents.SaveAsync(ownerId, originalName, extension, buffer, cancellationToken, note: note?.Trim()));
     }
 
     [HttpPost("archive")]
     [Consumes("multipart/form-data")]
     [RequestSizeLimit(MaxRequestBytes)]
-    public async Task<IActionResult> UploadArchive([FromForm] IFormFile? file, CancellationToken cancellationToken)
+    public async Task<IActionResult> UploadArchive([FromForm] IFormFile? file,
+        [FromForm, StringLength(Document.MaxNoteLength)] string? note, CancellationToken cancellationToken)
     {
         if (file is null || file.Length is <= 0 or > DocumentFormatValidator.MaxAudioBytes ||
             !string.Equals(Path.GetExtension(file.FileName), ".zip", StringComparison.OrdinalIgnoreCase))
@@ -94,7 +98,7 @@ public sealed class DocumentsController(
         var ownerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
         if (string.IsNullOrEmpty(ownerId)) return Unauthorized();
 
-        var (result, error) = await archives.UploadAsync(ownerId, file, cancellationToken);
+        var (result, error) = await archives.UploadAsync(ownerId, file, note?.Trim(), cancellationToken);
         return error is null ? Ok(result) : BadRequest(new { error });
     }
 }
